@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+.next/
+out/
+build/
+dist/
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cloud credentials
+*.json
+!package*.json
+credentials/
+service-account-key.json
+
+# Database
+*.db
+*.sqlite
+postgres_data/
+
+# Uploads (local dev)
+uploads/
+temp_files/
