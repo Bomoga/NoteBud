@@ -6,7 +6,7 @@ services:
     container_name: notebud-db
     environment:
       POSTGRES_USER: notebud
-      POSTGRES_PASSWORD: W1$wfRxi?u7wdshU]STjL*+[?6@C6XS$mbv
+      POSTGRES_PASSWORD: notebud_password1228
       POSTGRES_DB: notebud_dev
     ports:
       - "5432:5432"
