@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = "5433"
     POSTGRES_DB: str = "notebud_dev"
 
+    GCS_BUCKET_NAME: str = "notebud-dev-bucket"
+    GOOGLE_APPLICATION_CREDENTIALS: str = "credentials.json"
+
     @property
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

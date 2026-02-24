@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.lib.config.settings import settings
-from src.api.routers import health
+from src.api.routers import health, files
 
 app = FastAPI(
     title = settings.PROJECT_NAME,
@@ -19,8 +19,14 @@ app.add_middleware(
 
 app.include_router(
     health.router,
-    prefix=f"{settings.API_V1_STR}",
+    prefix=f"{settings.API_V1_STR}/files",
     tags=["System"]
+)
+
+app.include_router(
+    files.router,
+    prefix=f"{settings.API_V1_STR}",
+    tags=["Files"]
 )
 
 @app.get("/")
