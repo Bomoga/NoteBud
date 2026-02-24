@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "notebud_dev"
 
     GCS_BUCKET_NAME: str = "notebud-dev-bucket"
-    GOOGLE_APPLICATION_CREDENTIALS: str = "credentials.json"
 
     @property
     def DATABASE_URL(self) -> str:
