@@ -20,11 +20,11 @@ class StorageService:
             # Fallback to a default location in the current working directory.
             credentials_path = Path.cwd() / "service-account-key.json"
         if credentials_path.exists():
-            print(f"SUCCESS: Found credentials at {credentials_path}")
+            print("SUCCESS: Found GCS credentials file.")
             self.credentials = service_account.Credentials.from_service_account_file(str(credentials_path))
             self.client = storage.Client(credentials=self.credentials, project=self.credentials.project_id)
         else:
-            print(f"WARNING: Could not find credentials at {credentials_path}")
+            print("WARNING: GCS credentials file not found.")
             self.client = None
         
     async def upload_file(self, file: UploadFile, folder: str = "uploads") -> Optional[str]:
