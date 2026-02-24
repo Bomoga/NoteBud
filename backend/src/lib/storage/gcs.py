@@ -11,10 +11,14 @@ class StorageService:
     def __init__(self):
         self.bucket_name = settings.GCS_BUCKET_NAME
 
-        backend_dir = Path(__file__).resolve().parents[3]
-        
-        credentials_path = backend_dir / "service-account-key.json"
-        
+        # Determine credentials path from settings or environment, with a generic fallback.
+        credentials_path_str = getattr(settings, "GCS_CREDENTIALS_PATH", None) or os.getenv("GCS_CREDENTIALS_PATH")
+
+        if credentials_path_str:
+            credentials_path = Path(credentials_path_str)
+        else:
+            # Fallback to a default location in the current working directory.
+            credentials_path = Path.cwd() / "service-account-key.json"
         if credentials_path.exists():
             print(f"SUCCESS: Found credentials at {credentials_path}")
             self.credentials = service_account.Credentials.from_service_account_file(str(credentials_path))
