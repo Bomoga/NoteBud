@@ -19,13 +19,13 @@ app.add_middleware(
 
 app.include_router(
     health.router,
-    prefix=f"{settings.API_V1_STR}/files",
+    prefix=f"{settings.API_V1_STR}",
     tags=["System"]
 )
 
 app.include_router(
     files.router,
-    prefix=f"{settings.API_V1_STR}",
+    prefix=f"{settings.API_V1_STR}/files",
     tags=["Files"]
 )
 
