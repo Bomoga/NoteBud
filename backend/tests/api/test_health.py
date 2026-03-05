@@ -14,4 +14,5 @@ async def test_health_check_returns_200():
     data = response.json()
     assert data["status"] == "online"
     assert data["database"] == "connected"
+    assert "database" in data
     assert "message" in data
