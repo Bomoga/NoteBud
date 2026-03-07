@@ -1,8 +1,9 @@
 # 📒 NoteBud
 
-**An AI-powered notebook and study companion that creates a smart, personalized workspace for each student's classes.**
-
-NoteBud learns and adapts through machine learning and continuous feedback — becoming smarter the more you use it.
+**NoteBud is an AI-powered notebook and study companion that creates a smart, personalized
+workspace for each student's classes. Unlike generic note-taking apps, NoteBud learns and
+adapts through machine learning and continuous feedback, becoming smarter as students use
+it.**
 
 ---
 
