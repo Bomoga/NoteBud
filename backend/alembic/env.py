@@ -11,7 +11,7 @@ from src.lib.config.settings import settings
 from src.lib.db.session import Base
 
 # Import all models so Alembic can detect them
-from src.lib.models import Notebook 
+from src.lib.models import Notebook
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
