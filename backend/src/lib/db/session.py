@@ -19,3 +19,6 @@ Base = declarative_base()
 async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
+
+from src.lib.models.notebook import Notebook
+
