@@ -3,7 +3,7 @@ from sqlalchemy.sql import func
 from src.lib.db.session import Base
 
 class Notebook(Base):
-    __table_name__ = "notebooks"
+    __tablename__ = "notebooks"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
