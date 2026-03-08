@@ -7,7 +7,7 @@
 **Request Body**
 ```json
 {
-    "name": "string",
+    "title": "string",
     "course_code": "string"
 }
 ```
@@ -16,9 +16,12 @@
 ```json
 {
     "notebook_id": "uuid",
-    "name": "string",
+    "title": "string",
     "course_code": "string",
-    "created_at": "ISO 8601 timestamp"
+    "description": "string",
+    "created_at": "datetime",
+    "updated_at": "datetime",
+    "owner_id": "uuid"
 }
 ```
 
@@ -37,9 +40,12 @@
 [
   {
     "notebook_id": "uuid",
-    "name": "string",
+    "title": "string",
     "course_code": "string",
-    "created_at": "ISO 8601 timestamp"
+    "description": "string",
+    "created_at": "datetime",
+    "updated_at": "datetime",
+    "owner_id": "uuid"
   }
 ]
 ```
