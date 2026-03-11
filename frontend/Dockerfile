@@ -6,6 +6,19 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
+# Dev stage (hot reload)
+# Build: docker build --target dev -t notebud-frontend:dev .
+# Run:   docker run -p 3000:3000 -v $(pwd):/app -v /app/node_modules notebud-frontend:dev
+FROM base AS dev
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+ENV WATCHPACK_POLLING=true
+CMD ["npm", "run", "dev"]
+
 # Build stage
 FROM base AS builder
 WORKDIR /app

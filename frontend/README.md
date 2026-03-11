@@ -65,6 +65,18 @@ docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 -t notebud-fr
 docker run -p 3000:3000 notebud-frontend
 ```
 
+### Run with hot reload (development)
+
+```bash
+# Build the dev image
+docker build --target dev -t notebud-frontend:dev .
+
+# Run with volume mount (edit files locally, changes reflect in the container)
+docker run -p 3000:3000 -v $(pwd):/app -v /app/node_modules notebud-frontend:dev
+```
+
+The second `-v /app/node_modules` keeps the container's `node_modules` so the host doesn't overwrite it. Edit files in `src/` and the app will hot reload.
+
 ---
 
 ## Troubleshooting

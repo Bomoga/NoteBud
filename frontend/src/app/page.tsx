@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/api/client';
 
@@ -29,9 +28,9 @@ export default function Home() {
           
           {data && (
             <div className="text-left font-mono text-sm">
-              <p className="text-emerald-600">✅ {data.message}</p>
-              <p>Database: {data.database}</p>
-              <p>Status: {data.status}</p>
+              <p className="text-emerald-600">✅ {data?.message || "Connected to backend"}</p>
+              <p>Database: {data.database || "disconnected"}</p>
+              <p>Status: {data.status || "offline"}</p>
             </div>
           )}
         </div>
