@@ -8,7 +8,7 @@ export default function Home() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['health'],
     queryFn: async () => {
-      const response = await apiClient.get('/health');
+      const response = await apiClient.get('/api/v1/health');
       return response.data;
     },
   });
