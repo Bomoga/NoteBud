@@ -14,7 +14,7 @@ class NotebookRead(BaseModel):
     description: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    owner_id: Optional[str] = None
+    owner_id: Optional[int] = None
 
     model_config = {"from_attributes": True}
 
