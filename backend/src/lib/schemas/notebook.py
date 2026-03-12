@@ -4,6 +4,7 @@ from typing import Optional
 
 class NotebookCreate(BaseModel):
     title: str
+    course_code: str
     description: Optional[str] = None
 
 class NotebookRead(BaseModel):
