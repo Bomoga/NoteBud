@@ -6,7 +6,7 @@ export default function NavBar() {
   return (
     <Disclosure
       as="nav"
-      className="relative bg-white dark:bg-gray-800/50 dark:after:pointer-events-none dark:after:absolute dark:after:inset-x-0 dark:after:bottom-0 dark:after:h-px dark:after:bg-white/10"
+      className="relative z-20 bg-[linear-gradient(135deg,rgba(255,255,255,0.25)_0%,rgba(255,255,255,0.15)_100%)] backdrop-blur-[30px] backdrop-saturate-[130%] border-t border-t-white/50 border-x border-l-white/40 border-r-white/15 border-b border-b-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.12),inset_0_0_20px_rgba(255,255,255,0.1)]"
     >
       <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">
         <div className="flex h-16 justify-between">
@@ -14,20 +14,20 @@ export default function NavBar() {
             <div className="flex shrink-0 items-center">
               <img
                 alt="NoteBud Logo"
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
+                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=emerald&shade=600"
                 className="h-8 w-auto dark:hidden"
               />
               <img
                 alt="NoteBud Logo"
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
+                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=emerald&shade=500"
                 className="h-8 w-auto not-dark:hidden"
               />
             </div>
             <div className="hidden lg:ml-6 lg:flex lg:space-x-8">
-              {/* Current: "border-indigo-600 text-gray-900 dark:border-indigo-500 dark:text-white", Default: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white" */}
+              {/* Current: "border-emerald-600 text-gray-900 dark:border-emerald-500 dark:text-white", Default: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white" */}
               <a
                 href="#"
-                className="inline-flex items-center border-b-2 border-indigo-600 px-1 pt-1 text-sm font-medium text-gray-900 dark:border-indigo-500 dark:text-white"
+                className="inline-flex items-center border-b-2 border-emerald-600 px-1 pt-1 text-sm font-medium text-gray-900 dark:border-emerald-500 dark:text-white"
               >
                 Home
               </a>
@@ -51,13 +51,14 @@ export default function NavBar() {
               </a>
             </div>
           </div>
+          {/* Search Bar */}
           <div className="flex flex-1 items-center justify-center px-2 lg:ml-6 lg:justify-end">
             <div className="grid w-full max-w-lg grid-cols-1 lg:max-w-xs">
               <input
                 name="search"
                 type="search"
                 placeholder="Search"
-                className="col-start-1 row-start-1 block w-full rounded-md bg-white py-1.5 pr-3 pl-10 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
+                className="col-start-1 row-start-1 block w-full rounded-md bg-white/50 backdrop-blur-[30px] py-1.5 pr-3 pl-10 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-emerald-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-emerald-500"
               />
               <MagnifyingGlassIcon
                 aria-hidden="true"
@@ -67,7 +68,7 @@ export default function NavBar() {
           </div>
           <div className="flex items-center lg:hidden">
             {/* Mobile menu button */}
-            <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-600 dark:hover:bg-white/5 dark:hover:text-white dark:focus:outline-indigo-500">
+            <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-2 focus:-outline-offset-1 focus:outline-emerald-600 dark:hover:bg-white/5 dark:hover:text-white dark:focus:outline-emerald-500">
               <span className="absolute -inset-0.5" />
               <span className="sr-only">Open navigation menu</span>
               <Bars3Icon aria-hidden="true" className="block size-6 group-data-open:hidden" />
@@ -77,7 +78,7 @@ export default function NavBar() {
           <div className="hidden lg:ml-4 lg:flex lg:items-center">
             <button
               type="button"
-              className="relative shrink-0 rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:hover:text-white dark:focus:outline-indigo-500"
+              className="relative shrink-0 rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-emerald-600 dark:hover:text-white dark:focus:outline-emerald-500"
             >
               <span className="absolute -inset-1.5" />
               <span className="sr-only">View chat</span>
@@ -86,7 +87,7 @@ export default function NavBar() {
 
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-4 shrink-0">
-              <MenuButton className="relative flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:focus-visible:outline-indigo-500">
+              <MenuButton className="relative flex rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-500">
                 <span className="absolute -inset-1.5" />
                 <span className="sr-only">Open profile menu</span>
                 <img
@@ -132,11 +133,11 @@ export default function NavBar() {
 
       <DisclosurePanel className="lg:hidden">
         <div className="space-y-1 pt-2 pb-3">
-          {/* Current: "bg-indigo-50 border-indigo-600 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-600/10 dark:text-indigo-400", Default: "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5 dark:hover:text-white" */}
+          {/* Current: "bg-emerald-50 border-emerald-600 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-600/10 dark:text-emerald-400", Default: "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5 dark:hover:text-white" */}
           <DisclosureButton
             as="a"
             href="#"
-            className="block border-l-4 border-indigo-600 bg-indigo-50 py-2 pr-4 pl-3 text-base font-medium text-indigo-700 dark:border-indigo-500 dark:bg-indigo-600/10 dark:text-indigo-400"
+            className="block border-l-4 border-emerald-600 bg-emerald-50 py-2 pr-4 pl-3 text-base font-medium text-emerald-700 dark:border-emerald-500 dark:bg-emerald-600/10 dark:text-emerald-400"
           >
             Home
           </DisclosureButton>
@@ -177,7 +178,7 @@ export default function NavBar() {
             </div>
             <button
               type="button"
-              className="relative ml-auto shrink-0 rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 dark:hover:text-white"
+              className="relative ml-auto shrink-0 rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-emerald-600 dark:hover:text-white dark:focus:outline-emerald-500"
             >
               <span className="absolute -inset-1.5" />
               <span className="sr-only">View chat</span>
