@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.lib.config.settings import settings
-from src.api.routers import health, files
+from src.api.routers import health, files, notebooks
 
 app = FastAPI(
     title = settings.PROJECT_NAME,
@@ -27,6 +27,12 @@ app.include_router(
     files.router,
     prefix=f"{settings.API_V1_STR}/files",
     tags=["Files"]
+)
+
+app.include_router(
+    notebooks.router,
+    prefix=f"{settings.API_V1_STR}/notebooks",
+    tags=["Notebooks"]
 )
 
 @app.get("/")
