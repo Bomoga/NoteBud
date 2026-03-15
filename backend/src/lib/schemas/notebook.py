@@ -7,6 +7,11 @@ class NotebookCreate(BaseModel):
     course_code: str
     description: Optional[str] = None
 
+class NotebookUpdate(BaseModel):
+    title: Optional[str] = None
+    course_code: Optional[str] = None
+    description: Optional[str] = None
+
 class NotebookRead(BaseModel):
     id: int
     title: str
