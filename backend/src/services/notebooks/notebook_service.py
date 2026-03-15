@@ -11,8 +11,12 @@ async def create_notebook(db: AsyncSession, data: NotebookCreate) -> NotebookRea
         description=data.description
     )
     db.add(notebook)
-    await db.commit()
-    await db.refresh(notebook)
+    try:
+        await db.commit()
+        await db.refresh(notebook)
+    except Exception:
+        await db.rollback()
+        raise
     return NotebookRead.model_validate(notebook)
 
 
