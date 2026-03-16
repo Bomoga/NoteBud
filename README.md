@@ -59,21 +59,28 @@ it.**
 ```bash
 # Clone the repository
 git clone <repo-url>
-cd notebud
+cd NoteBud
 
-# Start all services
-docker-compose up
+# 1. Start the database (PostgreSQL + pgvector)
+cd backend/infrastructure/docker
+docker compose up -d
+cd ../../..
 
-# Frontend (in separate terminal)
+# 2. Backend (in one terminal)
+cd backend
+cp .env.example .env   # then edit .env with your DB credentials if needed
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn src.api.main:app --reload --port 8000
+
+# 3. Frontend (in another terminal)
 cd frontend
 npm install
+# Optional: create .env or .env.local with NEXT_PUBLIC_API_URL=http://localhost:8000
 npm run dev
-
-# Backend (in separate terminal)
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
 ```
+
+**Backend .env:** Use the same credentials as `backend/infrastructure/docker/docker-compose.yml`. When the DB runs via Docker, use `POSTGRES_PORT=5433` and `POSTGRES_SERVER=localhost`. The API is at `http://localhost:8000`; health check: `http://localhost:8000/api/v1/health`.
 
 ---
 
@@ -93,7 +100,7 @@ uvicorn main:app --reload
 
 ```bash
 # 1. Create a feature branch from develop
-git checkout develop && git pull origin develop
+git checkout dev && git pull origin dev
 git checkout -b feature/your-feature-name
 
 # 2. Commit with conventional messages
@@ -102,16 +109,16 @@ git checkout -b feature/your-feature-name
 git commit -m "feat: add notebook list component"
 
 # 3. Keep branch updated
-git checkout develop && git pull origin develop
+git checkout dev && git pull origin dev
 git checkout feature/your-feature-name
-git rebase develop
+git rebase dev
 
-# 4. Push and open a PR targeting develop
+# 4. Push and open a PR targeting dev
 git push origin feature/your-feature-name
 ```
 
 **PR Guidelines:**
-- Target `develop`, never `main`
+- Target `dev`, never `main`
 - Keep PRs small and focused
 - At least one team member must review before merging
 - Squash and merge on approval

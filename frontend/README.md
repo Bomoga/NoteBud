@@ -38,7 +38,7 @@ Create a `.env.local` file in the `frontend` directory if you need to override d
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-The frontend uses this URL to call the FastAPI backend. Default is `http://localhost:8000`.
+The frontend uses this URL to call the FastAPI backend. Default is `http://localhost:8000`. API routes live under `/api/v1` (e.g. health check: `/api/v1/health`).
 
 ---
 
