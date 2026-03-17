@@ -21,7 +21,7 @@
     "description": "string",
     "created_at": "datetime",
     "updated_at": "datetime",
-    "owner_id": "integer | null"
+    "owner_id": "integer"
 }
 ```
 
@@ -45,7 +45,7 @@
     "description": "string",
     "created_at": "datetime",
     "updated_at": "datetime",
-    "owner_id": "integer | null"
+    "owner_id": "integer"
   }
 ]
 ```
