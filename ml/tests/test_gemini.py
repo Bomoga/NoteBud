@@ -1,4 +1,3 @@
-import os
 import pytest
 from ml.services.gemini import GeminiClient
 
