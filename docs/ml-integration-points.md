@@ -32,9 +32,9 @@ When a user uploads a file to their notebook, the backend stores the file (e.g.,
 **Request Body:**
 ```json
 {
-  "notebook_id": "uuid",
-  "user_id": "uuid",
-  "file_id": "uuid",
+  "notebook_id": "integer",
+  "user_id": "integer",
+  "file_id": "integer",
   "file_url": "string",
   "file_name": "string",
   "file_type": "pdf" | "docx" | "pptx",
@@ -46,9 +46,9 @@ When a user uploads a file to their notebook, the backend stores the file (e.g.,
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `notebook_id` | UUID | Yes | The notebook this file belongs to |
-| `user_id` | UUID | Yes | Owner of the notebook |
-| `file_id` | UUID | Yes | Unique identifier for this file (used for deduplication and chunk tracking) |
+| `notebook_id` | integer | Yes | The notebook this file belongs to |
+| `user_id` | integer | Yes | Owner of the notebook |
+| `file_id` | integer | Yes | Unique identifier for this file (used for deduplication and chunk tracking) |
 | `file_url` | string | Yes | Presigned or internal URL where the ML service can download the file |
 | `file_name` | string | Yes | Original filename (e.g., `lecture_notes_week3.pdf`) |
 | `file_type` | enum | Yes | One of: `pdf`, `docx`, `pptx` |
