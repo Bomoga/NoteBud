@@ -14,6 +14,27 @@ class GeminiClient:
             raise ValueError("GEMINI_API_KEY environment variable is not set")
         self._client = genai.Client(api_key=api_key)
 
+    @staticmethod
+    def _is_rate_limit_error(error: Exception) -> bool:
+        """
+        Determine whether the given error represents a rate-limit (HTTP 429) error.
+
+        Prefer structured status/code fields on the exception or attached response,
+        and only fall back to string parsing if those are unavailable.
+        """
+        # Try common structured fields first.
+        status_code = getattr(error, "status_code", None)
+        if status_code is None:
+            status_code = getattr(error, "code", None)
+        if status_code is None:
+            response = getattr(error, "response", None)
+            if response is not None:
+                status_code = getattr(response, "status_code", None)
+        if status_code == 429:
+            return True
+        # Fall back to string parsing to preserve existing behavior if needed.
+        return "429" in str(error)
+
     def generate_embedding(self, text: str) -> list[float]:
         try:
             response = self._client.models.embed_content(
@@ -23,7 +44,7 @@ class GeminiClient:
             )
             return response.embeddings[0].values
         except genai_errors.ClientError as e:
-            if "429" in str(e):
+            if self._is_rate_limit_error(e):
                 raise RuntimeError(f"Gemini rate limit exceeded: {e}") from e
             raise RuntimeError(f"Gemini API error during embedding: {e}") from e
         except genai_errors.ServerError as e:
@@ -42,7 +63,7 @@ class GeminiClient:
             )
             return response.text
         except genai_errors.ClientError as e:
-            if "429" in str(e):
+            if self._is_rate_limit_error(e):
                 raise RuntimeError(f"Gemini rate limit exceeded: {e}") from e
             raise RuntimeError(f"Gemini API error during generation: {e}") from e
         except genai_errors.ServerError as e:
