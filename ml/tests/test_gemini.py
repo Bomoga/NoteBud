@@ -16,6 +16,10 @@ def test_missing_api_key(monkeypatch):
         GeminiClient()
 
 
+@pytest.mark.skipif(
+    os.getenv("GEMINI_API_KEY") is None,
+    reason="GEMINI_API_KEY not set; skipping integration test that calls external Gemini API.",
+)
 def test_generate_embedding(client):
     result = client.generate_embedding("This is a sample study note about biology.")
     assert isinstance(result, list)
@@ -23,6 +27,10 @@ def test_generate_embedding(client):
     assert all(isinstance(v, float) for v in result)
 
 
+@pytest.mark.skipif(
+    os.getenv("GEMINI_API_KEY") is None,
+    reason="GEMINI_API_KEY not set; skipping integration test that calls external Gemini API.",
+)
 def test_generate_response(client):
     result = client.generate_response("What is photosynthesis?")
     assert isinstance(result, str)
