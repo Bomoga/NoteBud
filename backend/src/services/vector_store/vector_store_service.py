@@ -1,7 +1,8 @@
 import uuid
 
-from sqlalchemy import text
+from sqlalchemy import text, bindparam
 from sqlalchemy.ext.asyncio import AsyncSession
+from pgvector.sqlalchemy import Vector
 
 from src.lib.models.chunk import Chunk
 
@@ -74,18 +75,18 @@ async def similarity_search(
             id,
             text,
             metadata,
-            1 - (embedding <=> CAST(:query_embedding AS vector)) AS similarity_score
+            1 - (embedding <=> :query_embedding) AS similarity_score
         FROM chunks
         WHERE notebook_id = :notebook_id
-          AND (embedding <=> CAST(:query_embedding AS vector)) <= :max_distance
-        ORDER BY embedding <=> CAST(:query_embedding AS vector)
+          AND (embedding <=> :query_embedding) <= :max_distance
+        ORDER BY embedding <=> :query_embedding
         LIMIT :top_k
-    """)
+    """).bindparams(bindparam("query_embedding", type_=Vector(768)))
 
     result = await db.execute(
         query,
         {
-            "query_embedding": str(query_embedding),
+            "query_embedding": query_embedding,
             "notebook_id": notebook_id,
             "max_distance": max_distance,
             "top_k": top_k,
