@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> str:
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
-    model_config = SettingsConfigDict(env_file=f".env.{os.getenv('ENVIRONMENT', 'development')}", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=(".env", f".env.{os.getenv('ENVIRONMENT', 'development')}"),
+        env_file_encoding="utf-8",
+    )
 
 settings = Settings()

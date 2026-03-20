@@ -1,7 +1,7 @@
 # Notebook API Contract 
 
 ## 1. Create Notebook
-**POST** `/api/notebooks`
+**POST** `/api/v1/notebooks`
 **Auth:** Bearer JWT token
 
 **Request Body**
@@ -15,13 +15,13 @@
 **Success response (201):**
 ```json
 {
-    "notebook_id": "uuid",
+    "id": "integer",
     "title": "string",
     "course_code": "string",
     "description": "string",
     "created_at": "datetime",
     "updated_at": "datetime",
-    "owner_id": "uuid"
+    "owner_id": "integer"
 }
 ```
 
@@ -32,20 +32,20 @@
 ---
 
 ## 2. Get ALL Notebooks
-**GET** `api/notebooks`
+**GET** `/api/v1/notebooks`
 **Auth:** Bearer JWT token
 
 **Success Response (200):**
 ```json
 [
   {
-    "notebook_id": "uuid",
+    "id": "integer",
     "title": "string",
     "course_code": "string",
     "description": "string",
     "created_at": "datetime",
     "updated_at": "datetime",
-    "owner_id": "uuid"
+    "owner_id": "integer"
   }
 ]
 ```
@@ -53,7 +53,7 @@
 **Errors:**
 - `401` — not authenticated
 ## 3. Upload File to Notebook
-**POST** `/api/notebooks/{notebook_id}/files`
+**POST** `/api/v1/notebooks/{id}/files`
 **Auth:** Bearer JWT token
 
 **Request Body (multipart/form-data):**
@@ -67,8 +67,9 @@
 
 **Success Response (201):**
 ```json
-{"file_id": "uuid",
-  "notebook_id": "uuid",
+{
+  "file_id": "uuid",
+  "notebook_id": "integer",
   "filename": "string",
   "file_type": "string",
   "upload_time": "ISO 8601 timestamp",

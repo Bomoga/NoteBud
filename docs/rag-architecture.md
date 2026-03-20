@@ -88,7 +88,7 @@ The pipeline consists of **7 sequential flows**:
 ```sql
 CREATE TABLE chunks (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  notebook_id UUID NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
+  notebook_id INT  NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
   user_id     UUID NOT NULL,
   source_file TEXT NOT NULL,
   page_number INT,
