@@ -1,5 +1,5 @@
 // Base api client for all api calls
-// JWT header is injected automatically
+// Note: Authentication headers (e.g. JWT) must be handled by the client implementation
 export { apiClient } from './client';
 
 // Notebook crud operations 
