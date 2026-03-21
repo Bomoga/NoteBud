@@ -30,11 +30,11 @@ export async function createNotebook(
   return data;
 }
 
-export async function getNotebook(id: string): Promise<NotebookResponse> {
+export async function getNotebook(id: number): Promise<NotebookResponse> {
   const { data } = await apiClient.get<NotebookResponse>(`${BASE}/${id}`);
   return data;
 }
 
-export async function deleteNotebook(id: string): Promise<void> {
+export async function deleteNotebook(id: number): Promise<void> {
   await apiClient.delete(`${BASE}/${id}`);
 }
