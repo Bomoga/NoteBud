@@ -16,6 +16,12 @@ export interface NotebookCreate {
   description?: string | null;
 }
 
+export interface NotebookUpdate {
+  title?: string;
+  course_code?: string;
+  description?: string | null;
+}
+
 const BASE = '/api/v1/notebooks';
 
 export async function getNotebooks(): Promise<NotebookResponse[]> {
@@ -32,6 +38,14 @@ export async function createNotebook(
 
 export async function getNotebook(id: number): Promise<NotebookResponse> {
   const { data } = await apiClient.get<NotebookResponse>(`${BASE}/${id}`);
+  return data;
+}
+
+export async function updateNotebook(
+  id: number,
+  payload: NotebookUpdate
+): Promise<NotebookResponse> {
+  const { data } = await apiClient.patch<NotebookResponse>(`${BASE}/${id}`, payload);
   return data;
 }
 

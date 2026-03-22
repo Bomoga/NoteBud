@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-
   --color-primary: #405449;
   --color-primary-light: #3B4540;
   --color-accent: #438951;
@@ -9,3 +8,64 @@
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
+
+/* Glassmorphism – frosted glass effect (outside @layer so backdrop-filter applies in Firefox) */
+.glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.35) 100%);
+    backdrop-filter: blur(60px);
+    -webkit-backdrop-filter: blur(60px);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 0 20px rgba(255, 255, 255, 0.1);
+    border-radius: 32px;
+    isolation: isolate;
+  }
+
+/* Lighter variant: bottom tabs, study buttons (Deep Focus, Pomodoro, etc.) */
+.glass-light {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.25) 100%);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.4);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.08), inset 0 0 15px rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    isolation: isolate;
+  }
+
+/* Alias for semantic use on panels/nav */
+.glass-panel {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.35) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    isolation: isolate;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+
+/* Inner elements: more opaque for depth (bubbles, inputs, buttons) */
+.glass-elevated {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.5) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    isolation: isolate;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.1);
+  }
+
+/* Pill-shaped inputs / primary actions */
+.glass-input {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.55) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    isolation: isolate;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.15);
+  }

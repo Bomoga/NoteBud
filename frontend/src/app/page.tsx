@@ -23,7 +23,7 @@ export default function Home() {
         </div>
       </div>
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-center p-24 text-slate-900">
-      <div className="text-center p-8 isolate aspect-video w-96 rounded-[32px] bg-[linear-gradient(135deg,rgba(255,255,255,0.25)_0%,rgba(255,255,255,0.15)_100%)] backdrop-blur-[30px] backdrop-saturate-[130%] border-t border-t-white/50 border-l border-l-white/40 border-r border-r-white/15 border-b border-b-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.12),inset_0_0_20px_rgba(255,255,255,0.1)]">
+      <div className="glass-panel text-center p-8 isolate aspect-video w-96 rounded-[32px]">
         <h1 className="text-4xl font-bold mb-4 text-emerald-700">NoteBud</h1>
         <p className="text-lg mb-8">AI-Powered Study Companion</p>
         

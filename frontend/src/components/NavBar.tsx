@@ -1,14 +1,24 @@
 "use client"
 
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/backpack', label: 'Backpack' },
+  { href: '#', label: 'Notes' },
+  { href: '#', label: 'Chat' },
+]
+
 export default function NavBar() {
+  const pathname = usePathname()
   return (
     <Disclosure
       as="nav"
-      className="relative z-20 bg-[linear-gradient(135deg,rgba(255,255,255,0.25)_0%,rgba(255,255,255,0.15)_100%)] backdrop-blur-[30px] backdrop-saturate-[130%] border-t border-t-white/50 border-x border-l-white/40 border-r-white/15 border-b border-b-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.12),inset_0_0_20px_rgba(255,255,255,0.1)]"
+      className="relative z-20 glass-panel backdrop-blur-[30px]"
     >
       <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">
         <div className="flex h-16 justify-between">
@@ -26,31 +36,29 @@ export default function NavBar() {
               />
             </div>
             <div className="hidden lg:ml-6 lg:flex lg:space-x-8">
-              {/* Current: "border-emerald-600 text-gray-900 dark:border-emerald-500 dark:text-white", Default: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white" */}
-              <a
-                href="#"
-                className="inline-flex items-center border-b-2 border-emerald-600 px-1 pt-1 text-sm font-medium text-gray-900 dark:border-emerald-500 dark:text-white"
-              >
-                Home
-              </a>
-              <a
-                href="#"
-                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white"
-              >
-                Courses
-              </a>
-              <a
-                href="#"
-                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white"
-              >
-                Notes
-              </a>
-              <a
-                href="#"
-                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white"
-              >
-                Chat
-              </a>
+              {navLinks.map(({ href, label }) => {
+                const isActive = href !== '#' && pathname === href
+                const baseClass = 'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
+                const activeClass = 'border-emerald-600 text-gray-900 dark:border-emerald-500 dark:text-white'
+                const defaultClass = 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white'
+                return href === '#' ? (
+                  <a
+                    key={label}
+                    href="#"
+                    className={`${baseClass} ${defaultClass}`}
+                  >
+                    {label}
+                  </a>
+                ) : (
+                  <Link
+                    key={label}
+                    href={href}
+                    className={`${baseClass} ${isActive ? activeClass : defaultClass}`}
+                  >
+                    {label}
+                  </Link>
+                )
+              })}
             </div>
           </div>
           {/* Search Bar */}
@@ -135,35 +143,21 @@ export default function NavBar() {
 
       <DisclosurePanel className="lg:hidden">
         <div className="space-y-1 pt-2 pb-3">
-          {/* Current: "bg-emerald-50 border-emerald-600 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-600/10 dark:text-emerald-400", Default: "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5 dark:hover:text-white" */}
-          <DisclosureButton
-            as="a"
-            href="#"
-            className="block border-l-4 border-emerald-600 bg-emerald-50 py-2 pr-4 pl-3 text-base font-medium text-emerald-700 dark:border-emerald-500 dark:bg-emerald-600/10 dark:text-emerald-400"
-          >
-            Home
-          </DisclosureButton>
-          <DisclosureButton
-            as="a"
-            href="#"
-            className="block border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5 dark:hover:text-white"
-          >
-            Courses
-          </DisclosureButton>
-          <DisclosureButton
-            as="a"
-            href="#"
-            className="block border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5 dark:hover:text-white"
-          >
-            Notes
-          </DisclosureButton>
-          <DisclosureButton
-            as="a"
-            href="#"
-            className="block border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5 dark:hover:text-white"
-          >
-            Chat
-          </DisclosureButton>
+          {navLinks.map(({ href, label }) => {
+            const isActive = href !== '#' && pathname === href
+            const activeClass = 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:border-emerald-500 dark:bg-emerald-600/10 dark:text-emerald-400'
+            const defaultClass = 'border-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-300 dark:hover:border-white/20 dark:hover:bg-white/5 dark:hover:text-white'
+            const baseClass = `block border-l-4 py-2 pr-4 pl-3 text-base font-medium ${isActive ? activeClass : defaultClass}`
+            return href === '#' ? (
+              <DisclosureButton key={label} as="a" href="#" className={baseClass}>
+                {label}
+              </DisclosureButton>
+            ) : (
+              <DisclosureButton key={label} as={Link} href={href} className={baseClass}>
+                {label}
+              </DisclosureButton>
+            )
+          })}
         </div>
         <div className="border-t border-gray-200 pt-4 pb-3 dark:border-white/10">
           <div className="flex items-center px-4">
