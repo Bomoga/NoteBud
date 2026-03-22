@@ -13,13 +13,13 @@ class NotebookUpdate(BaseModel):
     description: Optional[str] = None
 
 class NotebookRead(BaseModel):
-    id: int
+    id: str
     title: str
     course_code: str
     description: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    owner_id: Optional[int] = None
+    owner_id: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
