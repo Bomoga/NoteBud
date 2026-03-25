@@ -45,7 +45,7 @@ class ChunkRepository:
                 "position": c["position"],
                 "document_id": document_id,
             }
-            for c in chunks
+            for c in sorted(chunks, key=lambda c: c["position"])
         ]
 
         # type_label is a validated constant ("ContentChunk" or "SyllabusChunk"),
