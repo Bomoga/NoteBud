@@ -66,12 +66,16 @@ class ChunkRepository:
 
         # NEXT edges link consecutive chunks in position order.
         next_query = """
-            MATCH (d:Document {id: $document_id})-[:HAS_CHUNK]->(c:Chunk)
+            MATCH (d:Document {id: $document_id})
+            OPTIONAL MATCH (d)-[:HAS_CHUNK]->(:Chunk)-[r:NEXT]->(:Chunk)
+            DELETE r
+            WITH d
+            MATCH (d)-[:HAS_CHUNK]->(c:Chunk)
             WITH c ORDER BY c.position
             WITH collect(c) AS ordered
             UNWIND range(0, size(ordered) - 2) AS i
             WITH ordered[i] AS prev, ordered[i + 1] AS nxt
-            CREATE (prev)-[:NEXT]->(nxt)
+            MERGE (prev)-[:NEXT]->(nxt)
         """
 
         async with self._driver.session() as session:
