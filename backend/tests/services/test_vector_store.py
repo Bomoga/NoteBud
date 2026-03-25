@@ -15,22 +15,6 @@ def _make_chunks(n: int, text_prefix: str = "chunk") -> list[dict]:
     ]
 
 
-async def _create_document(driver, notebook_id: str) -> str:
-    from src.lib.repositories.notebook_repository import NotebookRepository
-    from src.lib.repositories.document_repository import DocumentRepository
-    from src.lib.schemas.notebook import NotebookCreate
-
-    nb_repo = NotebookRepository(driver)
-    await nb_repo.create(NotebookCreate(title="Test NB", course_code="TEST101"))
-
-    # Use a real notebook so CONTAINS edge can be created
-    doc_id = str(uuid.uuid4())
-    doc_repo = DocumentRepository(driver)
-    await doc_repo.create(id=doc_id, gcs_uri="gs://test/doc", filename="test.pdf", file_type="application/pdf")
-    await doc_repo.link_to_notebook(doc_id=doc_id, notebook_id=notebook_id)
-    return doc_id
-
-
 # ---------------------------------------------------------------------------
 # content chunks
 # ---------------------------------------------------------------------------
