@@ -1,92 +1,158 @@
-import numpy as np
+import uuid
 import pytest
 
-from src.services.vector_store.vector_store_service import store_chunks, similarity_search
+from src.services.vector_store.vector_store_service import store_chunks
 
 
-async def test_store_chunks_inserts_records(db_session):
-    nb_id1, _ = db_session.test_notebook_ids
-    chunks = [
-        {"notebook_id": nb_id1, "file_id": 1, "text": "Chunk one",
-         "metadata": {"source_file": "test.pdf", "page_number": 1}},
-        {"notebook_id": nb_id1, "file_id": 1, "text": "Chunk two",
-         "metadata": {"source_file": "test.pdf", "page_number": 2}},
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _make_chunks(n: int, text_prefix: str = "chunk") -> list[dict]:
+    return [
+        {"text": f"{text_prefix} {i}", "embedding": [0.1] * 768, "position": i}
+        for i in range(n)
     ]
-    embeddings = [np.random.rand(768).tolist() for _ in range(2)]
-
-    ids = await store_chunks(db_session, chunks, embeddings)
-
-    assert len(ids) == 2
-    assert all(isinstance(id_, str) for id_ in ids)
 
 
-async def test_store_chunks_raises_on_length_mismatch(db_session):
-    nb_id1, _ = db_session.test_notebook_ids
-    chunks = [{"notebook_id": nb_id1, "text": "chunk"}]
-    embeddings = []
+# ---------------------------------------------------------------------------
+# content chunks
+# ---------------------------------------------------------------------------
 
-    with pytest.raises(ValueError):
-        await store_chunks(db_session, chunks, embeddings)
+@pytest.mark.asyncio
+async def test_store_chunks_content_creates_correct_node_count(neo4j_driver):
+    from src.lib.schemas.notebook import NotebookCreate
+    from src.lib.repositories.notebook_repository import NotebookRepository
+    from src.lib.repositories.document_repository import DocumentRepository
 
+    nb = await NotebookRepository(neo4j_driver).create(
+        NotebookCreate(title="Content NB", course_code="C101")
+    )
+    doc_id = str(uuid.uuid4())
+    await DocumentRepository(neo4j_driver).create(
+        id=doc_id, gcs_uri="gs://t/f", filename="file.pdf", file_type="application/pdf"
+    )
+    await DocumentRepository(neo4j_driver).link_to_notebook(doc_id=doc_id, notebook_id=nb["id"])
 
-async def test_similarity_search_returns_similar_chunks(db_session):
-    nb_id1, _ = db_session.test_notebook_ids
+    chunks = _make_chunks(3)
+    ids = await store_chunks(neo4j_driver, chunks, doc_id, source_type="content")
 
-    # Base vector: unit vector along first dimension
-    base = np.zeros(768).tolist()
-    base[0] = 1.0
+    assert len(ids) == 3
+    assert all(isinstance(i, str) for i in ids)
 
-    # Similar: close to base
-    similar = np.zeros(768).tolist()
-    similar[0] = 0.95
-    similar[1] = 0.05
-
-    # Dissimilar: orthogonal to base
-    dissimilar = np.zeros(768).tolist()
-    dissimilar[500] = 1.0
-
-    chunks = [
-        {"notebook_id": nb_id1, "file_id": 1, "text": "Similar chunk", "metadata": {}},
-        {"notebook_id": nb_id1, "file_id": 1, "text": "Dissimilar chunk", "metadata": {}},
-    ]
-    embeddings = [similar, dissimilar]
-
-    await store_chunks(db_session, chunks, embeddings)
-    results = await similarity_search(db_session, base, notebook_id=nb_id1, top_k=5)
-
-    assert len(results) >= 1
-    assert results[0]["text"] == "Similar chunk"
-    assert results[0]["similarity_score"] >= 0.70
+    async with neo4j_driver.session() as session:
+        result = await session.run(
+            "MATCH (d:Document {id: $doc_id})-[:HAS_CHUNK]->(c:ContentChunk) RETURN count(c) AS n",
+            doc_id=doc_id,
+        )
+        record = await result.single()
+        assert record["n"] == 3
 
 
-async def test_similarity_search_scoped_to_notebook(db_session):
-    nb_id1, nb_id2 = db_session.test_notebook_ids
-    embedding = np.random.rand(768).tolist()
+@pytest.mark.asyncio
+async def test_store_chunks_content_has_chunk_edges(neo4j_driver):
+    from src.lib.schemas.notebook import NotebookCreate
+    from src.lib.repositories.notebook_repository import NotebookRepository
+    from src.lib.repositories.document_repository import DocumentRepository
 
-    chunks = [
-        {"notebook_id": nb_id1, "file_id": 1, "text": "Notebook 1 chunk", "metadata": {}},
-        {"notebook_id": nb_id2, "file_id": 2, "text": "Notebook 2 chunk", "metadata": {}},
-    ]
-    embeddings = [embedding, embedding]
+    nb = await NotebookRepository(neo4j_driver).create(
+        NotebookCreate(title="Edge NB", course_code="E101")
+    )
+    doc_id = str(uuid.uuid4())
+    await DocumentRepository(neo4j_driver).create(
+        id=doc_id, gcs_uri="gs://t/f2", filename="file2.pdf", file_type="application/pdf"
+    )
+    await DocumentRepository(neo4j_driver).link_to_notebook(doc_id=doc_id, notebook_id=nb["id"])
 
-    await store_chunks(db_session, chunks, embeddings)
-    results = await similarity_search(db_session, embedding, notebook_id=nb_id1, top_k=5)
+    await store_chunks(neo4j_driver, _make_chunks(2), doc_id, source_type="content")
 
-    for r in results:
-        assert r["text"] == "Notebook 1 chunk"
+    async with neo4j_driver.session() as session:
+        result = await session.run(
+            "MATCH (d:Document {id: $doc_id})-[:HAS_CHUNK]->(c) RETURN count(c) AS n",
+            doc_id=doc_id,
+        )
+        record = await result.single()
+        assert record["n"] == 2
 
 
-async def test_similarity_search_respects_top_k(db_session):
-    nb_id1, _ = db_session.test_notebook_ids
-    embedding = np.random.rand(768).tolist()
+@pytest.mark.asyncio
+async def test_store_chunks_content_next_edges_in_order(neo4j_driver):
+    from src.lib.schemas.notebook import NotebookCreate
+    from src.lib.repositories.notebook_repository import NotebookRepository
+    from src.lib.repositories.document_repository import DocumentRepository
 
-    chunks = [
-        {"notebook_id": nb_id1, "text": f"Chunk {i}", "metadata": {}}
-        for i in range(10)
-    ]
-    embeddings = [embedding for _ in range(10)]
+    nb = await NotebookRepository(neo4j_driver).create(
+        NotebookCreate(title="Next NB", course_code="N101")
+    )
+    doc_id = str(uuid.uuid4())
+    await DocumentRepository(neo4j_driver).create(
+        id=doc_id, gcs_uri="gs://t/f3", filename="file3.pdf", file_type="application/pdf"
+    )
+    await DocumentRepository(neo4j_driver).link_to_notebook(doc_id=doc_id, notebook_id=nb["id"])
 
-    await store_chunks(db_session, chunks, embeddings)
-    results = await similarity_search(db_session, embedding, notebook_id=nb_id1, top_k=3)
+    await store_chunks(neo4j_driver, _make_chunks(4), doc_id, source_type="content")
 
-    assert len(results) <= 3
+    async with neo4j_driver.session() as session:
+        result = await session.run(
+            "MATCH (d:Document {id: $doc_id})-[:HAS_CHUNK]->(c)-[:NEXT]->() RETURN count(c) AS n",
+            doc_id=doc_id,
+        )
+        record = await result.single()
+        # 4 chunks → 3 NEXT edges
+        assert record["n"] == 3
+
+
+# ---------------------------------------------------------------------------
+# syllabus chunks
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_store_chunks_syllabus_creates_syllabus_nodes(neo4j_driver):
+    from src.lib.schemas.notebook import NotebookCreate
+    from src.lib.repositories.notebook_repository import NotebookRepository
+    from src.lib.repositories.document_repository import DocumentRepository
+
+    nb = await NotebookRepository(neo4j_driver).create(
+        NotebookCreate(title="Syllabus NB", course_code="S101")
+    )
+    doc_id = str(uuid.uuid4())
+    await DocumentRepository(neo4j_driver).create(
+        id=doc_id, gcs_uri="gs://t/syl", filename="syllabus.pdf", file_type="application/pdf"
+    )
+    await DocumentRepository(neo4j_driver).link_to_notebook(doc_id=doc_id, notebook_id=nb["id"])
+
+    await store_chunks(neo4j_driver, _make_chunks(2), doc_id, source_type="syllabus")
+
+    async with neo4j_driver.session() as session:
+        result = await session.run(
+            "MATCH (d:Document {id: $doc_id})-[:HAS_CHUNK]->(c:SyllabusChunk) RETURN count(c) AS n",
+            doc_id=doc_id,
+        )
+        record = await result.single()
+        assert record["n"] == 2
+
+
+@pytest.mark.asyncio
+async def test_store_chunks_syllabus_has_no_similar_edges(neo4j_driver):
+    from src.lib.schemas.notebook import NotebookCreate
+    from src.lib.repositories.notebook_repository import NotebookRepository
+    from src.lib.repositories.document_repository import DocumentRepository
+
+    nb = await NotebookRepository(neo4j_driver).create(
+        NotebookCreate(title="Syllabus NB2", course_code="S102")
+    )
+    doc_id = str(uuid.uuid4())
+    await DocumentRepository(neo4j_driver).create(
+        id=doc_id, gcs_uri="gs://t/syl2", filename="syllabus2.pdf", file_type="application/pdf"
+    )
+    await DocumentRepository(neo4j_driver).link_to_notebook(doc_id=doc_id, notebook_id=nb["id"])
+
+    await store_chunks(neo4j_driver, _make_chunks(2), doc_id, source_type="syllabus")
+
+    async with neo4j_driver.session() as session:
+        result = await session.run(
+            "MATCH (c:SyllabusChunk)-[:SIMILAR]-() RETURN count(c) AS n"
+        )
+        record = await result.single()
+        # compute_similar_edges is never called for syllabus — zero SIMILAR edges
+        assert record["n"] == 0

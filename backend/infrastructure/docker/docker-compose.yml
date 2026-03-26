@@ -2,21 +2,16 @@ version: "3.9"
 
 services:
   db:
-    image: pgvector/pgvector:pg17
-    container_name: notebud-db
+    image: neo4j:2025.01
+    container_name: notebud-neo4j
     environment:
-      POSTGRES_USER: notebud
-      POSTGRES_PASSWORD: notebud_password1228
-      POSTGRES_DB: notebud_dev
+      NEO4J_AUTH: neo4j/notebud_password
+      NEO4J_PLUGINS: '["apoc"]'
     ports:
-      - "5433:5432"
+      - "7474:7474"
+      - "7687:7687"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U notebud -d notebud_dev"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - neo4j_data:/data
 
 volumes:
-  postgres_data:
+  neo4j_data:

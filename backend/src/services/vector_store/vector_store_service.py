@@ -1,105 +1,55 @@
-import uuid
+import logging
 
-from sqlalchemy import text, bindparam
-from sqlalchemy.ext.asyncio import AsyncSession
-from pgvector.sqlalchemy import Vector
+from neo4j import AsyncDriver
 
-from src.lib.models.chunk import Chunk
+from src.lib.repositories.chunk_repository import ChunkRepository
+
+logger = logging.getLogger(__name__)
 
 
 async def store_chunks(
-    db: AsyncSession,
+    driver: AsyncDriver,
     chunks: list[dict],
-    embeddings: list[list[float]],
+    document_id: str,
+    source_type: str = "content",
 ) -> list[str]:
+    """Store chunks in the graph via ChunkRepository.
+
+    Each chunk dict must contain: text (str), embedding (list[float]),
+    position (int).
+
+    source_type="content"  → :Chunk:ContentChunk nodes (enter vector index)
+    source_type="syllabus" → :Chunk:SyllabusChunk nodes (excluded from index)
+
+    After storage, compute_similar_edges() is called for content chunks only.
+    Returns the list of created chunk IDs.
     """
-    Batch insert chunks with their embeddings.
+    repo = ChunkRepository(driver)
+    chunk_ids = await repo.create_chunks(chunks, document_id, source_type)
 
-    Args:
-        db: Async database session
-        chunks: List of dicts with keys: notebook_id, file_id, text, metadata
-        embeddings: List of 768-dim float vectors, parallel to chunks
+    if source_type == "content":
+        await compute_similar_edges(chunk_ids)
 
-    Returns:
-        List of created chunk UUIDs as strings
+    return chunk_ids
+
+
+async def compute_similar_edges(chunk_ids: list[str]) -> None:
+    """Stub — SIMILAR edge computation pending ML review.
+
+    Will be implemented by the ML team in S3-16b.
+    store_chunks() calls this for content chunks only; syllabus chunks
+    never enter the similarity mesh.
     """
-    if len(chunks) != len(embeddings):
-        raise ValueError("chunks and embeddings must have the same length")
-
-    created_ids = []
-    for chunk_data, embedding in zip(chunks, embeddings):
-        chunk = Chunk(
-            id=uuid.uuid4(),
-            notebook_id=chunk_data["notebook_id"],
-            file_id=chunk_data.get("file_id"),
-            text=chunk_data["text"],
-            embedding=embedding,
-            metadata_=chunk_data.get("metadata"),
-        )
-        db.add(chunk)
-        created_ids.append(str(chunk.id))
-
-    try:
-        await db.commit()
-    except Exception:
-        await db.rollback()
-        raise
-
-    return created_ids
-
-
-async def similarity_search(
-    db: AsyncSession,
-    query_embedding: list[float],
-    notebook_id: int,
-    top_k: int = 5,
-    similarity_threshold: float = 0.70,
-) -> list[dict]:
-    """
-    Find top-K most similar chunks within a notebook using cosine similarity.
-
-    Args:
-        db: Async database session
-        query_embedding: 768-dim query vector
-        notebook_id: Scope search to this notebook
-        top_k: Max number of results (default 5)
-        similarity_threshold: Min cosine similarity (default 0.70)
-
-    Returns:
-        List of dicts with keys: chunk_id, text, metadata, similarity_score
-    """
-    max_distance = 1.0 - similarity_threshold
-
-    query = text("""
-        SELECT
-            id,
-            text,
-            metadata,
-            1 - (embedding <=> :query_embedding) AS similarity_score
-        FROM chunks
-        WHERE notebook_id = :notebook_id
-          AND (embedding <=> :query_embedding) <= :max_distance
-        ORDER BY embedding <=> :query_embedding
-        LIMIT :top_k
-    """).bindparams(bindparam("query_embedding", type_=Vector(768)))
-
-    result = await db.execute(
-        query,
-        {
-            "query_embedding": query_embedding,
-            "notebook_id": notebook_id,
-            "max_distance": max_distance,
-            "top_k": top_k,
-        },
+    logger.info(
+        "SIMILAR edge computation pending ML review — chunk_ids: %s", chunk_ids
     )
 
-    rows = result.fetchall()
-    return [
-        {
-            "chunk_id": str(row.id),
-            "text": row.text,
-            "metadata": row.metadata,
-            "similarity_score": float(row.similarity_score),
-        }
-        for row in rows
-    ]
+
+async def refresh_chunk_edges(chunk_id: str) -> None:
+    """Stub — incremental SIMILAR edge refresh pending ML review.
+
+    Will be implemented by the ML team in S3-17.
+    """
+    logger.info(
+        "refresh_chunk_edges pending ML review — chunk_id: %s", chunk_id
+    )
