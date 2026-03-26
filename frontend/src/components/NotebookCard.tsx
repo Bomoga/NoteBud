@@ -1,6 +1,7 @@
 'use client';
 
 import type { NotebookResponse } from '../lib/api';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 interface NotebookCardProps {
   notebook: NotebookResponse;
@@ -30,33 +31,39 @@ export default function NotebookCard({
   isEditing = false,
 }: NotebookCardProps) {
   return (
-    <article className="glass-panel rounded-xl p-5 shadow-sm backdrop-blur-[30px] transition-shadow hover:shadow-md">
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-        {notebook.title}
-      </h3>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        {notebook.course_code}
-      </p>
+    <article className="glass-panel rounded-xl p-5 shadow-sm backdrop-blur-[30px] transition-shadow hover:shadow-md hover:cursor-pointer flex flex-col">
+      <div className="flex flex-col items-start">
+        <h3 className="text-lg font-semibold text-slate-900">
+          {notebook.title}
+        </h3>
+        <p className="mt-1 text-sm text-slate-700">
+          {notebook.course_code}
+        </p>
+      </div>
+
       {notebook.description && (
-        <p className="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">
+        <p className="mt-2 line-clamp-2 text-sm text-slate-700">
           {notebook.description}
         </p>
       )}
-      <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
-        Created {formatDate(notebook.created_at)}
-      </p>
-      {onDelete && (
-        <div className="mt-4 flex gap-2">
+
+
+      <div className="mt-auto flex justify-between items-center pt-4">
+        <p className="text-xs text-green-700">
+          Created on {formatDate(notebook.created_at)}
+        </p>
           <button
             type="button"
             onClick={() => onDelete(notebook.id)}
             disabled={isDeleting}
-            className="rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 disabled:opacity-50 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+            aria-label="Delete notebook"
+            className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:cursor-pointer hover:text-slate-900 disabled:opacity-50"
           >
-            {isDeleting ? 'Deleting…' : 'Delete'}
+            <TrashIcon
+              className={isDeleting ? 'size-5 animate-spin' : 'size-5'}
+            />
           </button>
         </div>
-      )}
     </article>
   );
 }

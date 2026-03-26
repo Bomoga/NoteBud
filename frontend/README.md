@@ -42,6 +42,20 @@ The frontend uses this URL to call the FastAPI backend. Default is `http://local
 
 ---
 
+## Backpack and mock data
+
+The **Backpack** page lists notebooks. By default it calls the backend (`GET /api/v1/notebooks`).
+
+To load **fixed mock notebooks** instead (good for UI/layout work without a running database or auth), open:
+
+```text
+http://localhost:3000/backpack?mock=1
+```
+
+The page shows a short banner while `mock=1` is in the URL. Remove the query string (or use `/backpack` alone) to use live API data again.
+
+---
+
 ## Docker
 
 ### Build

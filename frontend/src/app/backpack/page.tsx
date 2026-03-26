@@ -11,16 +11,47 @@ export default function BackpackPage() {
     const searchParams = useSearchParams();
     const useMock = searchParams.get('mock') === '1';
     const { data: notebooks, isLoading, isError } = useNotebooks();
-    const displayNotebooks = useMock ? MOCK_NOTEBOOKS : notebooks;
+    const [mockNotebooks, setMockNotebooks] = useState(MOCK_NOTEBOOKS);
+    const displayNotebooks = useMock ? mockNotebooks : notebooks;
     const createMutation = useCreateNotebook();
     const deleteMutation = useDeleteNotebook();
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [title, setTitle] = useState('');
     const [courseCode, setCourseCode] = useState('');
+    const [isMockCreating, setIsMockCreating] = useState(false);
+
+    // In mock mode we should render mock cards immediately, even though the real query is still firing.
+    const isBusy = !useMock && isLoading;
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim() || !courseCode.trim()) return;
+
+        if (useMock) {
+            setIsMockCreating(true);
+            const nextId =
+                (mockNotebooks?.reduce((max, nb) => Math.max(max, nb.id), 0) ?? 0) + 1;
+
+            setMockNotebooks((prev) => [
+                ...prev,
+                {
+                    id: nextId,
+                    title: title.trim(),
+                    course_code: courseCode.trim(),
+                    description: null,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    owner_id: null,
+                },
+            ]);
+
+            setTitle('');
+            setCourseCode('');
+            setShowCreateForm(false);
+            setIsMockCreating(false);
+            return;
+        }
+
         try {
             await createMutation.mutateAsync({ title: title.trim(), course_code: courseCode.trim() });
             setTitle('');
@@ -33,6 +64,10 @@ export default function BackpackPage() {
 
     const handleDelete = (id: number) => {
         deleteMutation.mutate(id);
+    };
+
+    const handleMockDelete = (id: number) => {
+        setMockNotebooks((prev) => prev.filter((nb) => nb.id !== id));
     };
 
     return (
@@ -48,16 +83,13 @@ export default function BackpackPage() {
                             Showing mock data for layout testing. Remove <code className="rounded bg-amber-200/50 px-1 dark:bg-amber-800/50">?mock=1</code> from the URL for real data.
                         </div>
                     )}
-                    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white sm:text-3xl">
-                            Backpack
-                        </h1>
+                    <div className="mb-6 flex justify-end">
                         <button
                             type="button"
                             onClick={() => setShowCreateForm(!showCreateForm)}
-                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:bg-emerald-700 dark:hover:bg-emerald-600"
+                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 hover:cursor-pointer"
                         >
-                            {showCreateForm ? 'Cancel' : 'Create New Notebook'}
+                            {showCreateForm ? 'Cancel' : 'Create New'}
                         </button>
                     </div>
 
@@ -100,13 +132,19 @@ export default function BackpackPage() {
                                 </div>
                                 <button
                                     type="submit"
-                                    disabled={createMutation.isPending}
+                                    disabled={useMock ? isMockCreating : createMutation.isPending}
                                     className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-700 dark:hover:bg-emerald-600"
                                 >
-                                    {createMutation.isPending ? 'Creating…' : 'Create'}
+                                    {useMock
+                                        ? isMockCreating
+                                            ? 'Creating…'
+                                            : 'Create'
+                                        : createMutation.isPending
+                                          ? 'Creating…'
+                                          : 'Create'}
                                 </button>
                             </div>
-                            {createMutation.isError && (
+                            {!useMock && createMutation.isError && (
                                 <p className="mt-3 text-sm text-red-600 dark:text-red-400">
                                     Failed to create notebook. Please try again.
                                 </p>
@@ -114,7 +152,7 @@ export default function BackpackPage() {
                         </form>
                     )}
 
-                    {isLoading && !useMock && (
+                    {isBusy && (
                         <div className="flex min-h-[200px] items-center justify-center">
                             <p className="text-slate-600 dark:text-slate-400">Loading notebooks…</p>
                         </div>
@@ -129,7 +167,8 @@ export default function BackpackPage() {
                         </div>
                     )}
 
-                    {!isLoading && (!isError || useMock) && displayNotebooks?.length === 0 && (
+                    {displayNotebooks?.length === 0 &&
+                        (useMock ? true : !isLoading && !isError) && (
                         <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/50 p-12 text-center dark:border-slate-600 dark:bg-slate-800/50">
                             <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
                                 No notebooks yet
@@ -145,15 +184,15 @@ export default function BackpackPage() {
                                 Create New Notebook
                             </button>
                         </div>
-                    )}
+                        )}
 
-                    {!isLoading && displayNotebooks && displayNotebooks.length > 0 && (
+                    {displayNotebooks && displayNotebooks.length > 0 && (
                         <NotebookGrid>
                             {displayNotebooks.map((nb) => (
                                 <NotebookCard
                                     key={nb.id}
                                     notebook={nb}
-                                    onDelete={useMock ? undefined : handleDelete}
+                                    onDelete={useMock ? handleMockDelete : handleDelete}
                                     isDeleting={deleteMutation.isPending && deleteMutation.variables === nb.id}
                                 />
                             ))}
