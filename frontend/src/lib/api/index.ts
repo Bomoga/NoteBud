@@ -3,12 +3,13 @@
 export { apiClient } from './client';
 
 // Notebook crud operations 
-// TODO: Possibly need update functionality
 export {
   getNotebooks,
   createNotebook,
   getNotebook,
+  updateNotebook,
   deleteNotebook,
   type NotebookResponse,
   type NotebookCreate,
+  type NotebookUpdate,
 } from './notebooks';

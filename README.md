@@ -80,6 +80,8 @@ npm install
 npm run dev
 ```
 
+For UI work without notebook API data, the Backpack page can use mock notebooks: `http://localhost:3000/backpack?mock=1` — see [frontend/README.md](frontend/README.md#backpack-and-mock-data).
+
 **Backend .env:** Use the same credentials as `backend/infrastructure/docker/docker-compose.yml`. When the DB runs via Docker, use `POSTGRES_PORT=5433` and `POSTGRES_SERVER=localhost`. The API is at `http://localhost:8000`; health check: `http://localhost:8000/api/v1/health`.
 
 ---
