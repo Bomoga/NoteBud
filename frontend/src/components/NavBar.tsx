@@ -10,7 +10,7 @@ const navLinks = [
   { href: '/', label: 'Home' },
   // TODO: Remove mock=1 after backend is implemented
   { href: '/backpack?mock=1', label: 'Backpack' },
-  { href: '#', label: 'Notes' },
+  { href: '/notes?mock=1', label: 'Notes' },
   { href: '#', label: 'Chat' },
 ];
 
@@ -19,9 +19,9 @@ export default function NavBar() {
 
   return (
     <Disclosure as="nav" className="relative z-20 glass-panel backdrop-blur-[30px]">
-      <div className="mx-auto max-w-7xl px-2 sm:px-4 lg:px-8">
+      <div className="mx-auto max-w-8xl sm:px-6 lg:px-12">
         <div className="flex h-16 justify-between">
-          <div className="flex px-2 lg:px-0">
+          <div className="flex px-4 lg:px-6">
             <div className="flex shrink-0 items-center">
               <img
                 alt="NoteBud Logo"

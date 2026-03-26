@@ -1,4 +1,4 @@
-import type { NotebookResponse } from './notebooks';
+import type { NotebookCreate, NotebookResponse } from './notebooks';
 
 export const MOCK_NOTEBOOKS: NotebookResponse[] = [
   {
@@ -56,3 +56,49 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     owner_id: 1,
   },
 ];
+
+// Module-scoped mock store so mock create/delete work without persistence.
+// This intentionally resets on full page reload / HMR restart.
+let mockStore: NotebookResponse[] = [...MOCK_NOTEBOOKS];
+
+function snapshot(): NotebookResponse[] {
+  // Shallow clone is enough (NotebookResponse is all primitives/null).
+  return mockStore.map((nb) => ({ ...nb }));
+}
+
+export function resetMockNotebooks(): void {
+  mockStore = [...MOCK_NOTEBOOKS];
+}
+
+export function getMockNotebooksSnapshot(): NotebookResponse[] {
+  return snapshot();
+}
+
+export function getMockNotebooks(): Promise<NotebookResponse[]> {
+  return Promise.resolve(snapshot());
+}
+
+export function createMockNotebook(
+  payload: NotebookCreate
+): Promise<NotebookResponse> {
+  const nextId = (mockStore.reduce((max, nb) => Math.max(max, nb.id), 0) ?? 0) + 1;
+  const now = new Date().toISOString();
+
+  const created: NotebookResponse = {
+    id: nextId,
+    title: payload.title,
+    course_code: payload.course_code,
+    description: payload.description ?? null,
+    created_at: now,
+    updated_at: now,
+    owner_id: null,
+  };
+
+  mockStore = [...mockStore, created];
+  return Promise.resolve({ ...created });
+}
+
+export function deleteMockNotebook(id: number): Promise<void> {
+  mockStore = mockStore.filter((nb) => nb.id !== id);
+  return Promise.resolve();
+}

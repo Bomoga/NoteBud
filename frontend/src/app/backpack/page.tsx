@@ -2,55 +2,27 @@
 
 import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useNotebooks, useCreateNotebook, useDeleteNotebook } from '../../hooks/useNotebooks';
+import {
+    useNotebooks,
+    useCreateNotebook,
+    useDeleteNotebook,
+} from '../../hooks/useNotebooks';
 import NotebookCard from '../../components/NotebookCard';
 import NotebookGrid from '../../components/NotebookGrid';
-import { MOCK_NOTEBOOKS } from '../../lib/api/mockNotebooks';
 
 export default function BackpackPage() {
     const searchParams = useSearchParams();
     const useMock = searchParams.get('mock') === '1';
-    const { data: notebooks, isLoading, isError } = useNotebooks();
-    const [mockNotebooks, setMockNotebooks] = useState(MOCK_NOTEBOOKS);
-    const displayNotebooks = useMock ? mockNotebooks : notebooks;
-    const createMutation = useCreateNotebook();
-    const deleteMutation = useDeleteNotebook();
+    const { data: displayNotebooks, isLoading, isError } = useNotebooks({ mock: useMock });
+    const createMutation = useCreateNotebook({ mock: useMock });
+    const deleteMutation = useDeleteNotebook({ mock: useMock });
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [title, setTitle] = useState('');
     const [courseCode, setCourseCode] = useState('');
-    const [isMockCreating, setIsMockCreating] = useState(false);
-
-    // In mock mode we should render mock cards immediately, even though the real query is still firing.
-    const isBusy = !useMock && isLoading;
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim() || !courseCode.trim()) return;
-
-        if (useMock) {
-            setIsMockCreating(true);
-            const nextId =
-                (mockNotebooks?.reduce((max, nb) => Math.max(max, nb.id), 0) ?? 0) + 1;
-
-            setMockNotebooks((prev) => [
-                ...prev,
-                {
-                    id: nextId,
-                    title: title.trim(),
-                    course_code: courseCode.trim(),
-                    description: null,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    owner_id: null,
-                },
-            ]);
-
-            setTitle('');
-            setCourseCode('');
-            setShowCreateForm(false);
-            setIsMockCreating(false);
-            return;
-        }
 
         try {
             await createMutation.mutateAsync({ title: title.trim(), course_code: courseCode.trim() });
@@ -64,10 +36,6 @@ export default function BackpackPage() {
 
     const handleDelete = (id: number) => {
         deleteMutation.mutate(id);
-    };
-
-    const handleMockDelete = (id: number) => {
-        setMockNotebooks((prev) => prev.filter((nb) => nb.id !== id));
     };
 
     return (
@@ -132,16 +100,10 @@ export default function BackpackPage() {
                                 </div>
                                 <button
                                     type="submit"
-                                    disabled={useMock ? isMockCreating : createMutation.isPending}
+                            disabled={createMutation.isPending}
                                     className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-700 dark:hover:bg-emerald-600"
                                 >
-                                    {useMock
-                                        ? isMockCreating
-                                            ? 'Creating…'
-                                            : 'Create'
-                                        : createMutation.isPending
-                                          ? 'Creating…'
-                                          : 'Create'}
+                            {createMutation.isPending ? 'Creating…' : 'Create'}
                                 </button>
                             </div>
                             {!useMock && createMutation.isError && (
@@ -152,7 +114,7 @@ export default function BackpackPage() {
                         </form>
                     )}
 
-                    {isBusy && (
+                    {isLoading && !useMock && (
                         <div className="flex min-h-[200px] items-center justify-center">
                             <p className="text-slate-600 dark:text-slate-400">Loading notebooks…</p>
                         </div>
@@ -167,8 +129,7 @@ export default function BackpackPage() {
                         </div>
                     )}
 
-                    {displayNotebooks?.length === 0 &&
-                        (useMock ? true : !isLoading && !isError) && (
+                    {displayNotebooks?.length === 0 && !isLoading && !isError && (
                         <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/50 p-12 text-center dark:border-slate-600 dark:bg-slate-800/50">
                             <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
                                 No notebooks yet
@@ -184,7 +145,7 @@ export default function BackpackPage() {
                                 Create New Notebook
                             </button>
                         </div>
-                        )}
+                    )}
 
                     {displayNotebooks && displayNotebooks.length > 0 && (
                         <NotebookGrid>
@@ -192,7 +153,7 @@ export default function BackpackPage() {
                                 <NotebookCard
                                     key={nb.id}
                                     notebook={nb}
-                                    onDelete={useMock ? handleMockDelete : handleDelete}
+                                    onDelete={handleDelete}
                                     isDeleting={deleteMutation.isPending && deleteMutation.variables === nb.id}
                                 />
                             ))}
