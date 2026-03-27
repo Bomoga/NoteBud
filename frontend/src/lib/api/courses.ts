@@ -30,7 +30,7 @@ export async function addNotebookTag(
 
 export async function removeNotebookTag(
   notebookId: string,
-  tag: string
+  courseCode: string
 ): Promise<void> {
-  await apiClient.delete(`/api/v1/notebooks/${notebookId}/tags/${tag}`);
+  await apiClient.delete(`/api/v1/notebooks/${notebookId}/tags/${courseCode}`);
 }
