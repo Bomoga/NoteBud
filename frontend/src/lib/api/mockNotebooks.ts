@@ -8,7 +8,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     description: 'Cell structure, genetics, and basic ecology.',
     created_at: '2025-02-15T10:00:00Z',
     updated_at: '2025-03-01T14:30:00Z',
-    owner_id: 'mock-owner',
+    owner_id: null,
   },
   {
     id: 'mock-2',
@@ -17,7 +17,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     description: 'Reaction mechanisms and synthesis.',
     created_at: '2025-02-20T09:00:00Z',
     updated_at: '2025-03-05T11:00:00Z',
-    owner_id: 'mock-owner',
+    owner_id: null,
   },
   {
     id: 'mock-3',
@@ -26,7 +26,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     description: null,
     created_at: '2025-02-10T08:00:00Z',
     updated_at: '2025-02-10T08:00:00Z',
-    owner_id: 'mock-owner',
+    owner_id: null,
   },
   {
     id: 'mock-4',
@@ -35,7 +35,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     description: 'From ancient Greece through the Renaissance. Key movements, artists, and cultural context.',
     created_at: '2025-01-25T12:00:00Z',
     updated_at: '2025-03-07T16:45:00Z',
-    owner_id: 'mock-owner',
+    owner_id: null,
   },
   {
     id: 'mock-5',
@@ -44,7 +44,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     description: 'Behavior, cognition, and developmental psychology.',
     created_at: '2025-02-01T13:00:00Z',
     updated_at: '2025-03-02T09:15:00Z',
-    owner_id: 'mock-owner',
+    owner_id: null,
   },
   {
     id: 'mock-6',
@@ -53,7 +53,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     description: 'Arrays, linked lists, trees, and graphs.',
     created_at: '2025-02-18T11:00:00Z',
     updated_at: '2025-02-28T17:00:00Z',
-    owner_id: 'mock-owner',
+    owner_id: null,
   },
 ];
 
