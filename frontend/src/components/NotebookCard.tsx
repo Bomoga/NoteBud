@@ -54,7 +54,7 @@ export default function NotebookCard({
         </p>
           <button
             type="button"
-            onClick={() => onDelete(notebook.id)}
+            onClick={() => onDelete?.(notebook.id)}
             disabled={isDeleting}
             aria-label="Delete notebook"
             className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:cursor-pointer hover:text-slate-900 disabled:opacity-50"
