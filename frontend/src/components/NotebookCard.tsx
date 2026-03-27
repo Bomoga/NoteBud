@@ -5,9 +5,9 @@ import { TrashIcon } from '@heroicons/react/24/outline';
 
 interface NotebookCardProps {
   notebook: NotebookResponse;
-  onDelete?: (id: number) => void;
+  onDelete?: (id: string) => void;
   isDeleting?: boolean;
-  onEdit?: (id: number) => void;
+  onEdit?: (id: string) => void;
   isEditing?: boolean;
 }
 
