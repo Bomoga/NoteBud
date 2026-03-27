@@ -52,3 +52,28 @@ export async function updateNotebook(
 export async function deleteNotebook(id: string): Promise<void> {
   await apiClient.delete(`${BASE}/${id}`);
 }
+
+export interface UploadFileResponse {
+  status: string;
+  filename: string;
+  content_type: string;
+  gcs_uri: string;
+  document_id: string;
+}
+
+export async function uploadFile(
+  notebookId: string,
+  file: File,
+  sourceType?: string
+): Promise<UploadFileResponse> {
+  const form = new FormData();
+  form.append('file', file);
+  const params = new URLSearchParams({ notebook_id: notebookId });
+  if (sourceType) params.set('source_type', sourceType);
+  const { data } = await apiClient.post<UploadFileResponse>(
+    `/api/v1/files/upload?${params.toString()}`,
+    form,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  );
+  return data;
+}
