@@ -81,7 +81,12 @@ export function getMockNotebooks(): Promise<NotebookResponse[]> {
 export function createMockNotebook(
   payload: NotebookCreate
 ): Promise<NotebookResponse> {
-  const nextId = mockStore.length + 1;
+  const nextId = mockStore.reduce((max, nb) => {
+    const match = /^mock-(\d+)$/.exec(nb.id);
+    if (!match) return max;
+    const n = Number(match[1]);
+    return Number.isNaN(n) ? max : Math.max(max, n);
+  }, 0) + 1;
   const now = new Date().toISOString();
 
   const created: NotebookResponse = {
