@@ -8,9 +8,8 @@ import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  // TODO: Remove mock=1 after backend is implemented
-  { href: '/backpack?mock=1', label: 'Backpack' },
-  { href: '/notes?mock=1', label: 'Notes' },
+  { href: '/backpack', label: 'Backpack' },
+  { href: '/notes', label: 'Notes' },
   { href: '#', label: 'Chat' },
 ];
 
