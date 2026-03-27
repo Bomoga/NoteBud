@@ -60,7 +60,7 @@ export function useUpdateNotebook(options: UseNotebooksOptions = {}) {
   const _useMock = options.mock ?? false;
 
   return useMutation({
-    mutationFn: ({ id, ...payload }: { id: number } & NotebookUpdate) =>
+    mutationFn: ({ id, ...payload }: { id: string } & NotebookUpdate) =>
       updateNotebook(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: NOTEBOOKS_QUERY_KEY });
@@ -73,7 +73,7 @@ export function useDeleteNotebook(options: UseNotebooksOptions = {}) {
   const useMock = options.mock ?? false;
 
   return useMutation({
-    mutationFn: (id: number) =>
+    mutationFn: (id: string) =>
       useMock ? deleteMockNotebook(id) : deleteNotebook(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: NOTEBOOKS_QUERY_KEY });
