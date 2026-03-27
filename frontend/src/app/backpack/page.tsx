@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import {
     useNotebooks,
     useCreateNotebook,
@@ -11,11 +10,9 @@ import NotebookCard from '../../components/NotebookCard';
 import NotebookGrid from '../../components/NotebookGrid';
 
 export default function BackpackPage() {
-    const searchParams = useSearchParams();
-    const useMock = searchParams.get('mock') === '1';
-    const { data: displayNotebooks, isLoading, isError } = useNotebooks({ mock: useMock });
-    const createMutation = useCreateNotebook({ mock: useMock });
-    const deleteMutation = useDeleteNotebook({ mock: useMock });
+    const { data: displayNotebooks, isLoading, isError } = useNotebooks();
+    const createMutation = useCreateNotebook();
+    const deleteMutation = useDeleteNotebook();
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [title, setTitle] = useState('');
     const [courseCode, setCourseCode] = useState('');
@@ -34,7 +31,7 @@ export default function BackpackPage() {
         }
     };
 
-    const handleDelete = (id: number) => {
+    const handleDelete = (id: string) => {
         deleteMutation.mutate(id);
     };
 
@@ -46,11 +43,6 @@ export default function BackpackPage() {
             </div>
             <main className="relative z-10 min-h-screen p-6 pt-24 sm:p-8 sm:pt-28">
                 <div className="mx-auto max-w-6xl">
-                    {useMock && (
-                        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
-                            Showing mock data for layout testing. Remove <code className="rounded bg-amber-200/50 px-1 dark:bg-amber-800/50">?mock=1</code> from the URL for real data.
-                        </div>
-                    )}
                     <div className="mb-6 flex justify-end">
                         <button
                             type="button"
@@ -106,7 +98,7 @@ export default function BackpackPage() {
                             {createMutation.isPending ? 'Creating…' : 'Create'}
                                 </button>
                             </div>
-                            {!useMock && createMutation.isError && (
+                            {createMutation.isError && (
                                 <p className="mt-3 text-sm text-red-600 dark:text-red-400">
                                     Failed to create notebook. Please try again.
                                 </p>
@@ -114,13 +106,13 @@ export default function BackpackPage() {
                         </form>
                     )}
 
-                    {isLoading && !useMock && (
+                    {isLoading && (
                         <div className="flex min-h-[200px] items-center justify-center">
                             <p className="text-slate-600 dark:text-slate-400">Loading notebooks…</p>
                         </div>
                     )}
 
-                    {isError && !useMock && (
+                    {isError && (
                         <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900/50 dark:bg-red-900/20">
                             <p className="font-medium text-red-800 dark:text-red-300">Failed to load notebooks</p>
                             <p className="mt-1 text-sm text-red-600 dark:text-red-400">
