@@ -61,6 +61,22 @@ export interface UploadFileResponse {
   document_id: string;
 }
 
+export interface QueryNotebookResponse {
+  answer: string;
+  sources: string[];
+}
+
+export async function queryNotebook(
+  id: string,
+  query: string
+): Promise<QueryNotebookResponse> {
+  const { data } = await apiClient.post<QueryNotebookResponse>(
+    `${BASE}/${id}/query`,
+    { query }
+  );
+  return data;
+}
+
 export async function uploadFile(
   notebookId: string,
   file: File,
