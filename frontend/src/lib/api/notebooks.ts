@@ -80,7 +80,7 @@ export async function queryNotebook(
 export async function uploadFile(
   notebookId: string,
   file: File,
-  sourceType?: string
+  sourceType?: 'syllabus' | 'content'
 ): Promise<UploadFileResponse> {
   const form = new FormData();
   form.append('file', file);
