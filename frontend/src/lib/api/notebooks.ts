@@ -1,13 +1,13 @@
 import { apiClient } from './client';
 
 export interface NotebookResponse {
-  id: number;
+  id: string;
   title: string;
   course_code: string;
   description: string | null;
   created_at: string;
   updated_at: string;
-  owner_id: number | null;
+  owner_id: string | null;
 }
 
 export interface NotebookCreate {
