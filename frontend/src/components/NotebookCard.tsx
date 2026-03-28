@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { NotebookResponse } from '../lib/api';
 import { TrashIcon } from '@heroicons/react/24/outline';
 
@@ -31,6 +32,7 @@ export default function NotebookCard({
   isEditing = false,
 }: NotebookCardProps) {
   return (
+    <Link href={`/backpack/${notebook.id}`}>
     <article className="glass-panel rounded-xl p-5 shadow-sm backdrop-blur-[30px] transition-shadow hover:shadow-md hover:cursor-pointer flex flex-col">
       <div className="flex flex-col items-start">
         <h3 className="text-lg font-semibold text-slate-900">
@@ -54,7 +56,7 @@ export default function NotebookCard({
         </p>
           <button
             type="button"
-            onClick={() => onDelete?.(notebook.id)}
+            onClick={(e) => { e.preventDefault(); onDelete?.(notebook.id); }}
             disabled={isDeleting}
             aria-label="Delete notebook"
             className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:cursor-pointer hover:text-slate-900 disabled:opacity-50"
@@ -65,6 +67,7 @@ export default function NotebookCard({
           </button>
         </div>
     </article>
+    </Link>
   );
 }
  
