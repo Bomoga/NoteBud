@@ -14,4 +14,11 @@ class UserRepository:
         async with self._driver.session() as session:
             result = await session.run(query, user_id=user_id)
             record = await result.single()
-            return dict(record["u"])
+            if record is None:
+                # Fallback to a minimal representation if no record is returned
+                return {"id": user_id}
+            user_node = record.get("u")
+            if user_node is None:
+                # Fallback to a minimal representation if the expected key is missing
+                return {"id": user_id}
+            return dict(user_node)
