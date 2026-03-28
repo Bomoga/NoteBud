@@ -81,13 +81,18 @@ export default function NotebookDetailPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    await updateMutation.mutateAsync({
-      id,
-      title: title.trim(),
-      course_code: courseCode.trim(),
-      description: description.trim() || null,
-    });
-    setIsEditing(false);
+    try {
+      await updateMutation.mutateAsync({
+        id,
+        title: title.trim(),
+        course_code: courseCode.trim(),
+        description: description.trim() || null,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      // Keep isEditing true so the user can correct issues; error state will be reflected via updateMutation.isError
+      console.error('Failed to update notebook:', error);
+    }
   }
 
   return (
