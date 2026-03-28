@@ -869,21 +869,21 @@ allow_origins=settings.ALLOWED_ORIGINS  # new settings field
 
 ### Group B — Frontend: API Layer Completion
 
-- [ ] S5-09: Add `uploadFile(notebookId, file, sourceType?)` to `notebooks.ts` *(needs S5-03)*
-- [ ] S5-10: Add `queryNotebook(id, query)` to `notebooks.ts` *(needs S5-03)*
-- [ ] S5-11: Create `frontend/src/lib/api/courses.ts` with `getCourses`, `addNotebookTag`, `removeNotebookTag`
-- [ ] S5-12: Re-export new functions (`uploadFile`, `queryNotebook`, courses API) from `lib/api/index.ts` *(needs S5-09 – S5-11)*
+- [x] S5-09: Add `uploadFile(notebookId, file, sourceType?)` to `notebooks.ts` *(needs S5-03)*
+- [x] S5-10: Add `queryNotebook(id, query)` to `notebooks.ts` *(needs S5-03)*
+- [x] S5-11: Create `frontend/src/lib/api/courses.ts` with `getCourses`, `addNotebookTag`, `removeNotebookTag`
+- [x] S5-12: Re-export new functions (`uploadFile`, `queryNotebook`, courses API) from `lib/api/index.ts` *(needs S5-09 – S5-11)*
 
 ---
 
 ### Group C — Frontend: Page & Feature Build-out
 
-- [ ] S5-13: Make `NotebookCard` clickable — navigate to `/backpack/[id]` on card click *(needs S5-04)*
-- [ ] S5-14: Build `/backpack/[id]` notebook detail page: display metadata, inline edit via `updateNotebook` *(needs S5-05, S5-13)*
-- [ ] S5-15: Add file upload section to `/backpack/[id]`: PDF/DOCX/PPTX input, source type toggle, call `uploadFile` *(needs S5-09, S5-14)*
-- [ ] S5-16: Add course tag section to `/backpack/[id]`: course autocomplete from `getCourses`, add/remove tags *(needs S5-11, S5-14)*
-- [ ] S5-17: Build `/courses` page: list all courses with relationship display *(needs S5-11)*
-- [ ] S5-18: Add description field to the create notebook form on `/backpack` *(needs S5-08)*
+- [x] S5-13: Make `NotebookCard` clickable — navigate to `/backpack/[id]` on card click *(needs S5-04)*
+- [x] S5-14: Build `/backpack/[id]` notebook detail page: display metadata, inline edit via `updateNotebook` *(needs S5-05, S5-13)*
+- [x] S5-15: Add file upload section to `/backpack/[id]`: PDF/DOCX/PPTX input, source type toggle, call `uploadFile` *(needs S5-09, S5-14)*
+- [x] S5-16: Add course tag section to `/backpack/[id]`: course autocomplete from `getCourses`, add/remove tags *(needs S5-11, S5-14)*
+- [x] S5-17: Build `/courses` page: list all courses with relationship display *(needs S5-11)*
+- [x] S5-18: Add description field to the create notebook form on `/backpack` *(needs S5-08)*
 
 ---
 
@@ -915,11 +915,11 @@ allow_origins=settings.ALLOWED_ORIGINS  # new settings field
 
 ### Group G — Auth: Backend
 
-- [ ] S5-30: Add `JWT_SECRET` to `backend/.env.development`
-- [ ] S5-31: Create `backend/src/lib/auth/jwt.py`: `decode_token()` and `get_current_user()` FastAPI dependency *(needs S5-30)*
-- [ ] S5-32: Create `UserRepository`: `create_or_get(user_id)` that upserts a `:User` node *(needs S5-31)*
-- [ ] S5-33: Inject auth into `POST /notebooks`: set `owner_id = current_user` *(needs S5-31)*
-- [ ] S5-34: Scope `GET /notebooks` to authenticated user: filter `WHERE n.owner_id = $user_id` *(needs S5-33)*
+- [x] S5-30: Add `JWT_SECRET` to `backend/.env.development`
+- [x] S5-31: Create `backend/src/lib/auth/jwt.py`: `decode_token()` and `get_current_user()` FastAPI dependency *(needs S5-30)*
+- [x] S5-32: Create `UserRepository`: `create_or_get(user_id)` that upserts a `:User` node *(needs S5-31)*
+- [x] S5-33: Inject auth into `POST /notebooks`: set `owner_id = current_user` *(needs S5-31)*
+- [x] S5-34: Scope `GET /notebooks` to authenticated user: filter `WHERE n.owner_id = $user_id` *(needs S5-33)*
 - [ ] S5-35: Guard `PATCH`, `DELETE /notebooks/{id}`, `POST /files/upload`, `POST /notebooks/{id}/tags`, `POST /notebooks/{id}/query` — 403 if ownership mismatch *(needs S5-33)*
 - [ ] S5-36: Add `ALLOWED_ORIGINS` setting to `backend/src/lib/config/settings.py` and update CORS in `main.py`
 - [ ] S5-37: Add `ALLOWED_ORIGINS` to `backend/.env.development` and `.env.staging` *(needs S5-36)*
