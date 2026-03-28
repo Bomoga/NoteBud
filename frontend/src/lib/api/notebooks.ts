@@ -88,7 +88,8 @@ export async function uploadFile(
   if (sourceType) params.set('source_type', sourceType);
   const { data } = await apiClient.post<UploadFileResponse>(
     `/files/upload?${params.toString()}`,
-    form
+    form,
+    { headers: { 'Content-Type': undefined } }
   );
   return data;
 }
