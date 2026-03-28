@@ -12,7 +12,7 @@ export interface NotebookTagResponse {
 }
 
 export async function getCourses(): Promise<CourseResponse[]> {
-  const { data } = await apiClient.get<CourseResponse[]>('/api/v1/courses');
+  const { data } = await apiClient.get<CourseResponse[]>('/courses');
   return data;
 }
 
@@ -22,7 +22,7 @@ export async function addNotebookTag(
   courseCode: string
 ): Promise<NotebookTagResponse> {
   const { data } = await apiClient.post<NotebookTagResponse>(
-    `/api/v1/notebooks/${notebookId}/tags`,
+    `/notebooks/${notebookId}/tags`,
     { type, course_code: courseCode }
   );
   return data;
@@ -32,5 +32,5 @@ export async function removeNotebookTag(
   notebookId: string,
   courseCode: string
 ): Promise<void> {
-  await apiClient.delete(`/api/v1/notebooks/${notebookId}/tags/${courseCode}`);
+  await apiClient.delete(`/notebooks/${notebookId}/tags/${courseCode}`);
 }
