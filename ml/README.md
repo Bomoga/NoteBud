@@ -14,7 +14,7 @@ Split extracted text into 512-token chunks with 64-token overlap, preserving sen
 Convert text chunks into 768-dimensional dense vectors using the Gemini `text-embedding-004` model.
 
 ### `retrieval/`
-Search pgvector for the top-K most semantically relevant chunks by cosine similarity, scoped to a specific notebook.
+Search the vector index for the top-K most semantically relevant chunks by cosine similarity, scoped to a specific notebook. The production backend stores embeddings on **Neo4j** `ContentChunk` nodes (see `backend` ingestion/RAG); older docs may refer to pgvector from a prior stack.
 
 ### `generation/`
 Produce natural language answers grounded in retrieved chunks using Gemini 1.5 Flash, with inline citations and groundedness scoring.

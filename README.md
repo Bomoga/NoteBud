@@ -22,16 +22,15 @@ it.**
 - **React / Next.js** — UI framework, routing, server-side rendering
 - **TypeScript** — Type safety
 - **Tailwind CSS** — Styling
-- **React Query** — API state management and caching
-- **Zustand / Redux** — Global state management
+- **TanStack React Query** — API state management and caching
+- **Zustand** — Client global state (available in dependencies; use where needed)
 - **Axios** — HTTP client
 
 ### Backend
-- **FastAPI / Flask** — Python REST API framework
-- **PostgreSQL** — Primary database
-- **pgvector** — Vector embeddings storage
-- **SQLAlchemy + Alembic** — ORM and migrations
-- **JWT + Pydantic** — Auth and request validation
+- **FastAPI** — Python REST API
+- **Neo4j** — Graph store for notebooks, documents, chunks, and course relationships; vector index on content chunks
+- **neo4j-graphrag** — Graph RAG utilities
+- **Pydantic** — Request and response validation
 
 ### AI / ML
 - **Gemini API** — LLM for answer generation and embeddings
@@ -61,28 +60,28 @@ it.**
 git clone <repo-url>
 cd NoteBud
 
-# 1. Start the database (PostgreSQL + pgvector)
+# 1. Start Neo4j
 cd backend/infrastructure/docker
 docker compose up -d
 cd ../../..
 
 # 2. Backend (in one terminal)
 cd backend
-cp .env.example .env   # then edit .env with your DB credentials if needed
+cp .env.example .env   # set NEO4J_* and other keys; match NEO4J_AUTH in docker-compose.yml
 pip install -r requirements.txt
-alembic upgrade head
 uvicorn src.api.main:app --reload --port 8000
 
 # 3. Frontend (in another terminal)
 cd frontend
 npm install
-# Optional: create .env or .env.local with NEXT_PUBLIC_API_URL=http://localhost:8000
+# Base URL must include the API version prefix (paths in code are like /notebooks)
+# echo 'NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1' > .env.local
 npm run dev
 ```
 
-For UI work without notebook API data, the Backpack page can use mock notebooks: `http://localhost:3000/backpack?mock=1` — see [frontend/README.md](frontend/README.md#backpack-and-mock-data).
+For in-memory notebook data during UI or hook tests, pass `{ mock: true }` into the hooks in `frontend/src/hooks/useNotebooks.ts` (the Backpack page uses the live API by default). See [frontend/README.md](frontend/README.md#backpack-and-mock-data).
 
-**Backend .env:** Use the same credentials as `backend/infrastructure/docker/docker-compose.yml`. When the DB runs via Docker, use `POSTGRES_PORT=5433` and `POSTGRES_SERVER=localhost`. The API is at `http://localhost:8000`; health check: `http://localhost:8000/api/v1/health`.
+**Backend .env:** Copy `backend/.env.example` to `.env`. Set `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD` to match `backend/infrastructure/docker/docker-compose.yml` (default compose auth is `neo4j` / `notebud_password`). `GEMINI_API_KEY` is optional until embedding/LLM paths are enabled. Graph constraints and indexes are applied at API startup—there is no Alembic or SQL migration step. The API is at `http://localhost:8000`; health check: `http://localhost:8000/api/v1/health`.
 
 ---
 
@@ -93,7 +92,7 @@ For UI work without notebook API data, the Backpack page can use mock notebooks:
 | Branch | Purpose |
 |---|---|
 | `main` | Production-ready, always deployable, protected |
-| `develop` | Integration branch for features |
+| `dev` | Integration branch for features |
 | `feature/*` | Individual feature development |
 | `bugfix/*` | Bug fixes |
 | `hotfix/*` | Emergency production fixes |
@@ -101,7 +100,7 @@ For UI work without notebook API data, the Backpack page can use mock notebooks:
 ### Contributing
 
 ```bash
-# 1. Create a feature branch from develop
+# 1. Create a feature branch from dev
 git checkout dev && git pull origin dev
 git checkout -b feature/your-feature-name
 
