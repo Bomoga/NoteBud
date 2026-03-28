@@ -30,6 +30,7 @@ export default function NotebookDetailPage() {
   const [title, setTitle] = useState('');
   const [courseCode, setCourseCode] = useState('');
   const [description, setDescription] = useState('');
+  const [editValidationError, setEditValidationError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [sourceType, setSourceType] = useState<'content' | 'syllabus'>('content');
@@ -81,11 +82,18 @@ export default function NotebookDetailPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    const trimmedTitle = title.trim();
+    const trimmedCourseCode = courseCode.trim();
+    if (!trimmedTitle || !trimmedCourseCode) {
+      setEditValidationError('Title and course code cannot be empty.');
+      return;
+    }
+    setEditValidationError(null);
     try {
       await updateMutation.mutateAsync({
         id,
-        title: title.trim(),
-        course_code: courseCode.trim(),
+        title: trimmedTitle,
+        course_code: trimmedCourseCode,
         description: description.trim() || null,
       });
       setIsEditing(false);
@@ -167,6 +175,9 @@ export default function NotebookDetailPage() {
                       className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>
+                  {editValidationError && (
+                    <p className="text-sm text-red-600">{editValidationError}</p>
+                  )}
                   {updateMutation.isError && (
                     <p className="text-sm text-red-600">Failed to save changes. Please try again.</p>
                   )}
