@@ -22,7 +22,7 @@ export interface NotebookUpdate {
   description?: string | null;
 }
 
-const BASE = '/api/v1/notebooks';
+const BASE = '/notebooks';
 
 export async function getNotebooks(): Promise<NotebookResponse[]> {
   const { data } = await apiClient.get<NotebookResponse[]>(BASE);
@@ -87,8 +87,9 @@ export async function uploadFile(
   const params = new URLSearchParams({ notebook_id: notebookId });
   if (sourceType) params.set('source_type', sourceType);
   const { data } = await apiClient.post<UploadFileResponse>(
-    `/api/v1/files/upload?${params.toString()}`,
-    form
+    `/files/upload?${params.toString()}`,
+    form,
+    { headers: { 'Content-Type': undefined } }
   );
   return data;
 }

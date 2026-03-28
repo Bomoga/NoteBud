@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import type { NotebookResponse } from '../lib/api';
 import { TrashIcon } from '@heroicons/react/24/outline';
 
@@ -30,8 +31,13 @@ export default function NotebookCard({
   onEdit,
   isEditing = false,
 }: NotebookCardProps) {
+  const router = useRouter();
+
   return (
-    <article className="glass-panel rounded-xl p-5 shadow-sm backdrop-blur-[30px] transition-shadow hover:shadow-md hover:cursor-pointer flex flex-col">
+    <article
+      onClick={() => router.push(`/backpack/${notebook.id}`)}
+      className="glass-panel rounded-xl p-5 shadow-sm backdrop-blur-[30px] transition-shadow hover:shadow-md hover:cursor-pointer flex flex-col"
+    >
       <div className="flex flex-col items-start">
         <h3 className="text-lg font-semibold text-slate-900">
           {notebook.title}
@@ -47,23 +53,22 @@ export default function NotebookCard({
         </p>
       )}
 
-
       <div className="mt-auto flex justify-between items-center pt-4">
         <p className="text-xs text-green-700">
           Created on {formatDate(notebook.created_at)}
         </p>
-          <button
-            type="button"
-            onClick={() => onDelete?.(notebook.id)}
-            disabled={isDeleting}
-            aria-label="Delete notebook"
-            className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:cursor-pointer hover:text-slate-900 disabled:opacity-50"
-          >
-            <TrashIcon
-              className={isDeleting ? 'size-5 animate-spin' : 'size-5'}
-            />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete?.(notebook.id); }}
+          disabled={isDeleting}
+          aria-label="Delete notebook"
+          className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:cursor-pointer hover:text-slate-900 disabled:opacity-50"
+        >
+          <TrashIcon
+            className={isDeleting ? 'size-5 animate-spin' : 'size-5'}
+          />
+        </button>
+      </div>
     </article>
   );
 }

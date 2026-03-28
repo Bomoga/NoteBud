@@ -16,15 +16,17 @@ export default function BackpackPage() {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [title, setTitle] = useState('');
     const [courseCode, setCourseCode] = useState('');
+    const [description, setDescription] = useState('');
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim() || !courseCode.trim()) return;
 
         try {
-            await createMutation.mutateAsync({ title: title.trim(), course_code: courseCode.trim() });
+            await createMutation.mutateAsync({ title: title.trim(), course_code: courseCode.trim(), description: description.trim() || null });
             setTitle('');
             setCourseCode('');
+            setDescription('');
             setShowCreateForm(false);
         } catch {
             // Error handled by mutation / global error handler
@@ -61,6 +63,19 @@ export default function BackpackPage() {
                             <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">
                                 New notebook
                             </h2>
+                            <div className="mb-3">
+                                    <label htmlFor="description" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Description <span className="text-slate-400">(optional)</span>
+                                    </label>
+                                    <textarea
+                                        id="description"
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        placeholder="e.g. Notes on cell structure and genetics"
+                                        rows={2}
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder-slate-500"
+                                    />
+                                </div>
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                                 <div className="flex-1">
                                     <label htmlFor="title" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
