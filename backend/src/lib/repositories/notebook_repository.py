@@ -21,7 +21,7 @@ class NotebookRepository:
     def __init__(self, driver: AsyncDriver):
         self._driver = driver
 
-    async def create(self, data: NotebookCreate) -> dict:
+    async def create(self, data: NotebookCreate, owner_id: str | None = None) -> dict:
         notebook_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc)
         query = """
@@ -49,7 +49,7 @@ class NotebookRepository:
                 course_code=data.course_code,
                 description=data.description,
                 now=now,
-                owner_id=None,
+                owner_id=owner_id,
             )
             record = await result.single()
             return _node_to_dict(record["n"])
