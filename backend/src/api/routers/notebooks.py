@@ -32,8 +32,9 @@ async def create_notebook_endpoint(
 @router.get("", response_model=list[NotebookRead], status_code=200)
 async def list_notebooks_endpoint(
     repo: NotebookRepository = Depends(get_repo),
+    current_user: str = Depends(get_current_user),
 ):
-    return await repo.list()
+    return await repo.list(owner_id=current_user)
 
 
 @router.get("/{notebook_id}", response_model=NotebookRead, status_code=200)
