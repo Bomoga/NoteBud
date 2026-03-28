@@ -66,4 +66,4 @@ websockets==16.0
 neo4j
 neo4j-graphrag
 testcontainers[neo4j]
-PyJWT>=2.11.0
+PyJWT==2.11.0
