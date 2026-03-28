@@ -920,9 +920,9 @@ allow_origins=settings.ALLOWED_ORIGINS  # new settings field
 - [x] S5-32: Create `UserRepository`: `create_or_get(user_id)` that upserts a `:User` node *(needs S5-31)*
 - [x] S5-33: Inject auth into `POST /notebooks`: set `owner_id = current_user` *(needs S5-31)*
 - [x] S5-34: Scope `GET /notebooks` to authenticated user: filter `WHERE n.owner_id = $user_id` *(needs S5-33)*
-- [ ] S5-35: Guard `PATCH`, `DELETE /notebooks/{id}`, `POST /files/upload`, `POST /notebooks/{id}/tags`, `POST /notebooks/{id}/query` — 403 if ownership mismatch *(needs S5-33)*
-- [ ] S5-36: Add `ALLOWED_ORIGINS` setting to `backend/src/lib/config/settings.py` and update CORS in `main.py`
-- [ ] S5-37: Add `ALLOWED_ORIGINS` to `backend/.env.development` and `.env.staging` *(needs S5-36)*
+- [x] S5-35: Guard `PATCH`, `DELETE /notebooks/{id}`, `POST /files/upload`, `POST /notebooks/{id}/tags`, `POST /notebooks/{id}/query` — 403 if ownership mismatch *(needs S5-33)*
+- [x] S5-36: Add `ALLOWED_ORIGINS` setting to `backend/src/lib/config/settings.py` and update CORS in `main.py`
+- [x] S5-37: Add `ALLOWED_ORIGINS` to `backend/.env.development` and `.env.staging` *(needs S5-36)*
 
 ---
 
