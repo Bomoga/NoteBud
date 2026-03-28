@@ -53,18 +53,25 @@ async def update_notebook_endpoint(
     notebook_id: str,
     data: NotebookUpdate,
     repo: NotebookRepository = Depends(get_repo),
+    current_user: str = Depends(get_current_user),
 ):
-    notebook = await repo.update(notebook_id, data)
-    if notebook is None:
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
         raise HTTPException(status_code=404, detail="Notebook not found")
-    return notebook
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    return await repo.update(notebook_id, data)
 
 
 @router.delete("/{notebook_id}", status_code=204)
 async def delete_notebook_endpoint(
     notebook_id: str,
     repo: NotebookRepository = Depends(get_repo),
+    current_user: str = Depends(get_current_user),
 ):
-    deleted = await repo.delete(notebook_id)
-    if not deleted:
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
         raise HTTPException(status_code=404, detail="Notebook not found")
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    await repo.delete(notebook_id)
