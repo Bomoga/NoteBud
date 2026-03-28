@@ -60,7 +60,10 @@ async def update_notebook_endpoint(
         raise HTTPException(status_code=404, detail="Notebook not found")
     if existing["owner_id"] != current_user:
         raise HTTPException(status_code=403, detail="Not authorized")
-    return await repo.update(notebook_id, data)
+    updated = await repo.update(notebook_id, data)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    return updated
 
 
 @router.delete("/{notebook_id}", status_code=204)
