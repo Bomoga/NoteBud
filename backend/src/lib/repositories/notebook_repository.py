@@ -21,7 +21,7 @@ class NotebookRepository:
     def __init__(self, driver: AsyncDriver):
         self._driver = driver
 
-    async def create(self, data: NotebookCreate) -> dict:
+    async def create(self, data: NotebookCreate, owner_id: str | None = None) -> dict:
         notebook_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc)
         query = """
@@ -49,7 +49,7 @@ class NotebookRepository:
                 course_code=data.course_code,
                 description=data.description,
                 now=now,
-                owner_id=None,
+                owner_id=owner_id,
             )
             record = await result.single()
             return _node_to_dict(record["n"])
@@ -63,10 +63,10 @@ class NotebookRepository:
                 return None
             return _node_to_dict(record["n"])
 
-    async def list(self) -> list[dict]:
-        query = "MATCH (n:Notebook) RETURN n ORDER BY n.created_at DESC"
+    async def list(self, owner_id: str) -> list[dict]:
+        query = "MATCH (n:Notebook {owner_id: $owner_id}) RETURN n ORDER BY n.created_at DESC"
         async with self._driver.session() as session:
-            result = await session.run(query)
+            result = await session.run(query, owner_id=owner_id)
             return [_node_to_dict(record["n"]) async for record in result]
 
     async def update(self, notebook_id: str, data: NotebookUpdate) -> dict | None:

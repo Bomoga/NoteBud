@@ -3,8 +3,10 @@ import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile
 from neo4j import AsyncDriver
 
+from src.lib.auth.jwt import get_current_user
 from src.lib.db.neo4j import get_driver
 from src.lib.repositories.document_repository import DocumentRepository
+from src.lib.repositories.notebook_repository import NotebookRepository
 from src.lib.storage.gcs import storage_service
 from src.services.ingestion.ingestion_service import ingest_document
 
@@ -29,7 +31,14 @@ async def upload_document(
     file: UploadFile = File(...),
     driver: AsyncDriver = Depends(get_driver),
     source_type: str | None = Query(default=None),
+    current_user: str = Depends(get_current_user),
 ):
+    notebook = await NotebookRepository(driver).get_by_id(notebook_id)
+    if notebook is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    if notebook["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided.")
 
