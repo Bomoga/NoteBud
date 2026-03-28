@@ -25,6 +25,8 @@ class Settings(BaseSettings):
 
     JWT_SECRET: str = "dev-jwt-secret-change-in-production"
 
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
     # Optional until embedding / LLM paths are wired; omit or leave placeholder for local CRUD-only dev.
     gemini_api_key: str | None = Field(
         default=None,
