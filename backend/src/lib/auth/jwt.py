@@ -5,7 +5,11 @@ from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 from ..config.settings import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+# Note: tokenUrl is a documented placeholder. Token issuance is handled by an
+# external authentication service and is not part of this FastAPI application.
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="https://auth.example.com/oauth/token"
+)
 
 
 def decode_token(token: str) -> dict:
