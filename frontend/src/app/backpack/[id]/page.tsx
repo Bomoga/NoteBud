@@ -60,7 +60,10 @@ export default function NotebookDetailPage() {
   const addTagMutation = useMutation({
     mutationFn: () => addNotebookTag(id, tagType, selectedCourse),
     onSuccess: (data) => {
-      setLocalTags((prev) => [...prev, data]);
+      setLocalTags((prev) => {
+        const exists = prev.some((t) => t.course_code === data.course_code);
+        return exists ? prev : [...prev, data];
+      });
       setSelectedCourse('');
     },
   });
