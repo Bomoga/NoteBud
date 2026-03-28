@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { getNotebook } from '../../../lib/api';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { ArrowLeftIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { getNotebook, uploadFile, type UploadFileResponse } from '../../../lib/api';
 import { useUpdateNotebook } from '../../../hooks/useNotebooks';
 
 export default function NotebookDetailPage() {
@@ -22,6 +22,22 @@ export default function NotebookDetailPage() {
   const [title, setTitle] = useState('');
   const [courseCode, setCourseCode] = useState('');
   const [description, setDescription] = useState('');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sourceType, setSourceType] = useState<'content' | 'syllabus'>('content');
+  const [uploadResult, setUploadResult] = useState<UploadFileResponse | null>(null);
+
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => uploadFile(id, file, sourceType),
+    onSuccess: (data) => setUploadResult(data),
+  });
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadResult(null);
+    uploadMutation.mutate(file);
+  }
 
   function startEdit() {
     if (!notebook) return;
@@ -72,6 +88,7 @@ export default function NotebookDetailPage() {
           )}
 
           {notebook && (
+            <>
             <div className="glass-panel rounded-xl p-6 shadow-sm backdrop-blur-[30px]">
               {isEditing ? (
                 <form onSubmit={handleSave} className="flex flex-col gap-4">
@@ -157,6 +174,55 @@ export default function NotebookDetailPage() {
                 </>
               )}
             </div>
+
+            {/* File Upload */}
+            <div className="mt-6 glass-panel rounded-xl p-6 shadow-sm backdrop-blur-[30px]">
+              <h2 className="mb-4 text-base font-semibold text-slate-900">Upload Document</h2>
+
+              <div className="mb-4 flex gap-2">
+                {(['content', 'syllabus'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setSourceType(type)}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
+                      sourceType === type
+                        ? 'bg-emerald-600 text-white'
+                        : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+
+              <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 p-8 text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-colors">
+                <DocumentArrowUpIcon className="mb-2 size-8 text-slate-400" />
+                <span className="text-sm text-slate-600">
+                  {uploadMutation.isPending ? 'Uploading…' : 'Click to select a PDF, DOCX, or PPTX file'}
+                </span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.docx,.pptx"
+                  onChange={handleFileChange}
+                  disabled={uploadMutation.isPending}
+                  className="hidden"
+                />
+              </label>
+
+              {uploadMutation.isError && (
+                <p className="mt-3 text-sm text-red-600">Upload failed. Please try again.</p>
+              )}
+
+              {uploadResult && (
+                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+                  <p className="font-medium">{uploadResult.filename}</p>
+                  <p className="mt-0.5 text-xs text-emerald-600 break-all">{uploadResult.gcs_uri}</p>
+                </div>
+              )}
+            </div>
+            </>
           )}
         </div>
       </main>
