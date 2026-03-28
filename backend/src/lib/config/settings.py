@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     GCS_BUCKET_NAME: str = "notebud-dev-bucket"
     GOOGLE_APPLICATION_CREDENTIALS: str = "./service-account-key.json"
 
+    JWT_SECRET: str = "dev-jwt-secret-change-in-production"
+
     # Optional until embedding / LLM paths are wired; omit or leave placeholder for local CRUD-only dev.
     gemini_api_key: str | None = Field(
         default=None,
