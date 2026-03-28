@@ -2,6 +2,16 @@ import axios, { type AxiosError } from 'axios';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  const u = baseURL ?? '';
+  if (u && !u.includes('/api/v1')) {
+    console.warn(
+      '[api] NEXT_PUBLIC_API_URL should include /api/v1 (e.g. http://localhost:8000/api/v1). ' +
+        'Otherwise requests go to the wrong path and the UI will error.'
+    );
+  }
+}
+
 export const apiClient = axios.create({
   baseURL,
   headers: {

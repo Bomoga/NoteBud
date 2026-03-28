@@ -17,6 +17,8 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV WATCHPACK_POLLING=true
+# Browser calls the host; paths in code are /notebooks, /courses, etc. → need /api/v1 prefix
+ENV NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 CMD ["npm", "run", "dev"]
 
 # Build stage
@@ -25,7 +27,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 

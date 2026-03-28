@@ -23,7 +23,7 @@ An API contract is a simple document that both frontend and backend agree on bef
 
 ## Approval Process
 
-1. Backend or Frontend writes the contract and opens a PR into `develop`
+1. Backend or Frontend writes the contract and opens a PR into `dev`
 2. Tag both lanes for review in the PR description
 3. Both sides leave a comment: `✅ approved` or flag any issues
 4. Merge only after both lanes approve

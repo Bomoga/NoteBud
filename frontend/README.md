@@ -35,24 +35,18 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 Create a `.env.local` file in the `frontend` directory if you need to override defaults:
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ```
 
-The frontend uses this URL to call the FastAPI backend. Default is `http://localhost:8000`. API routes live under `/api/v1` (e.g. health check: `/api/v1/health`).
+The value must include the `/api/v1` prefix: the client calls paths like `/notebooks`, which Axios joins to this base (full URL: `http://localhost:8000/api/v1/notebooks`). A base of `http://localhost:8000` alone will hit the wrong routes and fail even if the backend is up.
 
 ---
 
 ## Backpack and mock data
 
-The **Backpack** page lists notebooks. By default it calls the backend (`GET /api/v1/notebooks`).
+The **Backpack** page lists notebooks and calls the backend (`GET /api/v1/notebooks`) via React Query.
 
-To load **fixed mock notebooks** instead (good for UI/layout work without a running database or auth), open:
-
-```text
-http://localhost:3000/backpack?mock=1
-```
-
-The page shows a short banner while `mock=1` is in the URL. Remove the query string (or use `/backpack` alone) to use live API data again.
+The hooks in `src/hooks/useNotebooks.ts` also support **`{ mock: true }`**, which uses the in-memory store in `src/lib/api/mockNotebooks.ts` instead of the network (handy for Storybook, tests, or a temporary demo page). The default Backpack route does not enable mock mode; wire `useSearchParams` or a dev toggle if you want `?mock=1` in the URL again.
 
 ---
 
@@ -68,7 +62,7 @@ docker build -t notebud-frontend .
 To point at a different backend (e.g., when using Docker Compose):
 
 ```bash
-docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000 -t notebud-frontend .
+docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1 -t notebud-frontend .
 ```
 
 `NEXT_PUBLIC_*` values are fixed at build time. Rebuild the image if you change the API URL.
@@ -88,6 +82,8 @@ docker build --target dev -t notebud-frontend:dev .
 # Run with volume mount (edit files locally, changes reflect in the container)
 docker run -p 3000:3000 -v $(pwd):/app -v /app/node_modules notebud-frontend:dev
 ```
+
+The dev image sets `NEXT_PUBLIC_API_URL` to `http://localhost:8000/api/v1` by default. Override if needed: `-e NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` (the browser on your machine calls this host, not the container).
 
 The second `-v /app/node_modules` keeps the container's `node_modules` so the host doesn't overwrite it. Edit files in `src/` and the app will hot reload.
 

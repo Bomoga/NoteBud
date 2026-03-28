@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     GCS_BUCKET_NAME: str = "notebud-dev-bucket"
     GOOGLE_APPLICATION_CREDENTIALS: str = "./service-account-key.json"
 
+    # Optional until embedding / LLM paths are wired; omit or leave placeholder for local CRUD-only dev.
+    gemini_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("GEMINI_API_KEY", "gemini_api_key"),
+    )
+
     model_config = SettingsConfigDict(
         env_file=(".env", f".env.{os.getenv('ENVIRONMENT', 'development')}"),
         env_file_encoding="utf-8",
