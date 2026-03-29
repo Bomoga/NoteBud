@@ -31,7 +31,7 @@ def main():
     print(f"\nUser ID : {args.user_id}")
     print(f"Expires : {args.hours}h from now")
     print(f"\nToken:\n{token}")
-    print(f"\nAuthorization header:\nBearer {token}\n")
+    print(f"\nAuthorization header:\nAuthorization: Bearer {token}\n")
 
 
 if __name__ == "__main__":
