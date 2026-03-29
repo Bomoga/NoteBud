@@ -5,7 +5,7 @@ from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 from ..config.settings import settings
 
-http_bearer = HTTPBearer()
+http_bearer = HTTPBearer(auto_error=False)
 
 
 def decode_token(token: str) -> dict:
@@ -26,8 +26,14 @@ def decode_token(token: str) -> dict:
         )
 
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(http_bearer)) -> str:
+def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer)) -> str:
     """FastAPI dependency — returns the user ID (sub claim) from the token."""
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     payload = decode_token(credentials.credentials)
     user_id: str | None = payload.get("sub")
     if not user_id:
