@@ -41,6 +41,7 @@ async def list_notebooks_endpoint(
 async def get_notebook_endpoint(
     notebook_id: str,
     repo: NotebookRepository = Depends(get_repo),
+    current_user: str = Depends(get_current_user),
 ):
     notebook = await repo.get_by_id(notebook_id)
     if notebook is None:
