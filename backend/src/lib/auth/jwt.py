@@ -1,15 +1,11 @@
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 from ..config.settings import settings
 
-# Note: tokenUrl is a documented placeholder. Token issuance is handled by an
-# external authentication service and is not part of this FastAPI application.
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="https://auth.example.com/oauth/token"
-)
+http_bearer = HTTPBearer(auto_error=False)
 
 
 def decode_token(token: str) -> dict:
@@ -30,9 +26,15 @@ def decode_token(token: str) -> dict:
         )
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
+def get_current_user(credentials: HTTPAuthorizationCredentials | None = Depends(http_bearer)) -> str:
     """FastAPI dependency — returns the user ID (sub claim) from the token."""
-    payload = decode_token(token)
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    payload = decode_token(credentials.credentials)
     user_id: str | None = payload.get("sub")
     if not user_id:
         raise HTTPException(
