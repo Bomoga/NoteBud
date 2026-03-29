@@ -1,9 +1,5 @@
 # NoteBud — Auth Backend Contracts
 
-> Written for the frontend developer implementing the login page.
-> Last updated: 2026-03-29
-> Backend branch: `auth-backend-fix`
-
 ---
 
 ## Overview
@@ -15,17 +11,6 @@ The frontend is responsible for:
 2. Logging in to get a token (`POST /auth/token`)
 3. Storing the token in the Zustand auth store (`frontend/src/lib/store/auth.ts`)
 4. Attaching the token to every subsequent API request via the `Authorization` header
-
----
-
-## Base URL
-
-```
-http://localhost:8000/api/v1        ← development
-https://staging-api.notebud.com/api/v1  ← staging
-```
-
-The frontend axios client (`frontend/src/lib/api/client.ts`) already sets this via `NEXT_PUBLIC_API_URL`.
 
 ---
 
@@ -158,7 +143,7 @@ interface AuthState {
 
 ---
 
-## Axios Interceptor (pending S5-40)
+## Axios Interceptor
 
 The axios client at `frontend/src/lib/api/client.ts` has a TODO on line 14 to attach the token. Once S5-40 is implemented it will read from the Zustand store automatically:
 
