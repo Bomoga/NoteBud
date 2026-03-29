@@ -22,6 +22,10 @@ def main():
     parser.add_argument("--hours", type=int, default=24, help="Token expiry in hours (default: 24)")
     args = parser.parse_args()
 
+    if settings.ENVIRONMENT != "development":
+        print(f"ERROR: This script only runs in development (current: {settings.ENVIRONMENT}).")
+        sys.exit(1)
+
     payload = {
         "sub": args.user_id,
         "exp": datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=args.hours),
