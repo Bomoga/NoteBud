@@ -306,7 +306,7 @@ Currently returns stub: `{answer: "RAG service pending ML implementation", sourc
 | `:Document` | `id` (str), `gcs_uri`, `filename`, `file_type` | — |
 | `:Chunk` + `:ContentChunk` | `id` (str), `text`, `embedding` (float[768]), `position` (int), `document_id` | UNIQUE `id`; vector index |
 | `:Chunk` + `:SyllabusChunk` | same as ContentChunk | — |
-| `:User` | `id` (str) | UNIQUE `id` |
+| `:User` | `id` (str), `username` (str), `hashed_password` (str) | UNIQUE `id`, UNIQUE `username` |
 | `:Course` | `code` (str), `name` | UNIQUE `code` |
 | `:Subject` | `name` | — |
 
