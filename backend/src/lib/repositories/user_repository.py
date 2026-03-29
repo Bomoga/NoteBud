@@ -22,7 +22,12 @@ class UserRepository:
                 query, id=user_id, username=username, hashed_password=hashed_password
             )
             record = await result.single()
-            return dict(record["u"])
+            if record is None:
+                raise RuntimeError("Failed to create user: database returned no record.")
+            user_node = record.get("u")
+            if user_node is None:
+                raise RuntimeError("Failed to create user: missing 'u' node in database response.")
+            return dict(user_node)
 
     async def get_by_username(self, username: str) -> dict | None:
         """Return a :User node by username, or None if not found."""
