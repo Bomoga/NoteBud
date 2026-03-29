@@ -67,3 +67,4 @@ neo4j
 neo4j-graphrag
 testcontainers[neo4j]
 PyJWT==2.11.0
+passlib[bcrypt]>=1.7.4
