@@ -32,7 +32,7 @@ async def register(
     body: RegisterRequest,
     user_repo: UserRepository = Depends(get_user_repo),
 ):
-    if not body.username.strip() or not body.password:
+    if not body.username.strip() or not body.password.strip():
         raise HTTPException(status_code=400, detail="Username and password are required.")
     hashed = pwd_context.hash(body.password)
     try:
