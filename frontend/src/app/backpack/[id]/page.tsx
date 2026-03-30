@@ -34,7 +34,7 @@ export default function NotebookDetailPage() {
     setIsEditing(true);
   }
 
-  async function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const trimmedTitle = title.trim();
     const trimmedCourseCode = courseCode.trim();
@@ -108,7 +108,7 @@ export default function NotebookDetailPage() {
 
           {notebook && (
             <>
-            <div className="hover:cursor-pointer hover:bg-slate-50 glass-panel rounded-xl p-6 shadow-sm backdrop-blur-[30px]">
+            <div className="glass-panel rounded-xl p-6 shadow-sm backdrop-blur-[30px]">
               {isEditing ? (
                 <form onSubmit={handleSave} className="flex flex-col gap-4">
                   <div>
@@ -209,6 +209,7 @@ export default function NotebookDetailPage() {
             <NotebookUploadAndCourseTagsModal
               isOpen={uploadAndCourseTagsModalOpen}
               onClose={handleCloseUploadAndCourseTagsModal}
+              onSubmit={handleSubmitUploadAndCourseTags}
               notebookId={id}
             />
             </>
