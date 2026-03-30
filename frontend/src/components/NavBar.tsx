@@ -10,7 +10,6 @@ import { useAuthStore } from '../lib/store/auth'
 const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/backpack', label: 'Backpack' },
-  { href: '/notes', label: 'Notes' },
 ];
 
 export default function NavBar() {
