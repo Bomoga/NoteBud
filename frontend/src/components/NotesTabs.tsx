@@ -47,22 +47,26 @@ export default function NotesTabs({
                 {tabs.map((tab) => {
                     const isActive = activeTab === tab;
                     return (
-                        <button
+                        <div
                             key={tab}
-                            type="button"
-                            onClick={() => onSelectTab(tab)}
-                            className={`glass-panel rounded-t-xl backdrop-blur-[30px] group inline-flex shrink-0 items-center gap-1 px-3 py-1.5 text-sm ${isActive ? 'text-slate-800' : 'text-slate-600 hover:text-slate-800'
-                                }`}
+                            className={`glass-panel rounded-t-xl backdrop-blur-[30px] group inline-flex shrink-0 items-center gap-1 px-3 py-1.5 text-sm ${isActive ? 'text-slate-800' : 'text-slate-600 hover:text-slate-800'}`}
                         >
-                            <span className="max-w-[150px] truncate">{tab}</span>
-                            <XMarkIcon
-                                className="h-4 w-4 opacity-60 group-hover:opacity-100"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onCloseTab(tab);
-                                }}
-                            />
-                        </button>
+                            <button
+                                type="button"
+                                onClick={() => onSelectTab(tab)}
+                                className="max-w-[150px] truncate"
+                            >
+                                {tab}
+                            </button>
+                            <button
+                                type="button"
+                                aria-label={`Close ${tab}`}
+                                onClick={() => onCloseTab(tab)}
+                                className="opacity-60 hover:opacity-100 focus:outline-none focus:opacity-100"
+                            >
+                                <XMarkIcon className="h-4 w-4" />
+                            </button>
+                        </div>
                     );
                 })}
                 <button

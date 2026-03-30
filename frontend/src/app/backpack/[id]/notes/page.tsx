@@ -105,7 +105,7 @@ export default function NotesForNotebookPage() {
                   <div className=" w-full h-full flex items-start mt-4 justify-start p-4">
                     {/* Filetree content */}
                     <FileTree nodes={noteTree} />
-<i></i>                  </div>
+                  </div>
                 </section>
             ) : null}
           </aside>
