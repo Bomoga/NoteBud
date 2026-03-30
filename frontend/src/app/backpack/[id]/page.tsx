@@ -179,13 +179,22 @@ export default function NotebookDetailPage() {
                       <h1 className="text-2xl font-bold text-slate-900">{notebook.title}</h1>
                       <p className="mt-1 text-sm font-medium text-slate-600">{notebook.course_code}</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={startEdit}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                      Edit
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleOpenUploadAndCourseTagsModal}
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        Upload / Tags
+                      </button>
+                      <button
+                        type="button"
+                        onClick={startEdit}
+                        className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        Edit
+                      </button>
+                    </div>
                   </div>
                   {notebook.description && (
                     <p className="mt-4 text-sm text-slate-700">{notebook.description}</p>
