@@ -1,9 +1,48 @@
+import uuid
+
 from neo4j import AsyncDriver
+from neo4j.exceptions import ConstraintError
 
 
 class UserRepository:
     def __init__(self, driver: AsyncDriver):
         self._driver = driver
+
+    async def create_user(self, username: str, hashed_password: str) -> dict:
+        """Create a new :User node with credentials. Raises ValueError if username taken.
+
+        Uses a single CREATE statement so uniqueness is enforced atomically by the
+        :User(username) constraint — no separate existence check needed.
+        """
+        user_id = str(uuid.uuid4())
+        query = """
+            CREATE (u:User {id: $id, username: $username, hashed_password: $hashed_password})
+            RETURN u
+        """
+        try:
+            async with self._driver.session() as session:
+                result = await session.run(
+                    query, id=user_id, username=username, hashed_password=hashed_password
+                )
+                record = await result.single()
+        except ConstraintError:
+            raise ValueError(f"Username '{username}' is already taken.")
+        if record is None:
+            raise RuntimeError("Failed to create user: database returned no record.")
+        user_node = record.get("u")
+        if user_node is None:
+            raise RuntimeError("Failed to create user: missing 'u' node in database response.")
+        return dict(user_node)
+
+    async def get_by_username(self, username: str) -> dict | None:
+        """Return a :User node by username, or None if not found."""
+        query = "MATCH (u:User {username: $username}) RETURN u"
+        async with self._driver.session() as session:
+            result = await session.run(query, username=username)
+            record = await result.single()
+            if record is None:
+                return None
+            return dict(record["u"])
 
     async def create_or_get(self, user_id: str) -> dict:
         """Upsert a :User node by ID and return its properties."""

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.lib.config.settings import settings
 from src.lib.db.neo4j import startup, close_driver
-from src.api.routers import health, files, notebooks, query, courses
+from src.api.routers import health, files, notebooks, query, courses, auth
 
 
 @asynccontextmanager
@@ -25,6 +25,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.include_router(
+    auth.router,
+    prefix=f"{settings.API_V1_STR}/auth",
+    tags=["Auth"],
 )
 
 app.include_router(
