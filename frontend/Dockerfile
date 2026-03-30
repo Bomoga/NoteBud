@@ -8,7 +8,9 @@ RUN npm ci
 
 # Dev stage (hot reload)
 # Build: docker build --target dev -t notebud-frontend:dev .
-# Run:   docker run -p 3000:3000 -v $(pwd):/app -v /app/node_modules notebud-frontend:dev
+# Run (as your user so .next/ is not root-owned on the bind mount — see frontend/README.md):
+#   docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -p 3000:3000 \
+#     -v "$(pwd):/app" -v /app/node_modules notebud-frontend:dev
 FROM base AS dev
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules

@@ -40,7 +40,9 @@ async def test_register_success(client):
     mock = _repo(create_result={"id": "some-uuid", "username": "alice"})
     app.dependency_overrides[get_user_repo] = lambda: mock
     try:
-        resp = await client.post(REGISTER_URL, json={"username": "alice", "password": "s3cr3t"})
+        resp = await client.post(
+            REGISTER_URL, json={"username": "alice", "password": "Secret12"}
+        )
     finally:
         app.dependency_overrides.pop(get_user_repo, None)
 
@@ -50,29 +52,29 @@ async def test_register_success(client):
     assert "id" in body
 
 
-async def test_register_empty_username_returns_400(client):
+async def test_register_empty_username_returns_422(client):
     mock = _repo()
     app.dependency_overrides[get_user_repo] = lambda: mock
     try:
-        resp = await client.post(REGISTER_URL, json={"username": "", "password": "s3cr3t"})
+        resp = await client.post(REGISTER_URL, json={"username": "", "password": "Secret12"})
     finally:
         app.dependency_overrides.pop(get_user_repo, None)
 
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 
-async def test_register_whitespace_username_returns_400(client):
+async def test_register_whitespace_username_returns_422(client):
     mock = _repo()
     app.dependency_overrides[get_user_repo] = lambda: mock
     try:
-        resp = await client.post(REGISTER_URL, json={"username": "   ", "password": "s3cr3t"})
+        resp = await client.post(REGISTER_URL, json={"username": "   ", "password": "Secret12"})
     finally:
         app.dependency_overrides.pop(get_user_repo, None)
 
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 
-async def test_register_empty_password_returns_400(client):
+async def test_register_empty_password_returns_422(client):
     mock = _repo()
     app.dependency_overrides[get_user_repo] = lambda: mock
     try:
@@ -80,10 +82,10 @@ async def test_register_empty_password_returns_400(client):
     finally:
         app.dependency_overrides.pop(get_user_repo, None)
 
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 
-async def test_register_whitespace_password_returns_400(client):
+async def test_register_whitespace_password_returns_422(client):
     mock = _repo()
     app.dependency_overrides[get_user_repo] = lambda: mock
     try:
@@ -91,14 +93,42 @@ async def test_register_whitespace_password_returns_400(client):
     finally:
         app.dependency_overrides.pop(get_user_repo, None)
 
-    assert resp.status_code == 400
+    assert resp.status_code == 422
+
+
+async def test_register_weak_password_returns_422(client):
+    mock = _repo()
+    app.dependency_overrides[get_user_repo] = lambda: mock
+    try:
+        resp = await client.post(
+            REGISTER_URL, json={"username": "alice", "password": "short1"}
+        )
+    finally:
+        app.dependency_overrides.pop(get_user_repo, None)
+
+    assert resp.status_code == 422
+
+
+async def test_register_invalid_username_chars_returns_422(client):
+    mock = _repo()
+    app.dependency_overrides[get_user_repo] = lambda: mock
+    try:
+        resp = await client.post(
+            REGISTER_URL, json={"username": "alice@home", "password": "Secret12"}
+        )
+    finally:
+        app.dependency_overrides.pop(get_user_repo, None)
+
+    assert resp.status_code == 422
 
 
 async def test_register_duplicate_username_returns_409(client):
     mock = _repo(create_raises=ValueError("Username 'alice' is already taken."))
     app.dependency_overrides[get_user_repo] = lambda: mock
     try:
-        resp = await client.post(REGISTER_URL, json={"username": "alice", "password": "s3cr3t"})
+        resp = await client.post(
+            REGISTER_URL, json={"username": "alice", "password": "Secret12"}
+        )
     finally:
         app.dependency_overrides.pop(get_user_repo, None)
 

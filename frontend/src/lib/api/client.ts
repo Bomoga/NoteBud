@@ -1,4 +1,5 @@
 import axios, { type AxiosError } from 'axios';
+import { useAuthStore } from '../store/auth';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -20,10 +21,9 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
-// --- Token handling (placeholder) ---
-// TODO: Replace with real auth (e.g. getAccessToken from auth context/store).
 function getAuthToken(): string | null {
-  return null;
+  if (typeof window === 'undefined') return null;
+  return useAuthStore.getState().token;
 }
 
 apiClient.interceptors.request.use((config) => {
@@ -34,16 +34,28 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// --- Global error handling (placeholder) ---
-// TODO: Hook up to toast/notification, redirect on 401, log to monitoring, etc.
-function handleApiError(_error: AxiosError): void {
-  // e.g. if (error.response?.status === 401) redirect to login
+function isAuthRequest(url: string | undefined): boolean {
+  if (!url) return false;
+  return url.includes('/auth/token') || url.includes('/auth/register');
 }
 
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    handleApiError(error);
+    if (error.response?.status === 401) {
+      const reqUrl = error.config?.url ?? '';
+      if (!isAuthRequest(reqUrl)) {
+        useAuthStore.getState().clearSession();
+        if (
+          typeof window !== 'undefined' &&
+          !['/login', '/register'].some((p) =>
+            window.location.pathname.startsWith(p)
+          )
+        ) {
+          window.location.assign('/login');
+        }
+      }
+    }
     return Promise.reject(error);
   }
 );
