@@ -43,6 +43,17 @@ export default function NotesForNotebookPage() {
   const [activeTab, setActiveTab] = useState('2026-03-24');
 
   const handleAddTab = () => {
+    setTabs((prevTabs) => {
+      const maxIndex = prevTabs.reduce((max, tabLabel) => {
+        const match = tabLabel.match(/^Notes-(\d+)$/);
+        if (!match) return max;
+        const num = parseInt(match[1], 10);
+        return Number.isNaN(num) ? max : Math.max(max, num);
+      }, 0);
+      const newTab = `Notes-${maxIndex + 1}`;
+      setActiveTab(newTab);
+      return [...prevTabs, newTab];
+    });
     setUploadAndCourseTagsModalOpen(true);
   };
 
