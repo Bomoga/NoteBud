@@ -27,7 +27,12 @@ export default function NotebookUploadAndCourseTagsModal({
 
       {/* Modal panel */}
       <div className="relative z-10 w-full max-w-3xl max-h-[min(90vh,900px)] overflow-hidden flex flex-col">
-        <div className="glass-panel flex max-h-[min(90vh,900px)] flex-col overflow-hidden rounded-xl border border-white/40 bg-white/80 shadow-lg backdrop-blur-[30px]">
+        <div
+          className="glass-panel flex max-h-[min(90vh,900px)] flex-col overflow-hidden rounded-xl border border-white/40 bg-white/80 shadow-lg backdrop-blur-[30px]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="notebook-upload-modal-title"
+        >
           <div className="flex items-center justify-between border-b border-white/40 px-6 py-4">
             <h2
               id="notebook-upload-modal-title"
