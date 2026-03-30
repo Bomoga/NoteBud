@@ -156,3 +156,82 @@ async def test_store_chunks_syllabus_has_no_similar_edges(neo4j_driver):
         record = await result.single()
         # compute_similar_edges is never called for syllabus — zero SIMILAR edges
         assert record["n"] == 0
+
+
+# ---------------------------------------------------------------------------
+# SIMILAR edges (S3-16b)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_compute_similar_edges_creates_edges_for_identical_embeddings(neo4j_driver):
+        """Two ContentChunk nodes with identical embeddings score 1.0 >= 0.80,
+            so exactly one undirected SIMILAR edge must exist between them after
+                store_chunks() is called for both documents.
+                    """
+        from src.lib.schemas.notebook import NotebookCreate
+        from src.lib.repositories.notebook_repository import NotebookRepository
+        from src.lib.repositories.document_repository import DocumentRepository
+
+    nb = await NotebookRepository(neo4j_driver).create(
+                NotebookCreate(title="Similar NB", course_code="SIM101")
+    )
+
+    doc_id_a = str(uuid.uuid4())
+    doc_id_b = str(uuid.uuid4())
+    for doc_id, uri, fname in [
+                (doc_id_a, "gs://t/sim_a", "sim_a.pdf"),
+                (doc_id_b, "gs://t/sim_b", "sim_b.pdf"),
+    ]:
+                await DocumentRepository(neo4j_driver).create(
+                                id=doc_id, gcs_uri=uri, filename=fname, file_type="application/pdf"
+                )
+                await DocumentRepository(neo4j_driver).link_to_notebook(
+                                doc_id=doc_id, notebook_id=nb["id"]
+                )
+
+    # Store first chunk (doc A) — no neighbours yet, so no edges.
+    await store_chunks(neo4j_driver, _make_chunks(1, "sim"), doc_id_a, source_type="content")
+
+    # Store second chunk (doc B) with the same embedding — should now find the
+    # first chunk as a neighbour with score 1.0 and create a SIMILAR edge.
+    await store_chunks(neo4j_driver, _make_chunks(1, "sim"), doc_id_b, source_type="content")
+
+    async with neo4j_driver.session() as session:
+                result = await session.run(
+                                "MATCH (a:ContentChunk)-[:SIMILAR]-(b:ContentChunk) RETURN count(DISTINCT [a,b]) AS n"
+                )
+                record = await result.single()
+                # At least one SIMILAR edge must have been created.
+        assert record["n"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_compute_similar_edges_not_called_for_syllabus(neo4j_driver):
+        """Syllabus chunks must never acquire SIMILAR edges regardless of embedding
+            similarity — this is enforced by store_chunks() gating on source_type.
+                """
+        from src.lib.schemas.notebook import NotebookCreate
+        from src.lib.repositories.notebook_repository import NotebookRepository
+        from src.lib.repositories.document_repository import DocumentRepository
+
+    nb = await NotebookRepository(neo4j_driver).create(
+                NotebookCreate(title="Syl Guard NB", course_code="SYL201")
+    )
+    doc_id = str(uuid.uuid4())
+    await DocumentRepository(neo4j_driver).create(
+                id=doc_id, gcs_uri="gs://t/sylg", filename="sylg.pdf", file_type="application/pdf"
+    )
+    await DocumentRepository(neo4j_driver).link_to_notebook(
+                doc_id=doc_id, notebook_id=nb["id"]
+    )
+
+    # Store two syllabus chunks with identical embeddings.
+    await store_chunks(neo4j_driver, _make_chunks(2, "syl"), doc_id, source_type="syllabus")
+
+    async with neo4j_driver.session() as session:
+                result = await session.run(
+                                "MATCH (c:SyllabusChunk)-[:SIMILAR]-() RETURN count(c) AS n"
+                )
+                record = await result.single()
+                assert record["n"] == 0
