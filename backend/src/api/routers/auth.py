@@ -25,7 +25,7 @@ class RegisterRequest(BaseModel):
     def username_rules(cls, v: str) -> str:
         s = v.strip()
         if len(s) < 3:
-            raise ValueError("Username must be at least 3 characterss.")
+            raise ValueError("Username must be at least 3 characters.")
         if len(s) > 32:
             raise ValueError("Username must be at most 32 characters.")
         if not _USERNAME_RE.fullmatch(s):
