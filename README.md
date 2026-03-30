@@ -10,6 +10,7 @@ it.**
 ## ✨ Features
 
 - **Smart Course Notebooks** — Each course gets its own dedicated notebook storing uploaded files, transcripts, notes, and links with a RAG-powered Q&A interface
+- **Notebook-Scoped Notes Workspace** — Notes open from a specific backpack notebook at `/backpack/:id/notes`, with left file-tree navigation and a right assistant panel
 - **Study Environment** — Built-in Deep Focus mode, Pomodoro timers, ambient audio, and a friendly interface designed for long study sessions
 - **Trust & Transparency** — Answers include citations to specific notebook chunks, groundedness indicators, and warnings when evidence is insufficient
 - **Planner & Review** — Study planner surfaces what to review before exams using spaced repetition and AI-generated review cards
@@ -80,6 +81,8 @@ npm run dev
 ```
 
 For in-memory notebook data during UI or hook tests, pass `{ mock: true }` into the hooks in `frontend/src/hooks/useNotebooks.ts` (the Backpack page uses the live API by default). See [frontend/README.md](frontend/README.md#backpack-and-mock-data).
+
+Notes are now notebook-scoped under `frontend/src/app/backpack/[id]/notes/page.tsx` and are opened from notebook cards. See [frontend/README.md](frontend/README.md#notes-workspace-routing-and-ui) for UI details (`FileTree`, tabs, and modal behavior).
 
 **Backend .env:** Copy `backend/.env.example` to `.env`. Set `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD` to match `backend/infrastructure/docker/docker-compose.yml` (default compose auth is `neo4j` / `notebud_password`). `GEMINI_API_KEY` is optional until embedding/LLM paths are enabled. Graph constraints and indexes are applied at API startup—there is no Alembic or SQL migration step. The API is at `http://localhost:8000`; health check: `http://localhost:8000/api/v1/health`.
 
