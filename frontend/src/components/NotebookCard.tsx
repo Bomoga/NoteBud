@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import type { NotebookResponse } from '../lib/api';
 import { TrashIcon } from '@heroicons/react/24/outline';
 
@@ -31,11 +31,9 @@ export default function NotebookCard({
   onEdit,
   isEditing = false,
 }: NotebookCardProps) {
-  const router = useRouter();
-
   return (
-    <article
-      onClick={() => router.push(`/backpack/${notebook.id}`)}
+    <Link
+      href={`/backpack/${notebook.id}/notes`}
       className="glass-panel rounded-xl p-5 shadow-sm backdrop-blur-[30px] transition-shadow hover:shadow-md hover:cursor-pointer flex flex-col"
     >
       <div className="flex flex-col items-start">
@@ -59,7 +57,12 @@ export default function NotebookCard({
         </p>
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onDelete?.(notebook.id); }}
+          onClick={(e) => {
+            // Prevent the surrounding link from navigating when clicking delete
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete?.(notebook.id);
+          }}
           disabled={isDeleting}
           aria-label="Delete notebook"
           className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:cursor-pointer hover:text-slate-900 disabled:opacity-50"
@@ -69,7 +72,7 @@ export default function NotebookCard({
           />
         </button>
       </div>
-    </article>
+    </Link>
   );
 }
  
