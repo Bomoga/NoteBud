@@ -42,6 +42,14 @@ The value must include the `/api/v1` prefix: the client calls paths like `/noteb
 
 ---
 
+## Authentication
+
+- **Pages:** [http://localhost:3000/login](http://localhost:3000/login) and [http://localhost:3000/register](http://localhost:3000/register).
+- **State:** `src/lib/store/auth.ts` (Zustand + persistence) holds the JWT; `src/lib/api/client.ts` attaches it to API requests.
+- **Rules:** Username and password constraints for **registration** are defined in `src/lib/authPolicy.ts` and must stay aligned with the backend (`backend/src/api/routers/auth.py`). Full API wording: [../docs/api-contracts/AUTH.md](../docs/api-contracts/AUTH.md).
+
+---
+
 ## Backpack and mock data
 
 The **Backpack** page lists notebooks and calls the backend (`GET /api/v1/notebooks`) via React Query.
@@ -80,16 +88,55 @@ docker run -p 3000:3000 notebud-frontend
 docker build --target dev -t notebud-frontend:dev .
 
 # Run with volume mount (edit files locally, changes reflect in the container)
-docker run -p 3000:3000 -v $(pwd):/app -v /app/node_modules notebud-frontend:dev
+# Use your UID/GID so files written to .next/ are not owned by root (see Troubleshooting).
+docker run --rm \
+  --user "$(id -u):$(id -g)" \
+  -e HOME=/tmp \
+  -p 3000:3000 \
+  -v "$(pwd):/app" \
+  -v /app/node_modules \
+  notebud-frontend:dev
 ```
+
+If **port 3000 is already taken**, change only the host port: `-p 3001:3000` and open [http://localhost:3001](http://localhost:3001).
 
 The dev image sets `NEXT_PUBLIC_API_URL` to `http://localhost:8000/api/v1` by default. Override if needed: `-e NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` (the browser on your machine calls this host, not the container).
 
-The second `-v /app/node_modules` keeps the container's `node_modules` so the host doesn't overwrite it. Edit files in `src/` and the app will hot reload.
+The anonymous volume mounted at `/app/node_modules` keeps dependencies in the volume: on first use, Docker copies `node_modules` from the image into it, and the host bind mount does not replace that directory. Edit files in `src/` and the app will hot reload.
+
+Use `--rm` so the container is removed when it stops (avoids stale containers tying up names).
 
 ---
 
 ## Troubleshooting
+
+### Docker: `Bind for 0.0.0.0:3000 failed: port is already allocated`
+
+Something else is already listening on host port **3000** (often a local `npm run dev`, another Docker container, or a left-over frontend container).
+
+1. List containers: `docker ps`. Stop any frontend container: `docker stop <container_id>`.
+2. See non-Docker processes: `ss -tlnp | grep ':3000'` (or `lsof -i :3000`).
+3. Map a different **host** port: `-p 3001:3000` in `docker run` and use [http://localhost:3001](http://localhost:3001).
+
+**Do not mix `sudo docker run` and normal `docker run`** for the same image unless you understand user namespaces; bind-mounted files may end up with ownership that breaks local `npm run dev`.
+
+### Local `npm run dev`: `Permission denied` / lockfile IO error on `.next`
+
+This usually happens after **Docker ran `next dev` as root** and wrote `.next/` on your repo via the volume mount. Your user can no longer create the Turbopack dev lockfile.
+
+**Fix (pick one):**
+
+```bash
+sudo chown -R "$(id -u):$(id -g)" .next
+# or remove the cache and let Next recreate it:
+sudo rm -rf .next
+```
+
+**Prevention:** run the dev container with **`--user "$(id -u):$(id -g)"`** and **`-e HOME=/tmp`** as in the [Run with hot reload](#run-with-hot-reload-development) command above so new files in the project are owned by you.
+
+### Next.js log shows `GET /api/v1/health 404`
+
+That request went to the **Next.js** dev server on port 3000, not to FastAPI. The backend health URL is **http://localhost:8000/api/v1/health** (with `uvicorn` running on 8000). The app’s API client should use `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` so the **browser** calls the backend directly.
 
 ### "Cannot find module 'next' or its corresponding type declarations"
 

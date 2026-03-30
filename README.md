@@ -83,6 +83,11 @@ For in-memory notebook data during UI or hook tests, pass `{ mock: true }` into 
 
 **Backend .env:** Copy `backend/.env.example` to `.env`. Set `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD` to match `backend/infrastructure/docker/docker-compose.yml` (default compose auth is `neo4j` / `notebud_password`). `GEMINI_API_KEY` is optional until embedding/LLM paths are enabled. Graph constraints and indexes are applied at API startup—there is no Alembic or SQL migration step. The API is at `http://localhost:8000`; health check: `http://localhost:8000/api/v1/health`.
 
+### Authentication
+
+- **API contract:** [docs/api-contracts/AUTH.md](docs/api-contracts/AUTH.md) — username/password rules, `POST /api/v1/auth/register`, `POST /api/v1/auth/token`, JWT claims.
+- **Frontend:** `/login` and `/register`; tokens persisted with Zustand and sent as `Authorization: Bearer …` to protected routes (e.g. notebooks).
+
 ---
 
 ## 🌿 Git Workflow

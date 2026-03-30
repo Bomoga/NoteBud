@@ -63,7 +63,7 @@ Sample request + sample response
 
 | File | Feature | Status | Approved By |
 |---|---|---|---|
-| [AUTH.md](./AUTH.md) | Register, Login, Logout | ✅ Approved | FE + BE |
+| [AUTH.md](./AUTH.md) | Register, login (`/auth/token`), JWT Bearer, validation rules | ✅ Aligned with implementation | Update sign-off if you change auth behavior |
 | [NOTEBOOK.md](./NOTEBOOK.md) | Create notebook, list notebooks, upload file | ✅ Approved | FE + BE |
 
 > Add a new row every time a new contract is merged.

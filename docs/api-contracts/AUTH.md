@@ -1,72 +1,149 @@
 # Auth API Contract
 
-## 1. Register
-**POST** `api/auth/register`
-**Auth:** None
+All paths are under **`/api/v1/auth`**. The live OpenAPI spec is served at **`/api/v1/openapi.json`**.
 
-**Request Body:** 
- ```json 
-{
-    "email": "string",
-    "password": "string",
-    "full_name": "string"
-}
-```
-
-***Success Response (201):**
-```json
-{
-    "user_id": "uuid",
-    "email": "string",
-    "full_name": "string",
-    "created_at": "ISO 8601 timestamp"
-}
-```
-
-**Errors:**
-- `400` - missing fields or invalid email format
-- `409` - email already registered
+Authentication for protected routes uses a **Bearer JWT** in the `Authorization` header. The frontend stores the access token (Zustand + `localStorage`) and attaches it via Axios; see `frontend/src/lib/api/client.ts`.
 
 ---
-## 2.Login
-**POST** `/api/auth/login`
+
+## Username and password rules (registration)
+
+These rules apply to **`POST /api/v1/auth/register`** and are mirrored in **`frontend/src/lib/authPolicy.ts`** for client-side validation and UI copy.
+
+| Field | Rules |
+|--------|--------|
+| **Username** | After trimming: **3–32** characters. Allowed characters: **letters**, **digits**, **`_`**, **`-`** only. |
+| **Password** | **8–128** characters. Must contain **at least one letter** (**A–Z** or **a–z**) and **at least one digit** (**0–9**). |
+
+**Login** (`POST /api/v1/auth/token`) accepts any **non-empty** password so existing users are not locked out if rules change later.
+
+---
+
+## 1. Register
+
+**POST** `/api/v1/auth/register`  
 **Auth:** None
 
-**Request Body:**
+**Request body (JSON):**
+
 ```json
 {
-    "email": "string",
-    "password": "string"
+  "username": "string",
+  "password": "string"
 }
 ```
 
-**Success Response (200):**
+**Success (201):**
+
 ```json
 {
-    "access_token": "string",
-    "token_type": "bearer",
-    "user_id": "uuid",
-    "full_time": "string"
+  "id": "uuid",
+  "username": "string"
 }
 ```
 
 **Errors:**
-- `401` - wrong email or password
-- `400` - missing fields
+
+| Status | Condition |
+|--------|-----------|
+| **422** | Validation failed (username/password do not meet the rules above). Response body follows FastAPI/Pydantic `detail` format. |
+| **409** | Username already taken. |
+
+---
+
+## 2. Login (access token)
+
+**POST** `/api/v1/auth/token`  
+**Auth:** None  
+
+*(Contract drafts may have referred to `/auth/login`; the implemented route is **`/auth/token`**.)*
+
+**Request body (JSON):**
+
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+
+**Success (200):**
+
+```json
+{
+  "access_token": "string",
+  "token_type": "bearer"
+}
+```
+
+The access token is a **JWT** (HS256). Claims used by the product today include:
+
+- **`sub`** — user id (UUID string)
+- **`username`** — display name for the UI
+- **`exp`** — expiry (default: 24 hours from issuance)
+
+The response does **not** embed `user_id` or profile fields separately; clients may read **`sub`** / **`username`** from the JWT payload if needed (verification of the signature is server-side only).
+
+**Errors:**
+
+| Status | Condition |
+|--------|-----------|
+| **422** | Missing or empty username/password (after trim for username). |
+| **401** | Unknown username or wrong password. |
 
 ---
 
 ## 3. Logout
-**POST** `api/auth/logout`
-**Auth:** Bearer JWT token
 
-**Request Body:** None
+**Status:** There is **no** dedicated logout endpoint in the API yet.
 
-**Success Response (200):**
-```json
-{
-  "message": "Logged out successfully"
-}
+Clients should **clear the stored access token** and stop sending `Authorization`. The frontend implements this via **`useAuthStore`** (e.g. NavBar “Sign out”).
+
+A future **`POST /api/v1/auth/logout`** could invalidate refresh tokens or sessions if the product adds server-side session management.
+
+---
+
+## Example (curl)
+
+Register:
+
+```bash
+curl -s -X POST http://localhost:8000/api/v1/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"student1","password":"Secret12"}'
 ```
-**Errors:**
-- `401` — invalid or expired token
+
+Login:
+
+```bash
+curl -s -X POST http://localhost:8000/api/v1/auth/token \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"student1","password":"Secret12"}'
+```
+
+Call a protected route:
+
+```bash
+TOKEN="<paste access_token>"
+curl -s http://localhost:8000/api/v1/notebooks \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## Frontend routes (reference)
+
+| Route | Purpose |
+|--------|---------|
+| `/login` | Sign in |
+| `/register` | Create account (shows the same username/password requirements as this doc) |
+
+---
+
+## Changelog (vs. earlier draft)
+
+- Identifiers are **`username` + `password`**, not email / `full_name`.
+- Login path is **`POST /auth/token`**, not `/auth/login`.
+- Register response returns **`id`** and **`username`**, not `user_id` / email.
+- Validation errors use **422** with Pydantic `detail`, not generic **400** for field rules.
+- Logout is **client-side** until a server endpoint exists.

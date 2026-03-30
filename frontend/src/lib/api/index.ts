@@ -1,6 +1,7 @@
 // Base api client for all api calls
-// Note: Authentication headers (e.g. JWT) must be handled by the client implementation
 export { apiClient } from './client';
+
+export { register, login, type AuthCredentials, type RegisterResponse, type TokenResponse } from './auth';
 
 // Notebook crud operations
 export {
