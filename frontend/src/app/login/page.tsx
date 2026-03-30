@@ -86,7 +86,10 @@ export default function LoginPage() {
 
             {loginMutation.isError && (
               <p className="text-sm text-red-600">
-                Invalid username or password. Try again or create an account.
+                {(loginMutation.error as { response?: { status?: number } })
+                  ?.response?.status === 401
+                  ? 'Invalid username or password. Try again or create an account.'
+                  : 'Something went wrong. Please try again later.'}
               </p>
             )}
 
