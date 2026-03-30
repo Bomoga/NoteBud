@@ -120,6 +120,7 @@ export default function RegisterPage() {
                 className="mt-1 w-full rounded-lg border border-gray-300 bg-white/80 px-3 py-2 text-gray-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 required
                 aria-invalid={Boolean(fieldErrors?.username)}
+                aria-describedby={fieldErrors?.username ? 'username-err' : undefined}
               />
               {fieldErrors?.username && (
                 <p id="username-err" className="mt-1 text-sm text-red-600">
