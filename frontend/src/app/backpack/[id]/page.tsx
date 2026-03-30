@@ -65,10 +65,6 @@ export default function NotebookDetailPage() {
     setUploadAndCourseTagsModalOpen(false);
   };
 
-  const handleSubmitUploadAndCourseTags = (notebookId: string, courseTags: string[]) => {
-    console.log(notebookId, courseTags);
-  };
-
   return (
     <div className="fixed inset-0 z-0 overflow-hidden">
       <div className="absolute inset-0 bg-[url('/forest-bg.png')] bg-center bg-cover bg-no-repeat">
@@ -209,7 +205,7 @@ export default function NotebookDetailPage() {
             <NotebookUploadAndCourseTagsModal
               isOpen={uploadAndCourseTagsModalOpen}
               onClose={handleCloseUploadAndCourseTagsModal}
-              onSubmit={handleSubmitUploadAndCourseTags}
+
               notebookId={id}
             />
             </>
