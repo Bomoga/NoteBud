@@ -156,6 +156,50 @@ async def test_token_success(client):
     assert body["token_type"] == "bearer"
 
 
+async def test_token_empty_username_returns_422(client):
+    mock = _repo()
+    app.dependency_overrides[get_user_repo] = lambda: mock
+    try:
+        resp = await client.post(TOKEN_URL, json={"username": "", "password": "s3cr3t"})
+    finally:
+        app.dependency_overrides.pop(get_user_repo, None)
+
+    assert resp.status_code == 422
+
+
+async def test_token_whitespace_username_returns_422(client):
+    mock = _repo()
+    app.dependency_overrides[get_user_repo] = lambda: mock
+    try:
+        resp = await client.post(TOKEN_URL, json={"username": "   ", "password": "s3cr3t"})
+    finally:
+        app.dependency_overrides.pop(get_user_repo, None)
+
+    assert resp.status_code == 422
+
+
+async def test_token_empty_password_returns_422(client):
+    mock = _repo()
+    app.dependency_overrides[get_user_repo] = lambda: mock
+    try:
+        resp = await client.post(TOKEN_URL, json={"username": "alice", "password": ""})
+    finally:
+        app.dependency_overrides.pop(get_user_repo, None)
+
+    assert resp.status_code == 422
+
+
+async def test_token_whitespace_password_returns_422(client):
+    mock = _repo()
+    app.dependency_overrides[get_user_repo] = lambda: mock
+    try:
+        resp = await client.post(TOKEN_URL, json={"username": "alice", "password": "   "})
+    finally:
+        app.dependency_overrides.pop(get_user_repo, None)
+
+    assert resp.status_code == 422
+
+
 async def test_token_wrong_password_returns_401(client):
     hashed = pwd_context.hash("s3cr3t")
     user = {"id": "some-uuid", "username": "alice", "hashed_password": hashed}

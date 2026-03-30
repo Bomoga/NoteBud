@@ -65,7 +65,8 @@ class LoginRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def password_nonempty(cls, v: str) -> str:
-        if not v:
+        s = v.strip()
+        if not s:
             raise ValueError("Password is required.")
         return v
 
