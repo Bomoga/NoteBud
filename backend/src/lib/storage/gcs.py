@@ -1,4 +1,5 @@
 import os
+import tempfile
 import uuid
 from typing import Optional
 from fastapi import UploadFile
@@ -41,5 +42,37 @@ class StorageService:
         blob.upload_from_file(file.file, content_type=file.content_type)
 
         return f"gs://{self.bucket_name}/{destination_blob_name}"
+
+    def download_to_tempfile(self, gcs_uri: str) -> str:
+        """Download a GCS object to a local temp file.
+
+        Args:
+            gcs_uri: Full GCS URI, e.g. gs://bucket/folder/file.pdf
+
+        Returns:
+            Path to the temp file. Caller must delete it when done (os.unlink).
+        """
+        if not self.client:
+            raise Exception("Storage client not initialized. Check credentials.")
+
+        # Parse gs://bucket/path
+        if not gcs_uri.startswith("gs://"):
+            raise ValueError(f"Invalid GCS URI: {gcs_uri}")
+        without_scheme = gcs_uri[len("gs://"):]
+        bucket_name, _, blob_path = without_scheme.partition("/")
+
+        ext = os.path.splitext(blob_path)[1] or ""
+        tmp = tempfile.NamedTemporaryFile(suffix=ext, delete=False)
+        try:
+            bucket = self.client.bucket(bucket_name)
+            blob = bucket.blob(blob_path)
+            blob.download_to_file(tmp)
+            tmp.close()
+            return tmp.name
+        except Exception:
+            tmp.close()
+            os.unlink(tmp.name)
+            raise
+
 
 storage_service = StorageService()

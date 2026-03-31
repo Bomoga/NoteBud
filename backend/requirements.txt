@@ -69,3 +69,6 @@ testcontainers[neo4j]
 PyJWT==2.11.0
 passlib[bcrypt]>=1.7.4
 bcrypt==4.0.1
+google-genai>=0.3.0
+llama-index-core
+llama-index-readers-file

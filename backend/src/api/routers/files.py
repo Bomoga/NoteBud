@@ -67,10 +67,11 @@ async def upload_document(
         document_id=document_id,
         gcs_uri=gcs_uri,
         source_type=detected_source_type,
+        filename=file.filename,
     )
 
     return {
-        "status": "success",
+        "status": "processing",
         "filename": file.filename,
         "content_type": file_type,
         "gcs_uri": gcs_uri,
