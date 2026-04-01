@@ -2,6 +2,8 @@ import os
 import tempfile
 import uuid
 from typing import Optional
+
+import anyio
 from fastapi import UploadFile
 from google.cloud import storage
 from google.oauth2 import service_account
@@ -39,7 +41,9 @@ class StorageService:
         bucket = self.client.bucket(self.bucket_name)
         blob = bucket.blob(destination_blob_name)
 
-        blob.upload_from_file(file.file, content_type=file.content_type)
+        await anyio.to_thread.run_sync(
+            lambda: blob.upload_from_file(file.file, content_type=file.content_type)
+        )
 
         return f"gs://{self.bucket_name}/{destination_blob_name}"
 

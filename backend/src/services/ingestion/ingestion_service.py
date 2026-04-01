@@ -8,6 +8,8 @@ import os
 import time
 from pathlib import Path
 
+import anyio
+
 from google import genai
 from google.genai import errors as genai_errors
 from llama_index.core import Document
@@ -57,12 +59,16 @@ async def _extract_text(gcs_uri: str, filename: str) -> list[dict]:
     Returns a list of dicts with keys: text, page_number, slide_number, source_file.
     """
     ext = _resolve_extension(gcs_uri, filename)
-    tmp_path = storage_service.download_to_tempfile(gcs_uri)
+    tmp_path = await anyio.to_thread.run_sync(
+        lambda: storage_service.download_to_tempfile(gcs_uri)
+    )
 
     try:
         if ext == ".pdf":
             reader = PDFReader()
-            documents = reader.load_data(file=Path(tmp_path))
+            documents = await anyio.to_thread.run_sync(
+                lambda: reader.load_data(file=Path(tmp_path))
+            )
             pages = [
                 {
                     "text": doc.text,
@@ -75,7 +81,9 @@ async def _extract_text(gcs_uri: str, filename: str) -> list[dict]:
             ]
         elif ext == ".docx":
             reader = DocxReader()
-            documents = reader.load_data(file=Path(tmp_path))
+            documents = await anyio.to_thread.run_sync(
+                lambda: reader.load_data(file=Path(tmp_path))
+            )
             pages = [
                 {
                     "text": doc.text,
@@ -88,7 +96,9 @@ async def _extract_text(gcs_uri: str, filename: str) -> list[dict]:
             ]
         elif ext == ".pptx":
             reader = PptxReader()
-            documents = reader.load_data(file=Path(tmp_path))
+            documents = await anyio.to_thread.run_sync(
+                lambda: reader.load_data(file=Path(tmp_path))
+            )
             pages = [
                 {
                     "text": doc.text,
