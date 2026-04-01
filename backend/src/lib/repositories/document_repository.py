@@ -17,7 +17,8 @@ class DocumentRepository:
             MERGE (d:Document {id: $id})
             SET d.gcs_uri   = $gcs_uri,
                 d.filename  = $filename,
-                d.file_type = $file_type
+                d.file_type = $file_type,
+                d.status    = "processing"
             RETURN d
         """
         async with self._driver.session() as session:
@@ -30,6 +31,15 @@ class DocumentRepository:
             )
             record = await result.single()
             return dict(record["d"])
+
+    async def update_status(self, doc_id: str, status: str) -> None:
+        """Update the status field on a Document node."""
+        query = """
+            MATCH (d:Document {id: $doc_id})
+            SET d.status = $status
+        """
+        async with self._driver.session() as session:
+            await session.run(query, doc_id=doc_id, status=status)
 
     async def link_to_notebook(self, doc_id: str, notebook_id: str) -> None:
         """Create a :CONTAINS edge from Notebook to Document."""

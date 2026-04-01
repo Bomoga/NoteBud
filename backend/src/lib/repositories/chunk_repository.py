@@ -44,6 +44,9 @@ class ChunkRepository:
                 "embedding": c["embedding"],   # stored as list[float], never a string
                 "position": c["position"],
                 "document_id": document_id,
+                "source_file": c.get("source_file"),
+                "page_number": c.get("page_number"),
+                "slide_number": c.get("slide_number"),
             }
             for c in sorted(chunks, key=lambda c: c["position"])
         ]
@@ -58,7 +61,10 @@ class ChunkRepository:
                 text: chunk.text,
                 embedding: chunk.embedding,
                 position: chunk.position,
-                document_id: $document_id
+                document_id: $document_id,
+                source_file: chunk.source_file,
+                page_number: chunk.page_number,
+                slide_number: chunk.slide_number
             }})
             CREATE (d)-[:HAS_CHUNK]->(c)
             RETURN c.id AS id
