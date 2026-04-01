@@ -33,12 +33,6 @@ _CHUNK_OVERLAP = 64
 _EMBED_MAX_RETRIES = 3
 _EMBED_BACKOFF_BASE = 1  # seconds
 
-_MIME_TO_EXT = {
-    "application/pdf": ".pdf",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
-}
-
 _splitter = SentenceSplitter(chunk_size=_CHUNK_SIZE, chunk_overlap=_CHUNK_OVERLAP)
 
 
