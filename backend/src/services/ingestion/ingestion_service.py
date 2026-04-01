@@ -198,7 +198,9 @@ async def _embed_chunks(chunks: list[dict]) -> list[dict]:
     client = _get_genai_client()
 
     for chunk in chunks:
-        chunk["embedding"] = _embed_single(client, chunk["text"])
+        chunk["embedding"] = await anyio.to_thread.run_sync(
+            lambda text=chunk["text"]: _embed_single(client, text)
+        )
 
     return chunks
 
