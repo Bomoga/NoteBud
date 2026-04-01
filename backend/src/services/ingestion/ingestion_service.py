@@ -3,10 +3,13 @@ Background ingestion pipeline: GCS file -> extract -> chunk -> embed -> Neo4j gr
 
 Called as a FastAPI BackgroundTask after file upload.
 """
+import asyncio
 import logging
 import os
 import time
 from pathlib import Path
+
+import anyio
 
 from google import genai
 from google.genai import errors as genai_errors
@@ -32,6 +35,7 @@ _CHUNK_SIZE = 512
 _CHUNK_OVERLAP = 64
 _EMBED_MAX_RETRIES = 3
 _EMBED_BACKOFF_BASE = 1  # seconds
+_EMBED_CONCURRENCY = 5  # max concurrent Gemini embedding requests
 
 _splitter = SentenceSplitter(chunk_size=_CHUNK_SIZE, chunk_overlap=_CHUNK_OVERLAP)
 
@@ -57,12 +61,16 @@ async def _extract_text(gcs_uri: str, filename: str) -> list[dict]:
     Returns a list of dicts with keys: text, page_number, slide_number, source_file.
     """
     ext = _resolve_extension(gcs_uri, filename)
-    tmp_path = storage_service.download_to_tempfile(gcs_uri)
+    tmp_path = await anyio.to_thread.run_sync(
+        lambda: storage_service.download_to_tempfile(gcs_uri)
+    )
 
     try:
         if ext == ".pdf":
             reader = PDFReader()
-            documents = reader.load_data(file=Path(tmp_path))
+            documents = await anyio.to_thread.run_sync(
+                lambda: reader.load_data(file=Path(tmp_path))
+            )
             pages = [
                 {
                     "text": doc.text,
@@ -75,7 +83,9 @@ async def _extract_text(gcs_uri: str, filename: str) -> list[dict]:
             ]
         elif ext == ".docx":
             reader = DocxReader()
-            documents = reader.load_data(file=Path(tmp_path))
+            documents = await anyio.to_thread.run_sync(
+                lambda: reader.load_data(file=Path(tmp_path))
+            )
             pages = [
                 {
                     "text": doc.text,
@@ -88,7 +98,9 @@ async def _extract_text(gcs_uri: str, filename: str) -> list[dict]:
             ]
         elif ext == ".pptx":
             reader = PptxReader()
-            documents = reader.load_data(file=Path(tmp_path))
+            documents = await anyio.to_thread.run_sync(
+                lambda: reader.load_data(file=Path(tmp_path))
+            )
             pages = [
                 {
                     "text": doc.text,
@@ -186,10 +198,15 @@ def _embed_single(client: genai.Client, text: str) -> list[float]:
 async def _embed_chunks(chunks: list[dict]) -> list[dict]:
     """Attach 768-dim Gemini embeddings to each chunk."""
     client = _get_genai_client()
+    sem = asyncio.Semaphore(_EMBED_CONCURRENCY)
 
-    for chunk in chunks:
-        chunk["embedding"] = _embed_single(client, chunk["text"])
+    async def embed_one(chunk: dict) -> None:
+        async with sem:
+            chunk["embedding"] = await anyio.to_thread.run_sync(
+                lambda text=chunk["text"]: _embed_single(client, text)
+            )
 
+    await asyncio.gather(*[embed_one(chunk) for chunk in chunks])
     return chunks
 
 
