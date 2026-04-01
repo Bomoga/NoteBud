@@ -3,6 +3,7 @@ Background ingestion pipeline: GCS file -> extract -> chunk -> embed -> Neo4j gr
 
 Called as a FastAPI BackgroundTask after file upload.
 """
+import asyncio
 import logging
 import os
 import time
@@ -34,6 +35,7 @@ _CHUNK_SIZE = 512
 _CHUNK_OVERLAP = 64
 _EMBED_MAX_RETRIES = 3
 _EMBED_BACKOFF_BASE = 1  # seconds
+_EMBED_CONCURRENCY = 5  # max concurrent Gemini embedding requests
 
 _splitter = SentenceSplitter(chunk_size=_CHUNK_SIZE, chunk_overlap=_CHUNK_OVERLAP)
 
@@ -196,12 +198,15 @@ def _embed_single(client: genai.Client, text: str) -> list[float]:
 async def _embed_chunks(chunks: list[dict]) -> list[dict]:
     """Attach 768-dim Gemini embeddings to each chunk."""
     client = _get_genai_client()
+    sem = asyncio.Semaphore(_EMBED_CONCURRENCY)
 
-    for chunk in chunks:
-        chunk["embedding"] = await anyio.to_thread.run_sync(
-            lambda text=chunk["text"]: _embed_single(client, text)
-        )
+    async def embed_one(chunk: dict) -> None:
+        async with sem:
+            chunk["embedding"] = await anyio.to_thread.run_sync(
+                lambda text=chunk["text"]: _embed_single(client, text)
+            )
 
+    await asyncio.gather(*[embed_one(chunk) for chunk in chunks])
     return chunks
 
 
