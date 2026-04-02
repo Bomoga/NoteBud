@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -10,13 +10,12 @@ import { useAuthStore } from '../lib/store/auth'
 import { abortAllInFlightRequests, disableAuthHeadersFor } from '../lib/api/client'
 
 const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/backpack', label: 'Backpack' },
+  { href: '/', label: 'Home', protected: false },
+  { href: '/backpack', label: 'Backpack', protected: true },
 ];
 
 export default function NavBar() {
   const pathname = usePathname();
-  const router = useRouter();
   const token = useAuthStore((s) => s.token);
   const username = useAuthStore((s) => s.username);
   const clearSession = useAuthStore((s) => s.clearSession);
@@ -49,17 +48,14 @@ export default function NavBar() {
               />
             </div>
             <div className="hidden lg:ml-6 lg:flex lg:space-x-8">
-              {navLinks.map(({ href, label }) => {
+              {navLinks.map(({ href, label, protected: isProtected }) => {
                 const linkPath = href.split('?')[0]
                 const isActive = href !== '#' && pathname === linkPath
                 const activeClass = 'border-emerald-600 text-gray-900'
                 const defaultClass = 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                return token ? (
-                  <Link key={label} href={href} className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${isActive ? activeClass : defaultClass}`}>
-                    {label}
-                  </Link>
-                ) : (
-                  <Link key={label} href="/login" className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${isActive ? activeClass : defaultClass}`}>
+                const resolvedHref = isProtected && !token ? '/login' : href
+                return (
+                  <Link key={label} href={resolvedHref} className={`inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium ${isActive ? activeClass : defaultClass}`}>
                     {label}
                   </Link>
                 )
@@ -150,18 +146,15 @@ export default function NavBar() {
 
       <DisclosurePanel className="lg:hidden">
         <div className="space-y-1 pt-2 pb-3">
-          {navLinks.map(({ href, label }) => {
+          {navLinks.map(({ href, label, protected: isProtected }) => {
             const linkPath = href.split('?')[0]
             const isActive = href !== '#' && pathname === linkPath
             const activeClass = 'border-emerald-600 bg-emerald-50 text-emerald-700'
             const defaultClass = 'border-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800'
             const baseClass = `block border-l-4 py-2 pr-4 pl-3 text-base font-medium ${isActive ? activeClass : defaultClass}`
-            return href === '#' ? (
-              <DisclosureButton key={label} as="a" href="#" className={baseClass}>
-                {label}
-              </DisclosureButton>
-            ) : (
-              <DisclosureButton key={label} as={Link} href={href} className={baseClass}>
+            const resolvedHref = isProtected && !token ? '/login' : href
+            return (
+              <DisclosureButton key={label} as={Link} href={resolvedHref} className={baseClass}>
                 {label}
               </DisclosureButton>
             )

@@ -69,7 +69,6 @@ apiClient.interceptors.request.use((config) => {
     const headers = (config.headers ?? {}) as any;
     config.headers = headers;
     delete headers.Authorization;
-    headers['X-Auth-Source'] = 'disabled-window';
     return config;
   }
 
@@ -84,33 +83,20 @@ apiClient.interceptors.request.use((config) => {
 
   // Default: never send Authorization unless BOTH store+persist agree.
   delete headers.Authorization;
-  delete headers['X-Auth-Source'];
 
   // If localStorage key is gone, do not send auth even if storeToken is stale.
   if (raw === null) {
-    headers['X-Auth-Source'] = 'no-persisted-key';
     return config;
   }
 
   const persistedToken = getPersistedAuthToken();
   // After signout we expect the store token to be null immediately. If it isn't,
   // requiring both sources prevents stale auth headers from being sent.
-  if (!persistedToken) {
-    headers['X-Auth-Source'] = 'persisted-token-missing';
-    return config;
-  }
-  if (!storeToken) {
-    headers['X-Auth-Source'] = 'store-token-missing';
-    return config;
-  }
-
-  if (persistedToken !== storeToken) {
-    headers['X-Auth-Source'] = 'token-mismatch';
+  if (!persistedToken || !storeToken || persistedToken !== storeToken) {
     return config;
   }
 
   headers.Authorization = `Bearer ${persistedToken}`;
-  headers['X-Auth-Source'] = 'persisted+store';
   return config;
 });
 
