@@ -16,7 +16,13 @@ export const useAuthStore = create<AuthState>()(
       userId: null,
       username: null,
       setSession: (token, userId, username) => set({ token, userId, username }),
-      clearSession: () => set({ token: null, userId: null, username: null }),
+      clearSession: () => {
+        set({ token: null, userId: null, username: null });
+        // Ensure the persisted session does not get re-hydrated from localStorage.
+        if (typeof window !== 'undefined') {
+          window.localStorage.removeItem('notebud-auth');
+        }
+      },
     }),
     { name: 'notebud-auth' }
   )

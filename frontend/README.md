@@ -65,6 +65,7 @@ The hooks in `src/hooks/useNotebooks.ts` also support **`{ mock: true }`**, whic
 - **Legacy `/notes` route:** This route has been removed and is no longer available; notes should be opened from a notebook context via `/backpack/:id/notes`.
 - **Left pane file tree:** `src/components/FileTree.tsx` renders nested folders/files with expand/collapse support.
 - **Upload modal:** `src/modals/NotebookUploadAndCourseTagsModal.tsx` is viewport-centered and expects notebook context from backpack-scoped notes.
+- **Architecture doc:** [../docs/notes-workspace-ui-architecture.md](../docs/notes-workspace-ui-architecture.md)
 
 ### `FileTree` quick usage
 
