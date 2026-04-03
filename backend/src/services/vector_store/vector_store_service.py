@@ -122,6 +122,130 @@ async def compute_similar_edges(
     )
 
 
+async def compute_note_similar_edges(
+        driver: AsyncDriver,
+        note_chunk_ids: list[str],
+        notebook_id: str,
+) -> None:
+    """Build SIMILAR edges from NoteChunks to ContentChunks and other NoteChunks.
+
+    For each NoteChunk two passes are run:
+      a. Query chunk_embeddings (ContentChunk index) — write SIMILAR edges to
+         ContentChunks that belong to the same notebook.
+      b. Query note_chunk_embeddings (NoteChunk index) — write SIMILAR edges to
+         NoteChunks that belong to the same notebook.
+
+    Two separate index queries are required because Neo4j vector indexes are
+    per-label; there is no unified index across :ContentChunk and :NoteChunk.
+
+    Threshold: 0.80 (same as compute_similar_edges).
+    """
+    if not note_chunk_ids:
+        return
+
+    def _batches(iterable, size):
+        it = iter(iterable)
+        while True:
+            batch = list(islice(it, size))
+            if not batch:
+                break
+            yield batch
+
+    total_edges = 0
+
+    for batch in _batches(note_chunk_ids, _BATCH_SIZE):
+        async with driver.session() as session:
+            for chunk_id in batch:
+                # ------------------------------------------------------------------
+                # Pass a: NoteChunk → ContentChunk (cross-type)
+                # ------------------------------------------------------------------
+                content_result = await session.run(
+                    """
+                    MATCH (nb:Notebook {id: $notebook_id})-[:HAS_NOTE]->(:Note)
+                          -[:HAS_CHUNK]->(src:NoteChunk {id: $chunk_id})
+                    CALL db.index.vector.queryNodes(
+                        'chunk_embeddings', $top_k, src.embedding
+                    ) YIELD node AS neighbour, score
+                    WHERE score >= $threshold
+                    MATCH (nb)-[:CONTAINS]->(d:Document)-[:HAS_CHUNK]->(neighbour)
+                    RETURN neighbour.id AS neighbour_id, score
+                    """,
+                    chunk_id=chunk_id,
+                    top_k=_TOP_K,
+                    threshold=_SCORE_THRESHOLD,
+                    notebook_id=notebook_id,
+                )
+                content_records = await content_result.data()
+
+                if content_records:
+                    write_result = await session.run(
+                        """
+                        UNWIND $pairs AS pair
+                        MATCH (a:NoteChunk {id: pair.src_id})
+                        MATCH (b:ContentChunk {id: pair.neighbour_id})
+                        MERGE (a)-[r:SIMILAR]-(b)
+                          ON CREATE SET r.score = pair.score
+                          ON MATCH SET  r.score = pair.score
+                        RETURN count(r) AS edges_written
+                        """,
+                        pairs=[
+                            {"src_id": chunk_id, "neighbour_id": r["neighbour_id"], "score": r["score"]}
+                            for r in content_records
+                        ],
+                    )
+                    rec = await write_result.single()
+                    if rec:
+                        total_edges += rec["edges_written"]
+
+                # ------------------------------------------------------------------
+                # Pass b: NoteChunk → NoteChunk (same-type, cross-note)
+                # ------------------------------------------------------------------
+                note_result = await session.run(
+                    """
+                    MATCH (nb:Notebook {id: $notebook_id})-[:HAS_NOTE]->(:Note)
+                          -[:HAS_CHUNK]->(src:NoteChunk {id: $chunk_id})
+                    CALL db.index.vector.queryNodes(
+                        'note_chunk_embeddings', $top_k, src.embedding
+                    ) YIELD node AS neighbour, score
+                    WHERE neighbour.id <> $chunk_id
+                      AND score >= $threshold
+                    MATCH (nb)-[:HAS_NOTE]->(n:Note)-[:HAS_CHUNK]->(neighbour)
+                    RETURN neighbour.id AS neighbour_id, score
+                    """,
+                    chunk_id=chunk_id,
+                    top_k=_TOP_K,
+                    threshold=_SCORE_THRESHOLD,
+                    notebook_id=notebook_id,
+                )
+                note_records = await note_result.data()
+
+                if note_records:
+                    write_result = await session.run(
+                        """
+                        UNWIND $pairs AS pair
+                        MATCH (a:NoteChunk {id: pair.src_id})
+                        MATCH (b:NoteChunk {id: pair.neighbour_id})
+                        MERGE (a)-[r:SIMILAR]-(b)
+                          ON CREATE SET r.score = pair.score
+                          ON MATCH SET  r.score = pair.score
+                        RETURN count(r) AS edges_written
+                        """,
+                        pairs=[
+                            {"src_id": chunk_id, "neighbour_id": r["neighbour_id"], "score": r["score"]}
+                            for r in note_records
+                        ],
+                    )
+                    rec = await write_result.single()
+                    if rec:
+                        total_edges += rec["edges_written"]
+
+    logger.info(
+        "compute_note_similar_edges: processed %d note chunks, wrote %d SIMILAR edges",
+        len(note_chunk_ids),
+        total_edges,
+    )
+
+
 async def refresh_chunk_edges(chunk_id: str) -> None:
     """Stub — incremental SIMILAR edge refresh pending ML review.
 

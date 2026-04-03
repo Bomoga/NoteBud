@@ -105,11 +105,15 @@ class ChunkRepository:
                 raise
 
     async def get_by_notebook(self, notebook_id: str) -> list[dict]:
-        """Return all chunks for a notebook, ordered by position."""
+        """Return all ContentChunks for a notebook, ordered by position.
+
+        Scoped to :ContentChunk to exclude :SyllabusChunk nodes, which carry
+        zero embeddings and must never enter vector search.
+        """
         query = """
             MATCH (nb:Notebook {id: $notebook_id})
                   -[:CONTAINS]->(d:Document)
-                  -[:HAS_CHUNK]->(c:Chunk)
+                  -[:HAS_CHUNK]->(c:ContentChunk)
             RETURN c
             ORDER BY c.position
         """
