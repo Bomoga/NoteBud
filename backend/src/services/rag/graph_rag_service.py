@@ -17,9 +17,10 @@ from src.lib.config.settings import settings
 from src.services.ingestion.ingestion_service import (
     EMBEDDING_DIMENSIONS,
     EMBEDDING_MODEL,
-    _EMBED_BACKOFF_BASE,
-    _EMBED_MAX_RETRIES,
 )
+
+_EMBED_MAX_RETRIES = 3
+_EMBED_BACKOFF_BASE = 1.0
 
 logger = logging.getLogger(__name__)
 
@@ -229,7 +230,7 @@ class GraphRAGService:
             query_embedding = await self._embed_query(query_text)
         except Exception as exc:
             logger.exception("Failed to embed query")
-            yield _sse({"token": f"Error: could not process query — {exc}"})
+            yield _sse({"token": "Sorry, something went wrong processing your query. Please try again."})
             yield _sse({"done": True, "citations": [], "low_confidence": True})
             return
 
@@ -266,7 +267,7 @@ class GraphRAGService:
                 yield _sse({"token": token})
         except Exception as exc:
             logger.exception("Gemini LLM streaming error")
-            yield _sse({"token": f"\n\n[Error: {exc}]"})
+            yield _sse({"token": "\n\nSorry, an error occurred while generating the answer. Please try again."})
 
         # 7. Final event
         yield _sse({
