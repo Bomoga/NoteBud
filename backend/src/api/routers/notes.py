@@ -37,7 +37,11 @@ async def create_note_endpoint(
     notebook = await notebook_repo.get_by_id(notebook_id)
     if notebook is None:
         raise HTTPException(status_code=404, detail="Notebook not found")
+    if notebook["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Forbidden")
     note = await repo.create(notebook_id, data, owner_id=current_user)
+    if note is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
     if note["content"]:
         background_tasks.add_task(
             ingest_note,
@@ -56,6 +60,8 @@ async def list_notes_endpoint(
     notebook = await notebook_repo.get_by_id(notebook_id)
     if notebook is None:
         raise HTTPException(status_code=404, detail="Notebook not found")
+    if notebook["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
     return await repo.list(notebook_id)
 
 
@@ -64,10 +70,18 @@ async def get_note_endpoint(
     notebook_id: str,
     note_id: str,
     repo: NoteRepository = Depends(get_repo),
+    notebook_repo: NotebookRepository = Depends(get_notebook_repo),
     current_user: str = Depends(get_current_user),
 ):
+    notebook = await notebook_repo.get_by_id(notebook_id)
+    if notebook is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
     note = await repo.get_by_id(note_id)
     if note is None:
+        raise HTTPException(status_code=404, detail="Note not found")
+    if note["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    if note.get("notebook_id") != notebook_id:
         raise HTTPException(status_code=404, detail="Note not found")
     return note
 
@@ -84,6 +98,8 @@ async def update_note_endpoint(
 ):
     existing = await repo.get_by_id(note_id)
     if existing is None:
+        raise HTTPException(status_code=404, detail="Note not found")
+    if existing["notebook_id"] != notebook_id:
         raise HTTPException(status_code=404, detail="Note not found")
     if existing["owner_id"] != current_user:
         raise HTTPException(status_code=403, detail="Not authorized")
@@ -108,6 +124,8 @@ async def delete_note_endpoint(
 ):
     existing = await repo.get_by_id(note_id)
     if existing is None:
+        raise HTTPException(status_code=404, detail="Note not found")
+    if existing["notebook_id"] != notebook_id:
         raise HTTPException(status_code=404, detail="Note not found")
     if existing["owner_id"] != current_user:
         raise HTTPException(status_code=403, detail="Not authorized")

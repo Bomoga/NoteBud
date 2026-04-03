@@ -49,6 +49,8 @@ class NoteRepository:
                 owner_id=owner_id,
             )
             record = await result.single()
+            if record is None:
+                return None
             return _node_to_dict(record["n"])
 
     async def get_by_id(self, note_id: str) -> dict | None:

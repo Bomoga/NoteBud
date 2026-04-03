@@ -161,13 +161,13 @@ async def compute_note_similar_edges(
                 # ------------------------------------------------------------------
                 content_result = await session.run(
                     """
-                    MATCH (src:NoteChunk {id: $chunk_id})
+                    MATCH (nb:Notebook {id: $notebook_id})-[:HAS_NOTE]->(:Note)
+                          -[:HAS_CHUNK]->(src:NoteChunk {id: $chunk_id})
                     CALL db.index.vector.queryNodes(
                         'chunk_embeddings', $top_k, src.embedding
                     ) YIELD node AS neighbour, score
                     WHERE score >= $threshold
-                    MATCH (nb:Notebook {id: $notebook_id})-[:CONTAINS]->(d:Document)
-                          -[:HAS_CHUNK]->(neighbour)
+                    MATCH (nb)-[:CONTAINS]->(d:Document)-[:HAS_CHUNK]->(neighbour)
                     RETURN neighbour.id AS neighbour_id, score
                     """,
                     chunk_id=chunk_id,
@@ -202,14 +202,14 @@ async def compute_note_similar_edges(
                 # ------------------------------------------------------------------
                 note_result = await session.run(
                     """
-                    MATCH (src:NoteChunk {id: $chunk_id})
+                    MATCH (nb:Notebook {id: $notebook_id})-[:HAS_NOTE]->(:Note)
+                          -[:HAS_CHUNK]->(src:NoteChunk {id: $chunk_id})
                     CALL db.index.vector.queryNodes(
                         'note_chunk_embeddings', $top_k, src.embedding
                     ) YIELD node AS neighbour, score
                     WHERE neighbour.id <> $chunk_id
                       AND score >= $threshold
-                    MATCH (nb:Notebook {id: $notebook_id})-[:HAS_NOTE]->(n:Note)
-                          -[:HAS_CHUNK]->(neighbour)
+                    MATCH (nb)-[:HAS_NOTE]->(n:Note)-[:HAS_CHUNK]->(neighbour)
                     RETURN neighbour.id AS neighbour_id, score
                     """,
                     chunk_id=chunk_id,
