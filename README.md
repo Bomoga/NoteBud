@@ -20,6 +20,7 @@ it.**
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **React / Next.js** — UI framework, routing, server-side rendering
 - **TypeScript** — Type safety
 - **Tailwind CSS** — Styling
@@ -28,18 +29,21 @@ it.**
 - **Axios** — HTTP client
 
 ### Backend
+
 - **FastAPI** — Python REST API
 - **Neo4j** — Graph store for notebooks, documents, chunks, and course relationships; vector index on content chunks
 - **neo4j-graphrag** — Graph RAG utilities
 - **Pydantic** — Request and response validation
 
 ### AI / ML
+
 - **Gemini API** — LLM for answer generation and embeddings
 - **Google ADK / LangGraph** — Agent orchestration
 - **LlamaIndex / LangChain** — Document loading, chunking, RAG pipeline
 - **scikit-learn / PyTorch** — ML model training
 
 ### Infrastructure
+
 - **Docker + Docker Compose** — Containerization and local dev
 - **GCS / S3** — Cloud object storage
 - **GitHub Actions** — CI/CD
@@ -50,6 +54,7 @@ it.**
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - Node.js (for frontend)
 - Python 3.10+ (for backend)
@@ -98,13 +103,13 @@ Architecture overview: [docs/notes-workspace-ui-architecture.md](docs/notes-work
 
 ### Branch Structure
 
-| Branch | Purpose |
-|---|---|
-| `main` | Production-ready, always deployable, protected |
-| `dev` | Integration branch for features |
-| `feature/*` | Individual feature development |
-| `bugfix/*` | Bug fixes |
-| `hotfix/*` | Emergency production fixes |
+| Branch      | Purpose                                        |
+| ----------- | ---------------------------------------------- |
+| `main`      | Production-ready, always deployable, protected |
+| `dev`       | Integration branch for features                |
+| `feature/*` | Individual feature development                 |
+| `bugfix/*`  | Bug fixes                                      |
+| `hotfix/*`  | Emergency production fixes                     |
 
 ### Contributing
 
@@ -128,7 +133,10 @@ git push origin feature/your-feature-name
 ```
 
 **PR Guidelines:**
+
 - Target `dev`, never `main`
 - Keep PRs small and focused
 - At least one team member must review before merging
 - Squash and merge on approval
+
+curl -N -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2MwZWViNC01MTQ5LTQ5ZmYtYTQzYS0wNjNmZjgwYjU0M2EiLCJ1c2VybmFtZSI6ImNlc2FyIiwiZXhwIjoxNzc1MzI1OTQ1fQ.GYf1u6uZD2v6j-mDTZuvLngoohDEi2EeuW50OGyIwU0" -H "Content-Type: application/json" -d '{"query": "What is this document about?"}' http://localhost:8000/api/v1/notebooks/bf0b5197-2f00-4077-a3ad-8e1a7e3e6eb9/chat
