@@ -25,10 +25,8 @@ async def chat_notebook(
 ):
     """Stream a RAG-powered chat answer with citations via SSE."""
     notebook = await NotebookRepository(driver).get_by_id(notebook_id)
-    if notebook is None:
+    if notebook is None or notebook["owner_id"] != current_user:
         raise HTTPException(status_code=404, detail="Notebook not found")
-    if notebook["owner_id"] != current_user:
-        raise HTTPException(status_code=403, detail="Not authorized")
 
     return StreamingResponse(
         rag_service.stream_chat(notebook_id, body.query),
