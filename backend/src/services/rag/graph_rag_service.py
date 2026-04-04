@@ -24,7 +24,8 @@ _EMBED_BACKOFF_BASE = 1.0
 
 logger = logging.getLogger(__name__)
 
-_VECTOR_INDEX = "chunk_embeddings"
+_CONTENT_VECTOR_INDEX = "chunk_embeddings"
+_NOTE_VECTOR_INDEX = "note_chunk_embeddings"
 _RETRIEVAL_TOP_K = 20  # cast a wide net, then filter by notebook
 _RESULT_LIMIT = 5
 _SIMILARITY_FLOOR = 0.50  # minimum to include a chunk at all
@@ -83,40 +84,71 @@ class GraphRAGService:
         )
 
     # ------------------------------------------------------------------
-    # 2. Retrieve top-5 chunks scoped to notebook
+    # 2. Retrieve top-5 chunks scoped to notebook (documents + notes)
     # ------------------------------------------------------------------
     async def _retrieve_chunks(
         self,
         notebook_id: str,
         query_embedding: list[float],
     ) -> list[dict]:
-        cypher = """
+        content_cypher = """
             CALL db.index.vector.queryNodes($index, $top_k, $embedding)
             YIELD node AS chunk, score
             MATCH (nb:Notebook {id: $notebook_id})
                   -[:CONTAINS]->(d:Document)
                   -[:HAS_CHUNK]->(chunk)
             WHERE score >= $floor
-            RETURN chunk.id        AS chunk_id,
-                   chunk.text      AS text,
+            RETURN chunk.id          AS chunk_id,
+                   chunk.text        AS text,
                    chunk.source_file AS source_file,
                    chunk.page_number AS page_number,
                    chunk.slide_number AS slide_number,
+                   'document'        AS source_type,
                    score
             ORDER BY score DESC
             LIMIT $limit
         """
+        note_cypher = """
+            CALL db.index.vector.queryNodes($index, $top_k, $embedding)
+            YIELD node AS chunk, score
+            MATCH (nb:Notebook {id: $notebook_id})
+                  -[:HAS_NOTE]->(n:Note)
+                  -[:HAS_CHUNK]->(chunk)
+            WHERE score >= $floor
+            RETURN chunk.id         AS chunk_id,
+                   chunk.text       AS text,
+                   chunk.note_title AS source_file,
+                   null             AS page_number,
+                   null             AS slide_number,
+                   'note'           AS source_type,
+                   score
+            ORDER BY score DESC
+            LIMIT $limit
+        """
+        params = dict(
+            top_k=_RETRIEVAL_TOP_K,
+            embedding=query_embedding,
+            notebook_id=notebook_id,
+            floor=_SIMILARITY_FLOOR,
+            limit=_RESULT_LIMIT,
+        )
         async with self._driver.session() as session:
-            result = await session.run(
-                cypher,
-                index=_VECTOR_INDEX,
-                top_k=_RETRIEVAL_TOP_K,
-                embedding=query_embedding,
-                notebook_id=notebook_id,
-                floor=_SIMILARITY_FLOOR,
-                limit=_RESULT_LIMIT,
+            content_result = await session.run(
+                content_cypher, index=_CONTENT_VECTOR_INDEX, **params,
             )
-            return await result.data()
+            content_chunks = await content_result.data()
+
+            note_result = await session.run(
+                note_cypher, index=_NOTE_VECTOR_INDEX, **params,
+            )
+            note_chunks = await note_result.data()
+
+        merged = sorted(
+            content_chunks + note_chunks,
+            key=lambda c: c["score"],
+            reverse=True,
+        )
+        return merged[:_RESULT_LIMIT]
 
     # ------------------------------------------------------------------
     # 3. Build the context prompt from retrieved chunks
@@ -125,8 +157,9 @@ class GraphRAGService:
     def _build_context(chunks: list[dict]) -> str:
         parts: list[str] = []
         for i, chunk in enumerate(chunks, 1):
-            filename = chunk["source_file"] or "unknown"
-            parts.append(f"[Source {i}: {filename}]\n{chunk['text']}")
+            name = chunk["source_file"] or "unknown"
+            label = "Note" if chunk.get("source_type") == "note" else "Document"
+            parts.append(f"[Source {i} ({label}): {name}]\n{chunk['text']}")
         return "\n\n".join(parts)
 
     # ------------------------------------------------------------------
@@ -139,6 +172,7 @@ class GraphRAGService:
                 "chunk_id": c["chunk_id"],
                 "filename": c["source_file"] or "unknown",
                 "snippet": c["text"][:120],
+                "source_type": c.get("source_type", "document"),
             }
             for c in chunks
         ]
