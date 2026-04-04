@@ -12,6 +12,7 @@ _driver = AsyncGraphDatabase.driver(
 # only, permanently excluding syllabus scheduling data from similarity search.
 _STARTUP_CYPHER = [
     "CREATE CONSTRAINT IF NOT EXISTS FOR (n:Notebook) REQUIRE n.id IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (n:Note) REQUIRE n.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (c:Chunk) REQUIRE c.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (u:User) REQUIRE u.username IS UNIQUE",
@@ -19,6 +20,14 @@ _STARTUP_CYPHER = [
     (
         "CREATE VECTOR INDEX chunk_embeddings IF NOT EXISTS "
         "FOR (c:ContentChunk) ON (c.embedding) "
+        "OPTIONS {indexConfig: {"
+        "`vector.dimensions`: 768, "
+        "`vector.similarity_function`: 'cosine'"
+        "}}"
+    ),
+    (
+        "CREATE VECTOR INDEX note_chunk_embeddings IF NOT EXISTS "
+        "FOR (c:NoteChunk) ON (c.embedding) "
         "OPTIONS {indexConfig: {"
         "`vector.dimensions`: 768, "
         "`vector.similarity_function`: 'cosine'"
