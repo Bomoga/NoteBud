@@ -185,9 +185,15 @@ class GraphRAGService:
         client: genai.Client, prompt: str
     ) -> AsyncGenerator[str, None]:
         """Yield text deltas from Gemini streaming, running the sync
-        iterator in a daemon thread and bridging via asyncio.Queue."""
+        iterator in a daemon thread and bridging via asyncio.Queue.
+
+        A threading.Event (stop_flag) is checked by the producer so that
+        if the client disconnects and the async generator is cancelled,
+        the background thread stops consuming LLM tokens promptly.
+        """
         loop = asyncio.get_running_loop()
-        queue: asyncio.Queue[str | Exception | None] = asyncio.Queue()
+        queue: asyncio.Queue[str | Exception | None] = asyncio.Queue(maxsize=64)
+        stop_flag = threading.Event()
 
         def _produce() -> None:
             try:
@@ -196,22 +202,28 @@ class GraphRAGService:
                     contents=prompt,
                 )
                 for chunk in response:
+                    if stop_flag.is_set():
+                        break
                     if chunk.text:
                         loop.call_soon_threadsafe(queue.put_nowait, chunk.text)
             except Exception as exc:            # noqa: BLE001
-                loop.call_soon_threadsafe(queue.put_nowait, exc)
+                if not stop_flag.is_set():
+                    loop.call_soon_threadsafe(queue.put_nowait, exc)
             finally:
                 loop.call_soon_threadsafe(queue.put_nowait, None)
 
         threading.Thread(target=_produce, daemon=True).start()
 
-        while True:
-            item = await queue.get()
-            if item is None:
-                break
-            if isinstance(item, Exception):
-                raise item
-            yield item
+        try:
+            while True:
+                item = await queue.get()
+                if item is None:
+                    break
+                if isinstance(item, Exception):
+                    raise item
+                yield item
+        finally:
+            stop_flag.set()
 
     # ------------------------------------------------------------------
     # Public API — non-streaming (kept for backwards compat with query router)
