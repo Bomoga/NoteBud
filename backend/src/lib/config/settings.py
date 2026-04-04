@@ -37,6 +37,11 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("GEMINI_API_KEY", "gemini_api_key"),
     )
 
+    gemini_model: str = Field(
+        default="gemini-2.0-flash",
+        validation_alias=AliasChoices("GEMINI_MODEL", "gemini_model"),
+    )
+
     model_config = SettingsConfigDict(
         env_file=(".env", f".env.{os.getenv('ENVIRONMENT', 'development')}"),
         env_file_encoding="utf-8",
