@@ -139,4 +139,8 @@ git push origin feature/your-feature-name
 - At least one team member must review before merging
 - Squash and merge on approval
 
-curl -N -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2MwZWViNC01MTQ5LTQ5ZmYtYTQzYS0wNjNmZjgwYjU0M2EiLCJ1c2VybmFtZSI6ImNlc2FyIiwiZXhwIjoxNzc1MzI1OTQ1fQ.GYf1u6uZD2v6j-mDTZuvLngoohDEi2EeuW50OGyIwU0" -H "Content-Type: application/json" -d '{"query": "What is this document about?"}' http://localhost:8000/api/v1/notebooks/bf0b5197-2f00-4077-a3ad-8e1a7e3e6eb9/chat
+```bash
+curl -N -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"query": "What is this document about?"}' \
+  http://localhost:8000/api/v1/notebooks/$NOTEBOOK_ID/chat
+```

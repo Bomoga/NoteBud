@@ -5,7 +5,9 @@ RAG chat service: embed query -> retrieve chunks -> stream LLM answer with citat
 import asyncio
 import json
 import logging
+import re
 import threading
+import time
 from typing import AsyncGenerator
 
 import anyio
@@ -26,7 +28,10 @@ logger = logging.getLogger(__name__)
 
 _CONTENT_VECTOR_INDEX = "chunk_embeddings"
 _NOTE_VECTOR_INDEX = "note_chunk_embeddings"
-_RETRIEVAL_TOP_K = 20  # cast a wide net, then filter by notebook
+# Cast a wide net so that notebook-scoped chunks are included even in a large
+# multi-tenant index.  At 200 candidates the per-request overhead is small
+# (Neo4j traverses the HNSW graph) while making false-zero results rare.
+_RETRIEVAL_TOP_K = 200
 _RESULT_LIMIT = 5
 _SIMILARITY_FLOOR = 0.50  # minimum to include a chunk at all
 _CONFIDENCE_THRESHOLD = 0.75  # for the low_confidence flag
@@ -36,7 +41,9 @@ _SYSTEM_INSTRUCTION = (
     "You are a helpful study assistant. Answer the user's question based ONLY "
     "on the provided context from their notebook documents. If the context "
     "doesn't contain enough information to answer the question, say so clearly. "
-    "Be concise and accurate."
+    "Be concise and accurate. "
+    "When you use information from a source, cite it inline using [Source N] "
+    "where N matches the source number in the context provided."
 )
 
 
@@ -51,8 +58,6 @@ def _get_genai_client() -> genai.Client:
 
 def _embed_query_sync(client: genai.Client, text: str) -> list[float]:
     """Embed a single query string (blocking). Retries on transient errors."""
-    import time
-
     for attempt in range(_EMBED_MAX_RETRIES):
         try:
             response = client.models.embed_content(
@@ -163,7 +168,7 @@ class GraphRAGService:
         return "\n\n".join(parts)
 
     # ------------------------------------------------------------------
-    # 4. Build citations list
+    # 4. Build citations list (all retrieved chunks)
     # ------------------------------------------------------------------
     @staticmethod
     def _build_citations(chunks: list[dict]) -> list[dict]:
@@ -176,6 +181,29 @@ class GraphRAGService:
             }
             for c in chunks
         ]
+
+    # ------------------------------------------------------------------
+    # 4b. Filter citations to only chunks actually cited in the answer
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _extract_cited_citations(chunks: list[dict], answer: str) -> list[dict]:
+        """Return citations only for [Source N] markers present in *answer*.
+
+        Falls back to all chunks if the model emitted no markers.
+        """
+        referenced = {int(m) for m in re.findall(r"\[Source\s+(\d+)\]", answer)}
+        cited = [
+            {
+                "chunk_id": chunks[i - 1]["chunk_id"],
+                "filename": chunks[i - 1]["source_file"] or "unknown",
+                "snippet": chunks[i - 1]["text"][:120],
+                "source_type": chunks[i - 1].get("source_type", "document"),
+            }
+            for i in sorted(referenced)
+            if 1 <= i <= len(chunks)
+        ]
+        # Fallback: include all chunks when the model produced no inline markers
+        return cited if cited else GraphRAGService._build_citations(chunks)
 
     # ------------------------------------------------------------------
     # 5. Stream Gemini LLM tokens from a background thread
@@ -229,7 +257,21 @@ class GraphRAGService:
     # Public API — non-streaming (kept for backwards compat with query router)
     # ------------------------------------------------------------------
     async def query(self, notebook_id: str, query_text: str) -> dict:
-        query_embedding = await self._embed_query(query_text)
+        try:
+            query_embedding = await self._embed_query(query_text)
+        except EnvironmentError:
+            logger.exception("GEMINI_API_KEY not configured")
+            return {
+                "answer": "The AI assistant is not configured. Please contact your administrator.",
+                "sources": [],
+            }
+        except Exception:
+            logger.exception("Failed to embed query in query()")
+            return {
+                "answer": "Sorry, something went wrong processing your query. Please try again.",
+                "sources": [],
+            }
+
         chunks = await self._retrieve_chunks(notebook_id, query_embedding)
 
         if not chunks:
@@ -248,12 +290,19 @@ class GraphRAGService:
         )
 
         client = _get_genai_client()
-        response = await anyio.to_thread.run_sync(
-            lambda: client.models.generate_content(
-                model=settings.gemini_model,
-                contents=prompt,
+        try:
+            response = await anyio.to_thread.run_sync(
+                lambda: client.models.generate_content(
+                    model=settings.gemini_model,
+                    contents=prompt,
+                )
             )
-        )
+        except Exception:
+            logger.exception("LLM generate_content failed in query()")
+            return {
+                "answer": "Sorry, the AI assistant is temporarily unavailable. Please try again later.",
+                "sources": [],
+            }
         return {
             "answer": response.text,
             "sources": [c["source_file"] or "unknown" for c in chunks],
@@ -274,7 +323,7 @@ class GraphRAGService:
         # 1. Embed the query
         try:
             query_embedding = await self._embed_query(query_text)
-        except Exception as exc:
+        except Exception:
             logger.exception("Failed to embed query")
             yield _sse({"token": "Sorry, something went wrong processing your query. Please try again."})
             yield _sse({"done": True, "citations": [], "low_confidence": True})
@@ -298,27 +347,32 @@ class GraphRAGService:
         confident = sum(1 for c in chunks if c["score"] >= _CONFIDENCE_THRESHOLD)
         low_confidence = confident < _MIN_CONFIDENT_CHUNKS
 
-        # 5. Build prompt and citations
+        # 5. Build prompt
         context = self._build_context(chunks)
         prompt = (
             f"{_SYSTEM_INSTRUCTION}\n\nContext:\n{context}\n\n"
             f"Question: {query_text}"
         )
-        citations = self._build_citations(chunks)
 
-        # 6. Stream LLM tokens
+        # 6. Stream LLM tokens; accumulate full answer to extract inline citations
         client = _get_genai_client()
+        answer_parts: list[str] = []
         try:
             async for token in self._stream_llm(client, prompt):
+                answer_parts.append(token)
                 yield _sse({"token": token})
-        except Exception as exc:
+        except Exception:
             logger.exception("Gemini LLM streaming error")
             yield _sse({"token": "\n\nSorry, an error occurred while generating the answer. Please try again."})
 
-        # 7. Final event
+        # 7. Derive citations from [Source N] markers actually used in the answer
+        full_answer = "".join(answer_parts)
+        cited = self._extract_cited_citations(chunks, full_answer)
+
+        # 8. Final event
         yield _sse({
             "done": True,
-            "citations": citations,
+            "citations": cited,
             "low_confidence": low_confidence,
         })
 
