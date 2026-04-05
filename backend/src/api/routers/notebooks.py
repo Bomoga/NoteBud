@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from neo4j import AsyncDriver
 
@@ -6,6 +8,9 @@ from src.lib.db.neo4j import get_driver
 from src.lib.repositories.notebook_repository import NotebookRepository
 from src.lib.repositories.user_repository import UserRepository
 from src.lib.schemas.notebook import NotebookCreate, NotebookRead, NotebookUpdate
+from src.lib.storage.gcs import storage_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -78,4 +83,12 @@ async def delete_notebook_endpoint(
         raise HTTPException(status_code=404, detail="Notebook not found")
     if existing["owner_id"] != current_user:
         raise HTTPException(status_code=403, detail="Not authorized")
+
+    gcs_uris = await repo.get_document_uris(notebook_id)
     await repo.delete(notebook_id)
+
+    for uri in gcs_uris:
+        try:
+            await storage_service.delete_blob(uri)
+        except Exception:
+            logger.exception("Failed to delete GCS blob %s — orphaned object may remain", uri)

@@ -47,6 +47,20 @@ class StorageService:
 
         return f"gs://{self.bucket_name}/{destination_blob_name}"
 
+    async def delete_blob(self, gcs_uri: str) -> None:
+        """Delete a GCS object by URI. No-ops if the blob does not exist."""
+        if not self.client:
+            raise Exception("Storage client not initialized. Check credentials.")
+
+        if not gcs_uri.startswith("gs://"):
+            raise ValueError(f"Invalid GCS URI: {gcs_uri}")
+        without_scheme = gcs_uri[len("gs://"):]
+        bucket_name, _, blob_path = without_scheme.partition("/")
+
+        bucket = self.client.bucket(bucket_name)
+        blob = bucket.blob(blob_path)
+        await anyio.to_thread.run_sync(lambda: blob.delete(if_generation_match=None))
+
     def download_to_tempfile(self, gcs_uri: str) -> str:
         """Download a GCS object to a local temp file.
 

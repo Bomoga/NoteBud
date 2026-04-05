@@ -93,8 +93,23 @@ class NotebookRepository:
                 return None
             return _node_to_dict(record["n"])
 
+    async def get_document_uris(self, notebook_id: str) -> list[str]:
+        """Return GCS URIs for all documents belonging to the notebook."""
+        query = """
+            MATCH (n:Notebook {id: $id})-[:CONTAINS]->(d:Document)
+            RETURN d.gcs_uri AS uri
+        """
+        async with self._driver.session() as session:
+            result = await session.run(query, id=notebook_id)
+            return [record["uri"] async for record in result if record["uri"]]
+
     async def delete(self, notebook_id: str) -> bool:
-        query = "MATCH (n:Notebook {id: $id}) DETACH DELETE n"
+        query = """
+            MATCH (n:Notebook {id: $id})
+            OPTIONAL MATCH (n)-[:CONTAINS]->(d:Document)-[:HAS_CHUNK]->(c:Chunk)
+            OPTIONAL MATCH (n)-[:HAS_NOTE]->(note:Note)-[:HAS_CHUNK]->(nc:NoteChunk)
+            DETACH DELETE n, d, c, note, nc
+        """
         async with self._driver.session() as session:
             result = await session.run(query, id=notebook_id)
             summary = await result.consume()
