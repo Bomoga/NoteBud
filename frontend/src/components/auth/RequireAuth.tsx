@@ -13,15 +13,15 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   const [hydrated, setHydrated] = useState(() =>
-    useAuthStore.persist.hasHydrated()
+    useAuthStore.persist?.hasHydrated() ?? false
   );
 
   useEffect(() => {
-    if (useAuthStore.persist.hasHydrated()) {
+    if (useAuthStore.persist?.hasHydrated()) {
       setHydrated(true);
       return;
     }
-    return useAuthStore.persist.onFinishHydration(() => {
+    return useAuthStore.persist?.onFinishHydration(() => {
       setHydrated(true);
     });
   }, []);

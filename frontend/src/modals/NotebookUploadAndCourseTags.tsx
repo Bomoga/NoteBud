@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, type ChangeEvent } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 
 import {
@@ -25,13 +25,17 @@ export default function NotebookUploadAndCourseTags({
   notebookCourseCode,
   className,
 }: Props) {
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [sourceType, setSourceType] = useState<'content' | 'syllabus'>('content');
   const [uploadResult, setUploadResult] = useState<UploadFileResponse | null>(null);
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => uploadFile(notebookId, file, sourceType),
-    onSuccess: (data) => setUploadResult(data),
+    onSuccess: (data) => {
+      setUploadResult(data);
+      queryClient.invalidateQueries({ queryKey: ['documents', notebookId] });
+    },
   });
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {

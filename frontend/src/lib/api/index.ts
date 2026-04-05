@@ -19,6 +19,33 @@ export {
   type QueryNotebookResponse,
 } from './notebooks';
 
+// Document listing
+export {
+  listDocuments,
+  type DocumentResponse,
+} from './documents';
+
+// Note crud operations
+export {
+  listNotes,
+  createNote,
+  getNote,
+  updateNote,
+  deleteNote,
+  type NoteResponse,
+  type NoteCreate,
+  type NoteUpdate,
+} from './notes';
+
+// RAG chat streaming
+export {
+  streamChat,
+  type ChatCitation,
+  type ChatTokenEvent,
+  type ChatDoneEvent,
+  type ChatEvent,
+} from './chat';
+
 // Courses and notebook tags
 export {
   getCourses,
