@@ -207,10 +207,10 @@ export default function NotesForNotebookPage() {
                   {activeNote ? (
                     <motion.div
                       key={activeNote.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 1 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
                       className="flex flex-col h-full"
                     >
                       {/* Note header: title + delete */}
@@ -245,10 +245,10 @@ export default function NotesForNotebookPage() {
                       return doc ? (
                         <motion.div
                           key={doc.id}
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -6 }}
-                          transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 1 }}
+                          transition={{ duration: 0.15, ease: 'easeOut' }}
                         >
                           <DocumentViewer document={doc} />
                         </motion.div>
