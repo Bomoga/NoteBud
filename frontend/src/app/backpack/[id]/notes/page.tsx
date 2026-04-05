@@ -7,6 +7,7 @@ import NotesTabs, { type NoteTab } from '../../../../components/NotesTabs';
 import FileTree, { type FileTreeNode } from '../../../../components/FileTree';
 import NotebookUploadAndCourseTagsModal from '../../../../modals/NotebookUploadAndCourseTagsModal';
 import NoteEditor from '../../../../components/editor/NoteEditor';
+import ChatPanel from '../../../../components/ChatPanel';
 import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from '../../../../hooks/useNotes';
 import { useDocuments } from '../../../../hooks/useDocuments';
 import type { NoteResponse, DocumentResponse } from '../../../../lib/api';
@@ -237,12 +238,8 @@ export default function NotesForNotebookPage() {
             }`}
           >
             {rightPaneOpen && (
-              <section className="flex flex-col h-full justify-between pl-2">
-                <div />
-                <div className="glass-panel border-2 border-gray-300 rounded-xl flex flex-col h-1/4 w-full items-start justify-start p-4 bg-white/10 backdrop-blur-[30px]">
-                  How can I help you today?
-                  <div className="mt-4 background-white/10 backdrop-blur-[30px] rounded-xl p-4 border-2 border-gray-300 w-full h-full" />
-                </div>
+              <section className="flex flex-col h-full pl-2 pb-2">
+                <ChatPanel notebookId={id} />
               </section>
             )}
           </aside>

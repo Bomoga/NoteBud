@@ -37,6 +37,15 @@ export {
   type NoteUpdate,
 } from './notes';
 
+// RAG chat streaming
+export {
+  streamChat,
+  type ChatCitation,
+  type ChatTokenEvent,
+  type ChatDoneEvent,
+  type ChatEvent,
+} from './chat';
+
 // Courses and notebook tags
 export {
   getCourses,
