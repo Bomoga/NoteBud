@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useParams } from 'next/navigation';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import NotesTabs, { type NoteTab } from '../../../../components/NotesTabs';
@@ -201,47 +202,71 @@ export default function NotesForNotebookPage() {
                 handleCloseLeftPane={() => setLeftPaneOpen(false)}
                 handleCloseChatPanel={() => setRightPaneOpen(false)}
               />
-              <div className="flex-1 min-h-0 overflow-auto">
-                {activeNote ? (
-                  <div className="flex flex-col h-full">
-                    {/* Note header: title + delete */}
-                    <div className="flex items-center gap-2 px-6 pt-4 pb-1 border-b border-white/30">
-                      <input
-                        className="flex-1 bg-transparent text-xl font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none"
-                        value={draftTitle}
-                        onChange={(e) => handleTitleChange(e.target.value)}
-                        placeholder="Note title"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleDeleteActiveNote}
-                        aria-label="Delete note"
-                        className="rounded-md p-1 text-slate-400 hover:text-red-500 hover:bg-white/20"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                    </div>
-                    {/* Rich text editor */}
-                    <div className="flex-1 min-h-0 overflow-hidden">
-                      <NoteEditor
-                        noteId={activeNote.id}
-                        content={activeNote.content}
-                        onChange={handleContentChange}
-                      />
-                    </div>
-                  </div>
-                ) : activeDocumentId ? (
-                  (() => {
-                    const doc = documents.find((d) => d.id === activeDocumentId);
-                    return doc ? (
-                      <DocumentViewer document={doc} />
-                    ) : null;
-                  })()
-                ) : (
-                  <div className="flex h-full items-center justify-center text-slate-400 text-sm">
-                    Select a note from the file tree or press + to create one.
-                  </div>
-                )}
+              <div className="flex-1 min-h-0 overflow-auto relative">
+                <AnimatePresence mode="wait" initial={false}>
+                  {activeNote ? (
+                    <motion.div
+                      key={activeNote.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                      className="flex flex-col h-full"
+                    >
+                      {/* Note header: title + delete */}
+                      <div className="flex items-center gap-2 px-6 pt-4 pb-1 border-b border-white/30">
+                        <input
+                          className="flex-1 bg-transparent text-xl font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                          value={draftTitle}
+                          onChange={(e) => handleTitleChange(e.target.value)}
+                          placeholder="Note title"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleDeleteActiveNote}
+                          aria-label="Delete note"
+                          className="rounded-md p-1 text-slate-400 hover:text-red-500 hover:bg-white/20"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                      {/* Rich text editor */}
+                      <div className="flex-1 min-h-0 overflow-hidden">
+                        <NoteEditor
+                          noteId={activeNote.id}
+                          content={activeNote.content}
+                          onChange={handleContentChange}
+                        />
+                      </div>
+                    </motion.div>
+                  ) : activeDocumentId ? (
+                    (() => {
+                      const doc = documents.find((d) => d.id === activeDocumentId);
+                      return doc ? (
+                        <motion.div
+                          key={doc.id}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                        >
+                          <DocumentViewer document={doc} />
+                        </motion.div>
+                      ) : null;
+                    })()
+                  ) : (
+                    <motion.div
+                      key="empty"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="flex h-full items-center justify-center text-slate-400 text-sm"
+                    >
+                      Select a note from the file tree or press + to create one.
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </section>

@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "../components/providers";
 import NavBar from "../components/NavBar";
+import PageTransition from "../components/PageTransition";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +23,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <NavBar />
-          {children}
+          <PageTransition>{children}</PageTransition>
         </Providers>
       </body>
     </html>
