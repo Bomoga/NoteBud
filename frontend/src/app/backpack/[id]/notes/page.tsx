@@ -1,89 +1,100 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import NotesTabs from '../../../../components/NotesTabs';
+import { TrashIcon } from '@heroicons/react/24/outline';
+import NotesTabs, { type NoteTab } from '../../../../components/NotesTabs';
 import FileTree, { type FileTreeNode } from '../../../../components/FileTree';
 import NotebookUploadAndCourseTagsModal from '../../../../modals/NotebookUploadAndCourseTagsModal';
+import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from '../../../../hooks/useNotes';
+import type { NoteResponse } from '../../../../lib/api';
 
-const noteTree: FileTreeNode[] = [
-  {
-    id: 'folder-lecture',
-    name: 'Lecture Notes',
-    type: 'folder',
-    children: [
-      { id: 'file-week-1', name: 'Week 1.md', type: 'file' },
-      { id: 'file-week-2', name: 'Week 2.md', type: 'file' },
-      {
-        id: 'folder-week-3',
-        name: 'Week 3',
-        type: 'folder',
-        children: [{ id: 'file-week-3-summary', name: 'Summary.md', type: 'file' }],
-      },
-    ],
-  },
-  {
-    id: 'folder-assignments',
-    name: 'Assignments',
-    type: 'folder',
-    children: [
-      { id: 'file-hw-1', name: 'Homework 1.md', type: 'file' },
-      { id: 'file-hw-2', name: 'Homework 2.md', type: 'file' },
-    ],
-  },
-];
+function notesToFileTree(notes: NoteResponse[]): FileTreeNode[] {
+  return notes.map((n) => ({ id: n.id, name: n.title, type: 'file' as const }));
+}
 
 export default function NotesForNotebookPage() {
   const { id } = useParams<{ id: string }>();
 
   const [leftPaneOpen, setLeftPaneOpen] = useState(true);
   const [rightPaneOpen, setRightPaneOpen] = useState(true);
-  const [tabs, setTabs] = useState(['Notes-1', 'Notes-2', 'Notes-3']);
   const [uploadAndCourseTagsModalOpen, setUploadAndCourseTagsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('2026-03-24');
 
-  const handleAddTab = () => {
-    setTabs((prevTabs) => {
-      const maxIndex = prevTabs.reduce((max, tabLabel) => {
-        const match = tabLabel.match(/^Notes-(\d+)$/);
-        if (!match) return max;
-        const num = parseInt(match[1], 10);
-        return Number.isNaN(num) ? max : Math.max(max, num);
-      }, 0);
-      const newTab = `Notes-${maxIndex + 1}`;
-      setActiveTab(newTab);
-      return [...prevTabs, newTab];
-    });
-    setUploadAndCourseTagsModalOpen(true);
-  };
+  // Open tab IDs and active tab
+  const [openNoteIds, setOpenNoteIds] = useState<string[]>([]);
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
 
-  const handleCloseUploadAndCourseTagsModal = () => {
-    setUploadAndCourseTagsModalOpen(false);
-  };
+  // Local draft for the active note's content (title + body), for optimistic editing
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftContent, setDraftContent] = useState('');
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleCloseTab = (tab: string) => {
-    setTabs((prev) => {
-      const next = prev.filter((t) => t !== tab);
-      if (activeTab === tab && next.length > 0) setActiveTab(next[0]);
+  const { data: notes = [] } = useNotes(id);
+  const createNote = useCreateNote(id);
+  const updateNote = useUpdateNote(id);
+  const deleteNote = useDeleteNote(id);
+
+  const activeNote = notes.find((n) => n.id === activeNoteId) ?? null;
+
+  // Sync draft when active note changes
+  useEffect(() => {
+    if (activeNote) {
+      setDraftTitle(activeNote.title);
+      setDraftContent(activeNote.content);
+    }
+  }, [activeNoteId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Remove open tabs whose notes have been deleted
+  useEffect(() => {
+    const noteIds = new Set(notes.map((n) => n.id));
+    setOpenNoteIds((prev) => prev.filter((id) => noteIds.has(id)));
+    setActiveNoteId((prev) => (prev && noteIds.has(prev) ? prev : null));
+  }, [notes]);
+
+  function openNote(noteId: string) {
+    setOpenNoteIds((prev) => (prev.includes(noteId) ? prev : [...prev, noteId]));
+    setActiveNoteId(noteId);
+  }
+
+  function scheduleSave(noteId: string, title: string, content: string) {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      updateNote.mutate({ noteId, title, content });
+    }, 800);
+  }
+
+  function handleTitleChange(value: string) {
+    setDraftTitle(value);
+    if (activeNoteId) scheduleSave(activeNoteId, value, draftContent);
+  }
+
+  function handleContentChange(value: string) {
+    setDraftContent(value);
+    if (activeNoteId) scheduleSave(activeNoteId, draftTitle, value);
+  }
+
+  async function handleAddTab() {
+    const note = await createNote.mutateAsync({ title: 'New Note', content: '' });
+    openNote(note.id);
+  }
+
+  function handleCloseTab(noteId: string) {
+    setOpenNoteIds((prev) => {
+      const next = prev.filter((id) => id !== noteId);
+      if (activeNoteId === noteId) setActiveNoteId(next[next.length - 1] ?? null);
       return next;
     });
-  };
+  }
 
-  const handleOpenChatPanel = () => {
-    setRightPaneOpen(true);
-  };
+  function handleDeleteActiveNote() {
+    if (!activeNoteId) return;
+    deleteNote.mutate(activeNoteId);
+  }
 
-  const handleOpenLeftPane = () => {
-    setLeftPaneOpen(true);
-  };
-
-  const handleCloseLeftPane = () => {
-    setLeftPaneOpen(false);
-  };
-
-  const handleCloseChatPanel = () => {
-    setRightPaneOpen(false);
-  };
+  const tabs: NoteTab[] = openNoteIds.flatMap((noteId) => {
+    const note = notes.find((n) => n.id === noteId);
+    return note ? [{ id: note.id, title: note.title }] : [];
+  });
 
   return (
     <div className="fixed inset-0 z-0 overflow-hidden h-screen">
@@ -94,50 +105,82 @@ export default function NotesForNotebookPage() {
 
       <main className="relative z-10 h-full overflow-hidden">
         <div className="mx-auto max-w-full flex flex-row flex-1 pt-16 h-full">
-          {/* Filetree pane (left) */}
+
+          {/* File tree pane (left) */}
           <aside
             className={`overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 flex flex-col justify-end ${
               leftPaneOpen ? 'flex-[0_0_15%]' : 'flex-[0_0_0%]'
             }`}
           >
-            {leftPaneOpen ? (
-                <section className="flex flex-col h-full justify-between p-4">
-                  <div className=" w-full h-full flex items-start mt-4 justify-start p-4">
-                    {/* Filetree content */}
-                    <FileTree nodes={noteTree} />
-                  </div>
-                </section>
-            ) : null}
+            {leftPaneOpen && (
+              <section className="flex flex-col h-full justify-between p-4">
+                <div className="w-full h-full flex items-start mt-4 justify-start p-4">
+                  <FileTree
+                    nodes={notesToFileTree(notes)}
+                    onSelectFile={(node) => openNote(node.id)}
+                  />
+                </div>
+              </section>
+            )}
           </aside>
 
-          {/* Modal overlay */}
+          {/* Upload / course tags modal */}
           <NotebookUploadAndCourseTagsModal
             isOpen={uploadAndCourseTagsModalOpen}
-            onClose={handleCloseUploadAndCourseTagsModal}
+            onClose={() => setUploadAndCourseTagsModalOpen(false)}
             notebookId={id}
           />
 
-          {/* Notes pane center */}
+          {/* Notes pane (center) */}
           <section className="relative h-full flex-1 min-w-0 overflow-hidden flex flex-col">
             <NotesTabs
               tabs={tabs}
-              activeTab={activeTab}
-              onSelectTab={setActiveTab}
+              activeTab={activeNoteId ?? ''}
+              onSelectTab={(noteId) => openNote(noteId)}
               onAddTab={handleAddTab}
               onCloseTab={handleCloseTab}
               leftPaneOpen={leftPaneOpen}
               rightPaneOpen={rightPaneOpen}
-              handleOpenChatPanel={handleOpenChatPanel}
-              handleOpenLeftPane={handleOpenLeftPane}
-              handleCloseLeftPane={handleCloseLeftPane}
-              handleCloseChatPanel={handleCloseChatPanel}
+              handleOpenChatPanel={() => setRightPaneOpen(true)}
+              handleOpenLeftPane={() => setLeftPaneOpen(true)}
+              handleCloseLeftPane={() => setLeftPaneOpen(false)}
+              handleCloseChatPanel={() => setRightPaneOpen(false)}
             />
 
-
-            <div className={`min-h-0 overflow-hidden flex flex-col h-full`}>
-              <div className="p-2 glass-panel flex flex-col items-start justify-center backdrop-blur-[30px] border-2 border-gray-300 rounded-xl flex-1 min-h-0 w-full h-full overflow-auto">
-                {/* Note content will be displayed here */}
-                <div className="background-white/10 backdrop-blur-[30px] rounded-xl p-4 border-2 border-gray-300 w-full h-full" />
+            <div className="min-h-0 overflow-hidden flex flex-col h-full">
+              <div className="p-2 glass-panel flex flex-col backdrop-blur-[30px] border-2 border-gray-300 rounded-xl flex-1 min-h-0 w-full h-full overflow-auto">
+                {activeNote ? (
+                  <div className="flex flex-col h-full gap-2">
+                    {/* Note header: title + delete */}
+                    <div className="flex items-center gap-2 px-2 pt-2">
+                      <input
+                        className="flex-1 bg-transparent text-lg font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                        value={draftTitle}
+                        onChange={(e) => handleTitleChange(e.target.value)}
+                        placeholder="Note title"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleDeleteActiveNote}
+                        aria-label="Delete note"
+                        className="rounded-md p-1 text-slate-500 hover:text-red-500 hover:bg-white/20"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                    {/* Note body */}
+                    <textarea
+                      className="flex-1 w-full bg-transparent text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none px-2 pb-2 text-sm"
+                      value={draftContent}
+                      onChange={(e) => handleContentChange(e.target.value)}
+                      placeholder="Start writing…"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-slate-400 text-sm">
+                    Select a note from the file tree or press + to create one.
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -148,15 +191,15 @@ export default function NotesForNotebookPage() {
               rightPaneOpen ? 'flex-[0_0_25%]' : 'flex-[0_0_0%]'
             }`}
           >
-            {rightPaneOpen ? (
+            {rightPaneOpen && (
               <section className="flex flex-col h-full justify-between pl-2">
-                <div></div>
-                  <div className="glass-panel border-2 border-gray-300 rounded-xl flex flex-col h-1/4 w-full items-start justify-start p-4 bg-white/10 backdrop-blur-[30px]">
-                    How can I help you today?
-                    <div className="mt-4 background-white/10 backdrop-blur-[30px] rounded-xl p-4 border-2 border-gray-300 w-full h-full" />
-                  </div>
+                <div />
+                <div className="glass-panel border-2 border-gray-300 rounded-xl flex flex-col h-1/4 w-full items-start justify-start p-4 bg-white/10 backdrop-blur-[30px]">
+                  How can I help you today?
+                  <div className="mt-4 background-white/10 backdrop-blur-[30px] rounded-xl p-4 border-2 border-gray-300 w-full h-full" />
+                </div>
               </section>
-            ) : null}
+            )}
           </aside>
 
         </div>
@@ -164,4 +207,3 @@ export default function NotesForNotebookPage() {
     </div>
   );
 }
-

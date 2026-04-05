@@ -19,6 +19,18 @@ export {
   type QueryNotebookResponse,
 } from './notebooks';
 
+// Note crud operations
+export {
+  listNotes,
+  createNote,
+  getNote,
+  updateNote,
+  deleteNote,
+  type NoteResponse,
+  type NoteCreate,
+  type NoteUpdate,
+} from './notes';
+
 // Courses and notebook tags
 export {
   getCourses,

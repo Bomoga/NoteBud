@@ -3,12 +3,17 @@
 import React from 'react';
 import { ChatBubbleLeftIcon, PlusIcon, QueueListIcon, ArrowLeftStartOnRectangleIcon, XMarkIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 
+export interface NoteTab {
+    id: string;
+    title: string;
+}
+
 interface NotesTabsProps {
-    tabs: string[];
+    tabs: NoteTab[];
     activeTab: string;
-    onSelectTab: (tab: string) => void;
+    onSelectTab: (id: string) => void;
     onAddTab: () => void;
-    onCloseTab: (tab: string) => void;
+    onCloseTab: (id: string) => void;
     rightPaneOpen: boolean;
     leftPaneOpen: boolean;
     handleOpenLeftPane: () => void;
@@ -45,23 +50,23 @@ export default function NotesTabs({
                     </button>
                 }
                 {tabs.map((tab) => {
-                    const isActive = activeTab === tab;
+                    const isActive = activeTab === tab.id;
                     return (
                         <div
-                            key={tab}
+                            key={tab.id}
                             className={`glass-panel rounded-t-xl backdrop-blur-[30px] group inline-flex shrink-0 items-center gap-1 px-3 py-1.5 text-sm ${isActive ? 'text-slate-800' : 'text-slate-600 hover:text-slate-800'}`}
                         >
                             <button
                                 type="button"
-                                onClick={() => onSelectTab(tab)}
+                                onClick={() => onSelectTab(tab.id)}
                                 className="max-w-[150px] truncate"
                             >
-                                {tab}
+                                {tab.title}
                             </button>
                             <button
                                 type="button"
-                                aria-label={`Close ${tab}`}
-                                onClick={() => onCloseTab(tab)}
+                                aria-label={`Close ${tab.title}`}
+                                onClick={() => onCloseTab(tab.id)}
                                 className="opacity-60 hover:opacity-100 focus:outline-none focus:opacity-100"
                             >
                                 <XMarkIcon className="h-4 w-4" />
