@@ -8,6 +8,7 @@ import FileTree, { type FileTreeNode } from '../../../../components/FileTree';
 import NotebookUploadAndCourseTagsModal from '../../../../modals/NotebookUploadAndCourseTagsModal';
 import NoteEditor from '../../../../components/editor/NoteEditor';
 import ChatPanel from '../../../../components/ChatPanel';
+import DocumentViewer from '../../../../components/DocumentViewer';
 import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from '../../../../hooks/useNotes';
 import { useDocuments } from '../../../../hooks/useDocuments';
 import type { NoteResponse, DocumentResponse } from '../../../../lib/api';
@@ -60,6 +61,7 @@ export default function NotesForNotebookPage() {
   // Open tab IDs and active tab
   const [openNoteIds, setOpenNoteIds] = useState<string[]>([]);
   const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
 
   // Local draft for the active note's content (title + body), for optimistic editing
   const [draftTitle, setDraftTitle] = useState('');
@@ -95,6 +97,12 @@ export default function NotesForNotebookPage() {
   function openNote(noteId: string) {
     setOpenNoteIds((prev) => (prev.includes(noteId) ? prev : [...prev, noteId]));
     setActiveNoteId(noteId);
+    setActiveDocumentId(null);
+  }
+
+  function openDocument(documentId: string) {
+    setActiveDocumentId(documentId);
+    setActiveNoteId(null);
   }
 
   function scheduleSave(noteId: string, title: string, content: string) {
@@ -159,10 +167,13 @@ export default function NotesForNotebookPage() {
                   <FileTree
                     nodes={buildFileTree(notes, documents)}
                     onSelectFile={(node) => {
-                      // Only notes are openable; document files are display-only
-                      if (notes.some((n) => n.id === node.id)) openNote(node.id);
+                      if (notes.some((n) => n.id === node.id)) {
+                        openNote(node.id);
+                      } else if (documents.some((d) => d.id === node.id)) {
+                        openDocument(node.id);
+                      }
                     }}
-                    selectedId={activeNoteId ?? undefined}
+                    selectedId={activeNoteId ?? activeDocumentId ?? undefined}
                   />
                 </div>
               </section>
@@ -222,6 +233,13 @@ export default function NotesForNotebookPage() {
                       />
                     </div>
                   </div>
+                ) : activeDocumentId ? (
+                  (() => {
+                    const doc = documents.find((d) => d.id === activeDocumentId);
+                    return doc ? (
+                      <DocumentViewer document={doc} />
+                    ) : null;
+                  })()
                 ) : (
                   <div className="flex h-full items-center justify-center text-slate-400 text-sm">
                     Select a note from the file tree or press + to create one.
