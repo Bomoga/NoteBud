@@ -35,8 +35,12 @@ _MD_STRIP_RE = re.compile(
 )
 
 
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+
+
 def _strip_markdown(text: str) -> str:
-    """Remove markdown syntax, leaving plain prose suitable for embedding."""
+    """Remove HTML tags and markdown syntax, leaving plain prose suitable for embedding."""
+    text = _HTML_TAG_RE.sub(" ", text)
     stripped = _MD_STRIP_RE.sub(" ", text)
     # Collapse excess whitespace
     return re.sub(r"\s{2,}", " ", stripped).strip()

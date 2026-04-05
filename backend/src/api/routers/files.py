@@ -56,6 +56,7 @@ async def upload_document(
         gcs_uri=gcs_uri,
         filename=file.filename,
         file_type=file_type,
+        source_type=detected_source_type,
     )
     await doc_repo.link_to_notebook(doc_id=document_id, notebook_id=notebook_id)
 

@@ -6,11 +6,47 @@ import { TrashIcon } from '@heroicons/react/24/outline';
 import NotesTabs, { type NoteTab } from '../../../../components/NotesTabs';
 import FileTree, { type FileTreeNode } from '../../../../components/FileTree';
 import NotebookUploadAndCourseTagsModal from '../../../../modals/NotebookUploadAndCourseTagsModal';
+import NoteEditor from '../../../../components/editor/NoteEditor';
 import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from '../../../../hooks/useNotes';
-import type { NoteResponse } from '../../../../lib/api';
+import { useDocuments } from '../../../../hooks/useDocuments';
+import type { NoteResponse, DocumentResponse } from '../../../../lib/api';
 
-function notesToFileTree(notes: NoteResponse[]): FileTreeNode[] {
-  return notes.map((n) => ({ id: n.id, name: n.title, type: 'file' as const }));
+function buildFileTree(
+  notes: NoteResponse[],
+  documents: DocumentResponse[],
+): FileTreeNode[] {
+  const tree: FileTreeNode[] = [];
+
+  if (notes.length > 0) {
+    tree.push({
+      id: '__folder-pages__',
+      name: 'Pages',
+      type: 'folder',
+      children: notes.map((n) => ({ id: n.id, name: n.title, type: 'file' as const })),
+    });
+  }
+
+  const material = documents.filter((d) => d.source_type === 'content');
+  if (material.length > 0) {
+    tree.push({
+      id: '__folder-material__',
+      name: 'Material',
+      type: 'folder',
+      children: material.map((d) => ({ id: d.id, name: d.filename, type: 'file' as const })),
+    });
+  }
+
+  const courseInfo = documents.filter((d) => d.source_type === 'syllabus');
+  if (courseInfo.length > 0) {
+    tree.push({
+      id: '__folder-course-info__',
+      name: 'Course Information',
+      type: 'folder',
+      children: courseInfo.map((d) => ({ id: d.id, name: d.filename, type: 'file' as const })),
+    });
+  }
+
+  return tree;
 }
 
 export default function NotesForNotebookPage() {
@@ -30,6 +66,7 @@ export default function NotesForNotebookPage() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: notes = [] } = useNotes(id);
+  const { data: documents = [] } = useDocuments(id);
   const createNote = useCreateNote(id);
   const updateNote = useUpdateNote(id);
   const deleteNote = useDeleteNote(id);
@@ -44,12 +81,15 @@ export default function NotesForNotebookPage() {
     }
   }, [activeNoteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Remove open tabs whose notes have been deleted
+  // Remove open tabs whose notes have been deleted.
+  // Use a stable string of IDs as the dependency — notes is a new array
+  // reference on every React Query render, which would cause an infinite loop.
+  const noteIdKey = notes.map((n) => n.id).join(',');
   useEffect(() => {
     const noteIds = new Set(notes.map((n) => n.id));
     setOpenNoteIds((prev) => prev.filter((id) => noteIds.has(id)));
     setActiveNoteId((prev) => (prev && noteIds.has(prev) ? prev : null));
-  }, [notes]);
+  }, [noteIdKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function openNote(noteId: string) {
     setOpenNoteIds((prev) => (prev.includes(noteId) ? prev : [...prev, noteId]));
@@ -116,8 +156,12 @@ export default function NotesForNotebookPage() {
               <section className="flex flex-col h-full justify-between p-4">
                 <div className="w-full h-full flex items-start mt-4 justify-start p-4">
                   <FileTree
-                    nodes={notesToFileTree(notes)}
-                    onSelectFile={(node) => openNote(node.id)}
+                    nodes={buildFileTree(notes, documents)}
+                    onSelectFile={(node) => {
+                      // Only notes are openable; document files are display-only
+                      if (notes.some((n) => n.id === node.id)) openNote(node.id);
+                    }}
+                    selectedId={activeNoteId ?? undefined}
                   />
                 </div>
               </section>
@@ -150,11 +194,11 @@ export default function NotesForNotebookPage() {
             <div className="min-h-0 overflow-hidden flex flex-col h-full">
               <div className="p-2 glass-panel flex flex-col backdrop-blur-[30px] border-2 border-gray-300 rounded-xl flex-1 min-h-0 w-full h-full overflow-auto">
                 {activeNote ? (
-                  <div className="flex flex-col h-full gap-2">
+                  <div className="flex flex-col h-full">
                     {/* Note header: title + delete */}
-                    <div className="flex items-center gap-2 px-2 pt-2">
+                    <div className="flex items-center gap-2 px-6 pt-4 pb-1 border-b border-white/30">
                       <input
-                        className="flex-1 bg-transparent text-lg font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                        className="flex-1 bg-transparent text-xl font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none"
                         value={draftTitle}
                         onChange={(e) => handleTitleChange(e.target.value)}
                         placeholder="Note title"
@@ -163,18 +207,19 @@ export default function NotesForNotebookPage() {
                         type="button"
                         onClick={handleDeleteActiveNote}
                         aria-label="Delete note"
-                        className="rounded-md p-1 text-slate-500 hover:text-red-500 hover:bg-white/20"
+                        className="rounded-md p-1 text-slate-400 hover:text-red-500 hover:bg-white/20"
                       >
                         <TrashIcon className="h-5 w-5" />
                       </button>
                     </div>
-                    {/* Note body */}
-                    <textarea
-                      className="flex-1 w-full bg-transparent text-slate-800 placeholder:text-slate-400 resize-none focus:outline-none px-2 pb-2 text-sm"
-                      value={draftContent}
-                      onChange={(e) => handleContentChange(e.target.value)}
-                      placeholder="Start writing…"
-                    />
+                    {/* Rich text editor */}
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                      <NoteEditor
+                        noteId={activeNote.id}
+                        content={activeNote.content}
+                        onChange={handleContentChange}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="flex h-full items-center justify-center text-slate-400 text-sm">

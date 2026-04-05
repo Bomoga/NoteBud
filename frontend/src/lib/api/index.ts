@@ -19,6 +19,12 @@ export {
   type QueryNotebookResponse,
 } from './notebooks';
 
+// Document listing
+export {
+  listDocuments,
+  type DocumentResponse,
+} from './documents';
+
 // Note crud operations
 export {
   listNotes,
