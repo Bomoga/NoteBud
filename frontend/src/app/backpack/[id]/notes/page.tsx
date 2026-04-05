@@ -153,30 +153,28 @@ export default function NotesForNotebookPage() {
       </div>
 
       <main className="relative z-10 h-full overflow-hidden">
-        <div className="mx-auto max-w-full flex flex-row flex-1 pt-16 h-full">
+        <div className="mx-auto max-w-full flex flex-row flex-1 pt-16 h-full gap-2 px-2 pb-2">
 
           {/* File tree pane (left) */}
           <aside
-            className={`overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 flex flex-col justify-end ${
+            className={`overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 ${
               leftPaneOpen ? 'flex-[0_0_15%]' : 'flex-[0_0_0%]'
             }`}
           >
             {leftPaneOpen && (
-              <section className="flex flex-col h-full justify-between p-4">
-                <div className="w-full h-full flex items-start mt-4 justify-start p-4">
-                  <FileTree
-                    nodes={buildFileTree(notes, documents)}
-                    onSelectFile={(node) => {
-                      if (notes.some((n) => n.id === node.id)) {
-                        openNote(node.id);
-                      } else if (documents.some((d) => d.id === node.id)) {
-                        openDocument(node.id);
-                      }
-                    }}
-                    selectedId={activeNoteId ?? activeDocumentId ?? undefined}
-                  />
-                </div>
-              </section>
+              <div className="glass-panel border-2 border-gray-300 rounded-xl backdrop-blur-[30px] w-full h-full overflow-auto p-3">
+                <FileTree
+                  nodes={buildFileTree(notes, documents)}
+                  onSelectFile={(node) => {
+                    if (notes.some((n) => n.id === node.id)) {
+                      openNote(node.id);
+                    } else if (documents.some((d) => d.id === node.id)) {
+                      openDocument(node.id);
+                    }
+                  }}
+                  selectedId={activeNoteId ?? activeDocumentId ?? undefined}
+                />
+              </div>
             )}
           </aside>
 
@@ -189,22 +187,21 @@ export default function NotesForNotebookPage() {
 
           {/* Notes pane (center) */}
           <section className="relative h-full flex-1 min-w-0 overflow-hidden flex flex-col">
-            <NotesTabs
-              tabs={tabs}
-              activeTab={activeNoteId ?? ''}
-              onSelectTab={(noteId) => openNote(noteId)}
-              onAddTab={handleAddTab}
-              onCloseTab={handleCloseTab}
-              leftPaneOpen={leftPaneOpen}
-              rightPaneOpen={rightPaneOpen}
-              handleOpenChatPanel={() => setRightPaneOpen(true)}
-              handleOpenLeftPane={() => setLeftPaneOpen(true)}
-              handleCloseLeftPane={() => setLeftPaneOpen(false)}
-              handleCloseChatPanel={() => setRightPaneOpen(false)}
-            />
-
-            <div className="min-h-0 overflow-hidden flex flex-col h-full">
-              <div className="p-2 glass-panel flex flex-col backdrop-blur-[30px] border-2 border-gray-300 rounded-xl flex-1 min-h-0 w-full h-full overflow-auto">
+            <div className="glass-panel flex flex-col backdrop-blur-[30px] border-2 border-gray-300 rounded-xl flex-1 min-h-0 h-full overflow-hidden">
+              <NotesTabs
+                tabs={tabs}
+                activeTab={activeNoteId ?? ''}
+                onSelectTab={(noteId) => openNote(noteId)}
+                onAddTab={handleAddTab}
+                onCloseTab={handleCloseTab}
+                leftPaneOpen={leftPaneOpen}
+                rightPaneOpen={rightPaneOpen}
+                handleOpenChatPanel={() => setRightPaneOpen(true)}
+                handleOpenLeftPane={() => setLeftPaneOpen(true)}
+                handleCloseLeftPane={() => setLeftPaneOpen(false)}
+                handleCloseChatPanel={() => setRightPaneOpen(false)}
+              />
+              <div className="flex-1 min-h-0 overflow-auto">
                 {activeNote ? (
                   <div className="flex flex-col h-full">
                     {/* Note header: title + delete */}
@@ -251,14 +248,12 @@ export default function NotesForNotebookPage() {
 
           {/* Chat pane (right) */}
           <aside
-            className={`overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 flex flex-col justify-end ${
+            className={`overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 ${
               rightPaneOpen ? 'flex-[0_0_25%]' : 'flex-[0_0_0%]'
             }`}
           >
             {rightPaneOpen && (
-              <section className="flex flex-col h-full pl-2 pb-2">
-                <ChatPanel notebookId={id} />
-              </section>
+              <ChatPanel notebookId={id} />
             )}
           </aside>
 

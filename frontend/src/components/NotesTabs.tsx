@@ -36,8 +36,7 @@ export default function NotesTabs({
     handleCloseChatPanel,
 }: NotesTabsProps) {
     return (
-        <div className={`border-b border-white/40 ml-4 mr-4 pt-1.5 mt-4
-    `}>
+        <div className="border-b border-white/40 ml-4 mr-4 pt-1.5 mt-2">
             <div className="flex items-end justify-between gap-1 overflow-x-auto">
                 <div className="flex items-center gap-1">
                 {!leftPaneOpen ? (
