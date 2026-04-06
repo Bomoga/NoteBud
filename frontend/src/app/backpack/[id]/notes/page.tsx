@@ -25,7 +25,7 @@ function buildFileTree(
       id: '__folder-pages__',
       name: 'Pages',
       type: 'folder',
-      children: notes.map((n) => ({ id: n.id, name: n.title, type: 'file' as const })),
+      children: notes.map((n) => ({ id: n.id, name: n.title, type: 'file' as const, deletable: true })),
     });
   }
 
@@ -173,6 +173,7 @@ export default function NotesForNotebookPage() {
                       openDocument(node.id);
                     }
                   }}
+                  onDeleteFile={(node) => deleteNote.mutate(node.id)}
                   selectedId={activeNoteId ?? activeDocumentId ?? undefined}
                 />
               </div>
