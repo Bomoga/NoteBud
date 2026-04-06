@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useParams } from 'next/navigation';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import NotesTabs, { type NoteTab } from '../../../../components/NotesTabs';
 import FileTree, { type FileTreeNode, type SectionType } from '../../../../components/FileTree';
 import NotebookUploadAndCourseTagsModal from '../../../../modals/NotebookUploadAndCourseTagsModal';
@@ -12,7 +13,7 @@ import ChatPanel from '../../../../components/ChatPanel';
 import DocumentViewer from '../../../../components/DocumentViewer';
 import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from '../../../../hooks/useNotes';
 import { useDocuments, usePatchDocument } from '../../../../hooks/useDocuments';
-import type { NoteResponse, DocumentResponse } from '../../../../lib/api';
+import { uploadFile, type NoteResponse, type DocumentResponse } from '../../../../lib/api';
 
 // ---------------------------------------------------------------------------
 // buildFileTree — trie-based from folder_path strings
@@ -156,12 +157,23 @@ export default function NotesForNotebookPage() {
     notes: [], material: [], syllabus: [],
   });
 
+  const queryClient = useQueryClient();
   const { data: notes = [] } = useNotes(id);
   const { data: documents = [] } = useDocuments(id);
   const createNote = useCreateNote(id);
   const updateNote = useUpdateNote(id);
   const deleteNote = useDeleteNote(id);
   const patchDocument = usePatchDocument(id);
+
+  const uploadMutation = useMutation({
+    mutationFn: ({ file, sourceType }: { file: File; sourceType: 'content' | 'syllabus' }) =>
+      uploadFile(id, file, sourceType),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['documents', id] }),
+  });
+
+  function handleUploadFile(sectionType: 'material' | 'syllabus', file: File) {
+    uploadMutation.mutate({ file, sourceType: sectionType === 'material' ? 'content' : 'syllabus' });
+  }
 
   const activeNote = notes.find((n) => n.id === activeNoteId) ?? null;
 
@@ -338,6 +350,8 @@ export default function NotesForNotebookPage() {
                   onCreateFolder={handleCreateFolder}
                   onRenameFolder={handleRenameFolder}
                   onDeleteFolder={handleDeleteFolder}
+                  onAddNote={handleAddTab}
+                  onUploadFile={handleUploadFile}
                   selectedId={activeNoteId ?? activeDocumentId ?? undefined}
                 />
               </div>

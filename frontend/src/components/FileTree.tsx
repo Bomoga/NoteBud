@@ -12,6 +12,8 @@ import {
   AcademicCapIcon,
   LockClosedIcon,
   TrashIcon,
+  PlusIcon,
+  ArrowUpTrayIcon,
 } from '@heroicons/react/24/solid';
 
 // ---------------------------------------------------------------------------
@@ -46,6 +48,8 @@ type FileTreeProps = {
   onCreateFolder?: (sectionType: SectionType, parentPath: string, name: string) => void;
   onRenameFolder?: (sectionType: SectionType, oldPath: string, newName: string) => void;
   onDeleteFolder?: (sectionType: SectionType, folderPath: string) => void;
+  onAddNote?: (folderPath: string) => void;
+  onUploadFile?: (sectionType: 'material' | 'syllabus', file: File) => void;
   selectedId?: string;
   className?: string;
 };
@@ -158,6 +162,8 @@ function TreeBranch({
   renamingPath,
   onRenameConfirm,
   onRenameCancel,
+  onAddNote,
+  onTriggerUpload,
 }: {
   node: FileTreeNode;
   depth: number;
@@ -173,6 +179,8 @@ function TreeBranch({
   renamingPath: string | null;
   onRenameConfirm: (newName: string) => void;
   onRenameCancel: () => void;
+  onAddNote?: (folderPath: string) => void;
+  onTriggerUpload?: (sectionType: 'material' | 'syllabus') => void;
 }) {
   const isOpen = expanded[node.id] ?? true;
   const isSelected = node.id === selectedId;
@@ -191,7 +199,7 @@ function TreeBranch({
       <li>
         {/* Section header */}
         <div
-          className={`flex w-full items-center gap-1 py-[3px] pr-2 rounded-sm ${meta.bgClass}`}
+          className={`group flex w-full items-center gap-1 py-[3px] pr-2 rounded-sm ${meta.bgClass}`}
           style={{ paddingLeft: indent }}
         >
           <span className={`flex-1 text-[11px] font-semibold uppercase tracking-wide ${meta.colorClass}`}>
@@ -204,7 +212,37 @@ function TreeBranch({
             />
           )}
           <span className="text-[10px] text-slate-400 tabular-nums mr-1">{fileCount}</span>
-          {node.sectionType !== 'syllabus' && (
+          {node.sectionType === 'notes' && (
+            <>
+              <button
+                type="button"
+                title="New note"
+                onClick={() => onAddNote?.('')}
+                className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-violet-600 focus:opacity-100 hover:bg-white/30"
+              >
+                <PlusIcon className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                title="New folder"
+                onClick={() => onAddFolder?.(node.sectionType!, '')}
+                className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-slate-600 focus:opacity-100 hover:bg-white/30"
+              >
+                <FolderPlusIcon className="h-3.5 w-3.5" />
+              </button>
+            </>
+          )}
+          {(node.sectionType === 'material' || node.sectionType === 'syllabus') && (
+            <button
+              type="button"
+              title="Upload file"
+              onClick={() => onTriggerUpload?.(node.sectionType as 'material' | 'syllabus')}
+              className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-sky-600 focus:opacity-100 hover:bg-white/30"
+            >
+              <ArrowUpTrayIcon className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {node.sectionType === 'material' && (
             <button
               type="button"
               title="New folder"
@@ -235,6 +273,8 @@ function TreeBranch({
               renamingPath={renamingPath}
               onRenameConfirm={onRenameConfirm}
               onRenameCancel={onRenameCancel}
+              onAddNote={onAddNote}
+              onTriggerUpload={onTriggerUpload}
             />
           ))}
           {isCreatingHere && (
@@ -370,6 +410,8 @@ export default function FileTree({
   onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
+  onAddNote,
+  onUploadFile,
   selectedId,
   className = '',
 }: FileTreeProps) {
@@ -384,6 +426,19 @@ export default function FileTree({
   const [creatingIn, setCreatingIn] = useState<{ sectionType: SectionType; parentPath: string } | null>(null);
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const contentInputRef = useRef<HTMLInputElement>(null);
+  const syllabusInputRef = useRef<HTMLInputElement>(null);
+
+  function handleTriggerUpload(sectionType: 'material' | 'syllabus') {
+    if (sectionType === 'material') contentInputRef.current?.click();
+    else syllabusInputRef.current?.click();
+  }
+
+  function handleFileInputChange(sectionType: 'material' | 'syllabus', e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) onUploadFile?.(sectionType, file);
+    e.target.value = '';
+  }
 
   const toggleExpanded = (id: string) => setExpanded((p) => ({ ...p, [id]: !p[id] }));
 
@@ -461,6 +516,22 @@ export default function FileTree({
 
   return (
     <>
+      {/* Hidden file inputs for in-tree uploads */}
+      <input
+        ref={contentInputRef}
+        type="file"
+        accept=".pdf,.docx,.pptx"
+        className="hidden"
+        onChange={(e) => handleFileInputChange('material', e)}
+      />
+      <input
+        ref={syllabusInputRef}
+        type="file"
+        accept=".pdf,.docx,.pptx"
+        className="hidden"
+        onChange={(e) => handleFileInputChange('syllabus', e)}
+      />
+
       <nav className={`w-full overflow-auto ${className}`} aria-label="File tree">
         <ul className="py-1 space-y-1">
           {nodes.map((node) => (
@@ -480,6 +551,8 @@ export default function FileTree({
               renamingPath={renamingPath}
               onRenameConfirm={handleRenameConfirm}
               onRenameCancel={() => { setRenamingPath(null); setContextMenu(null); }}
+              onAddNote={onAddNote}
+              onTriggerUpload={handleTriggerUpload}
             />
           ))}
         </ul>
