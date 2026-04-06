@@ -80,12 +80,14 @@ export async function queryNotebook(
 export async function uploadFile(
   notebookId: string,
   file: File,
-  sourceType?: 'syllabus' | 'content'
+  sourceType?: 'syllabus' | 'content',
+  folderPath?: string,
 ): Promise<UploadFileResponse> {
   const form = new FormData();
   form.append('file', file);
   const params = new URLSearchParams({ notebook_id: notebookId });
   if (sourceType) params.set('source_type', sourceType);
+  if (folderPath) params.set('folder_path', folderPath);
   const { data } = await apiClient.post<UploadFileResponse>(
     `/files/upload?${params.toString()}`,
     form,

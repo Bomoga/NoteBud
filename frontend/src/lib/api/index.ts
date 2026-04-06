@@ -19,10 +19,12 @@ export {
   type QueryNotebookResponse,
 } from './notebooks';
 
-// Document listing
+// Document listing and patching
 export {
   listDocuments,
+  patchDocument,
   type DocumentResponse,
+  type DocumentUpdate,
 } from './documents';
 
 // Note crud operations

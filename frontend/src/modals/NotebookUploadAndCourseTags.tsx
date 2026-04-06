@@ -6,6 +6,7 @@ import { DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 
 import {
   uploadFile,
+  listDocuments,
   getCourses,
   addNotebookTag,
   removeNotebookTag,
@@ -28,10 +29,26 @@ export default function NotebookUploadAndCourseTags({
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [sourceType, setSourceType] = useState<'content' | 'syllabus'>('content');
+  const [selectedFolder, setSelectedFolder] = useState('');
   const [uploadResult, setUploadResult] = useState<UploadFileResponse | null>(null);
 
+  const { data: existingDocs = [] } = useQuery({
+    queryKey: ['documents', notebookId],
+    queryFn: () => listDocuments(notebookId),
+    enabled: !!notebookId,
+    staleTime: 60 * 1000,
+  });
+
+  const availableFolders = Array.from(
+    new Set(
+      existingDocs
+        .filter((d) => d.source_type === sourceType && d.folder_path)
+        .map((d) => d.folder_path)
+    )
+  ).sort();
+
   const uploadMutation = useMutation({
-    mutationFn: (file: File) => uploadFile(notebookId, file, sourceType),
+    mutationFn: (file: File) => uploadFile(notebookId, file, sourceType, selectedFolder || undefined),
     onSuccess: (data) => {
       setUploadResult(data);
       queryClient.invalidateQueries({ queryKey: ['documents', notebookId] });
@@ -87,7 +104,7 @@ export default function NotebookUploadAndCourseTags({
             <button
               key={type}
               type="button"
-              onClick={() => setSourceType(type)}
+              onClick={() => { setSourceType(type); setSelectedFolder(''); }}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
                 sourceType === type
                   ? 'bg-emerald-600 text-white'
@@ -97,6 +114,25 @@ export default function NotebookUploadAndCourseTags({
               {type}
             </button>
           ))}
+        </div>
+
+        <div className="mb-4">
+          <label htmlFor="folderSelect" className="mb-1 block text-sm font-medium text-slate-700">
+            Save to folder
+          </label>
+          <select
+            id="folderSelect"
+            value={selectedFolder}
+            onChange={(e) => setSelectedFolder(e.target.value)}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          >
+            <option value="">No folder (root)</option>
+            {availableFolders.map((fp) => (
+              <option key={fp} value={fp}>
+                {fp}
+              </option>
+            ))}
+          </select>
         </div>
 
         <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 p-8 text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-colors">

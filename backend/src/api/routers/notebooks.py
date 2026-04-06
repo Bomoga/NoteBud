@@ -8,6 +8,7 @@ from src.lib.db.neo4j import get_driver
 from src.lib.repositories.document_repository import DocumentRepository
 from src.lib.repositories.notebook_repository import NotebookRepository
 from src.lib.repositories.user_repository import UserRepository
+from src.lib.schemas.document import DocumentUpdate
 from src.lib.schemas.notebook import NotebookCreate, NotebookRead, NotebookUpdate
 from src.lib.storage.gcs import storage_service
 
@@ -86,6 +87,32 @@ async def list_notebook_documents_endpoint(
     if existing["owner_id"] != current_user:
         raise HTTPException(status_code=403, detail="Not authorized")
     return await DocumentRepository(driver).list_by_notebook(notebook_id)
+
+
+@router.patch("/{notebook_id}/documents/{document_id}", status_code=200)
+async def patch_notebook_document_endpoint(
+    notebook_id: str,
+    document_id: str,
+    data: DocumentUpdate,
+    repo: NotebookRepository = Depends(get_repo),
+    driver: AsyncDriver = Depends(get_driver),
+    current_user: str = Depends(get_current_user),
+):
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    doc_repo = DocumentRepository(driver)
+    # Verify document belongs to this notebook
+    docs = await doc_repo.list_by_notebook(notebook_id)
+    if not any(d["id"] == document_id for d in docs):
+        raise HTTPException(status_code=404, detail="Document not found in notebook")
+    updates = data.model_dump(exclude_unset=True)
+    result = await doc_repo.update(document_id, updates)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return result
 
 
 @router.delete("/{notebook_id}", status_code=204)

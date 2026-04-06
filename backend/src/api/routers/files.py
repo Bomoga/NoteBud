@@ -31,6 +31,7 @@ async def upload_document(
     file: UploadFile = File(...),
     driver: AsyncDriver = Depends(get_driver),
     source_type: str | None = Query(default=None),
+    folder_path: str = Query(default=""),
     current_user: str = Depends(get_current_user),
 ):
     notebook = await NotebookRepository(driver).get_by_id(notebook_id)
@@ -49,6 +50,7 @@ async def upload_document(
 
     document_id = str(uuid.uuid4())
     file_type = file.content_type or "application/octet-stream"
+    detected_source_type = _detect_source_type(file.filename, source_type)
 
     doc_repo = DocumentRepository(driver)
     await doc_repo.create(
@@ -57,10 +59,9 @@ async def upload_document(
         filename=file.filename,
         file_type=file_type,
         source_type=detected_source_type,
+        folder_path=folder_path,
     )
     await doc_repo.link_to_notebook(doc_id=document_id, notebook_id=notebook_id)
-
-    detected_source_type = _detect_source_type(file.filename, source_type)
 
     background_tasks.add_task(
         ingest_document,
