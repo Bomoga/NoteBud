@@ -86,7 +86,7 @@ function fileIcon(fileItemType: FileItemType, processing: boolean) {
     : fileItemType === 'content-doc'
       ? DocumentTextIcon
       : AcademicCapIcon;
-  return <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${cls}`} />;
+  return <Icon className={`h-4 w-4 flex-shrink-0 ${cls}`} />;
 }
 
 function collectFolders(nodes: FileTreeNode[]): FileTreeNode[] {
@@ -130,15 +130,15 @@ function InlineFolderInput({
   return (
     <li>
       <div
-        className="flex items-center gap-1.5 py-[3px] pr-3"
+        className="flex items-center gap-1.5 py-[5px] pr-3"
         style={{ paddingLeft: BASE_PADDING + depth * INDENT + 20 }}
       >
-        <FolderIcon className="h-3.5 w-3.5 flex-shrink-0 text-amber-400" />
+        <FolderIcon className="h-4 w-4 flex-shrink-0 text-amber-400" />
         <input
           ref={ref}
           onKeyDown={handleKey}
           onBlur={onCancel}
-          className="flex-1 min-w-0 rounded bg-white/40 px-1 text-[13px] text-slate-800 focus:outline-none border border-white/60"
+          className="flex-1 min-w-0 rounded bg-white/40 px-1 text-[15px] text-slate-800 focus:outline-none border border-white/60"
           placeholder="Folder name…"
         />
       </div>
@@ -199,7 +199,7 @@ function TreeBranch({
   const isSelected = node.id === selectedId;
   const indent = BASE_PADDING + depth * INDENT;
   const rowBase =
-    'group flex w-full items-center gap-1.5 py-[3px] pr-2 text-left text-[13px] leading-5 cursor-pointer select-none transition-colors duration-75 rounded-sm';
+    'group flex w-full items-center gap-1.5 py-[5px] pr-2 text-left text-[15px] leading-5 cursor-pointer select-none transition-colors duration-75 rounded-sm';
 
   // ── SECTION ──────────────────────────────────────────────────────────────
   if (node.type === 'section') {
@@ -221,29 +221,29 @@ function TreeBranch({
         >
           {showSectionHeaders && (
             <>
-              <span className={`flex-1 text-[11px] font-semibold uppercase tracking-wide ${meta.colorClass}`}>
+              <span className={`flex-1 text-[12px] font-semibold uppercase tracking-wide ${meta.colorClass}`}>
                 {meta.label}
               </span>
               {node.sectionType === 'syllabus' && (
-                <LockClosedIcon className="h-3 w-3 text-amber-400 flex-shrink-0" title="Not included in AI search" />
+                <LockClosedIcon className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" title="Not included in AI search" />
               )}
-              <span className="text-[10px] text-slate-400 tabular-nums mr-1">{fileCount}</span>
+              <span className="text-[11px] text-slate-400 tabular-nums mr-1">{fileCount}</span>
               {node.sectionType === 'notes' && (
                 <>
                   <button type="button" title="New note" onClick={() => onAddNote?.('')}
                     className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-violet-600 focus:opacity-100 hover:bg-white/30">
-                    <PlusIcon className="h-3.5 w-3.5" />
+                    <PlusIcon className="h-4 w-4" />
                   </button>
                   <button type="button" title="New folder" onClick={() => onAddFolder?.(node.sectionType!, '')}
                     className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-slate-600 focus:opacity-100 hover:bg-white/30">
-                    <FolderPlusIcon className="h-3.5 w-3.5" />
+                    <FolderPlusIcon className="h-4 w-4" />
                   </button>
                 </>
               )}
               {(node.sectionType === 'material' || node.sectionType === 'syllabus') && (
                 <button type="button" title="Upload file" onClick={() => onTriggerUpload?.(node.sectionType as 'material' | 'syllabus')}
                   className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-sky-600 focus:opacity-100 hover:bg-white/30">
-                  <ArrowUpTrayIcon className="h-3.5 w-3.5" />
+                  <ArrowUpTrayIcon className="h-4 w-4" />
                 </button>
               )}
               {node.sectionType === 'material' && (
@@ -293,7 +293,7 @@ function TreeBranch({
           )}
           {fileCount === 0 && !isCreatingHere && (
             <li
-              className="text-[11px] text-slate-400 italic py-[3px]"
+              className="text-[13px] text-slate-400 italic py-[5px]"
               style={{ paddingLeft: BASE_PADDING + (depth + 1) * INDENT + 20 }}
             >
               Nothing here yet
@@ -338,17 +338,17 @@ function TreeBranch({
           onDrop={(e) => { e.preventDefault(); onDropOnTarget?.(node.folderPath!); setDragOverId(null); }}
           aria-expanded={isOpen}
         >
-          <span className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center text-slate-400">
+          <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center text-slate-400">
             {hasChildren || isCreatingHere ? (
               isOpen ? <ChevronDownIcon className="h-2.5 w-2.5" /> : <ChevronRightIcon className="h-2.5 w-2.5" />
             ) : null}
           </span>
           {isOpen ? (
-            <FolderOpenIcon className="h-3.5 w-3.5 flex-shrink-0 text-amber-400" />
+            <FolderOpenIcon className="h-4 w-4 flex-shrink-0 text-amber-400" />
           ) : (
-            <FolderIcon className="h-3.5 w-3.5 flex-shrink-0 text-amber-400" />
+            <FolderIcon className="h-4 w-4 flex-shrink-0 text-amber-400" />
           )}
-          <span className="truncate text-[13px]">{node.name}</span>
+          <span className="truncate text-[15px]">{node.name}</span>
         </button>
 
         {isOpen && (
@@ -611,7 +611,7 @@ export default function FileTree({
       {contextMenu && (
         <div
           ref={menuRef}
-          className="fixed z-50 min-w-[160px] rounded-lg border border-white/30 bg-white/85 py-1 shadow-lg backdrop-blur-[20px] text-[13px]"
+          className="fixed z-50 min-w-[160px] rounded-lg border border-white/30 bg-white/85 py-1 shadow-lg backdrop-blur-[20px] text-[14px]"
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           {contextMenu.kind === 'file' && (
@@ -622,7 +622,7 @@ export default function FileTree({
                 const folders = sec ? foldersBySection[sec] : [];
                 return (
                   <div className="border-b border-slate-200/60 pb-1 mb-1">
-                    <p className="px-3 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                       Move to
                     </p>
                     <button
@@ -639,7 +639,7 @@ export default function FileTree({
                         onClick={() => { onMoveFile(contextMenu.node, f.folderPath!); setContextMenu(null); }}
                         className="flex w-full items-center gap-2 px-3 py-1 text-slate-600 hover:bg-slate-100/60"
                       >
-                        <FolderIcon className="h-3.5 w-3.5 text-amber-400" />
+                        <FolderIcon className="h-4 w-4 text-amber-400" />
                         {f.name}
                       </button>
                     ))}
@@ -653,7 +653,7 @@ export default function FileTree({
                   onClick={() => { onDeleteFile?.(contextMenu.node); setContextMenu(null); }}
                   className="flex w-full items-center gap-2 px-3 py-1.5 text-red-600 hover:bg-red-50/60"
                 >
-                  <TrashIcon className="h-3.5 w-3.5" />
+                  <TrashIcon className="h-4 w-4" />
                   Delete
                 </button>
               )}
@@ -667,7 +667,7 @@ export default function FileTree({
                 onClick={() => { setRenamingPath(contextMenu.node.folderPath!); }}
                 className="flex w-full items-center gap-2 px-3 py-1.5 text-slate-700 hover:bg-slate-100/60"
               >
-                <PencilSquareIcon className="h-3.5 w-3.5 text-slate-400" />
+                <PencilSquareIcon className="h-4 w-4 text-slate-400" />
                 Rename
               </button>
               <button
