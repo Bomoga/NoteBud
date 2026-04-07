@@ -163,7 +163,7 @@ export default function ChatPanel({ notebookId }: Props) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a question…"
+            placeholder=""
             disabled={isStreaming}
             className="flex-1 resize-none bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none min-h-[20px] max-h-[120px] leading-5 disabled:opacity-50"
             style={{ height: 'auto' }}
