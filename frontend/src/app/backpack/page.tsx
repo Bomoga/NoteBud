@@ -92,7 +92,7 @@ export default function BackpackPage() {
                     <div className="glass-panel border border-white/30 rounded-xl flex flex-col flex-1 overflow-hidden min-h-0">
                         <div className="flex items-center gap-2 px-4 pt-4 pb-2 flex-shrink-0">
                             <ShareIcon className="size-4 text-slate-500" />
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Notebook graph</span>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Notebook Neural Map</span>
                         </div>
                         <NotebookGraph notebooks={displayNotebooks ?? []} links={allLinks} />
                     </div>
