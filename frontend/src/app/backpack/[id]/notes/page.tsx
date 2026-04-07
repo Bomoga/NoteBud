@@ -370,13 +370,13 @@ export default function NotesForNotebookPage() {
                           type="button"
                           onClick={() => setActiveSection(section)}
                           title={label}
-                          className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium border-b-2 transition-colors ${
+                          className={`flex flex-1 flex-col items-center gap-1 py-3 text-[12px] font-medium border-b-2 transition-colors ${
                             isActive
                               ? `${activeColor} ${activeBg}`
                               : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-white/20'
                           }`}
                         >
-                          <Icon className="h-4 w-4" />
+                          <Icon className="h-5 w-5" />
                           <span>{label}</span>
                         </button>
                       );
