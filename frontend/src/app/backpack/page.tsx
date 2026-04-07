@@ -5,6 +5,8 @@ import { useNotebooks, useCreateNotebook, useDeleteNotebook } from '../../hooks/
 import NotebookCard from '../../components/NotebookCard';
 import NotebookGrid from '../../components/NotebookGrid';
 import { PlusIcon, ShareIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
+import NotebookGraph from '../../components/NotebookGraph';
+import { useAllLinks } from '../../hooks/useLinks';
 
 const DEFAULT_SEMESTER = 'Spring 2026';
 const STORAGE_KEY = 'notebud_current_semester';
@@ -18,6 +20,7 @@ function semesterSortKey(semester: string): number {
 
 export default function BackpackPage() {
     const { data: displayNotebooks, isLoading, isError } = useNotebooks();
+    const { data: allLinks = [] } = useAllLinks();
     const createMutation = useCreateNotebook();
     const deleteMutation = useDeleteNotebook();
     const [currentSemester, setCurrentSemester] = useState<string>(
@@ -73,7 +76,7 @@ export default function BackpackPage() {
             <div className="relative z-10 flex h-full gap-3 p-3 pt-[4.5rem]">
 
                 {/* ── Left panel: Calendar + Graph ── */}
-                <div className="hidden lg:flex w-72 xl:w-80 flex-shrink-0 flex-col gap-3 h-full">
+                <div className="hidden lg:flex w-[420px] xl:w-[480px] flex-shrink-0 flex-col gap-3 h-full">
                     {/* Calendar placeholder */}
                     <div className="glass-panel border border-white/30 rounded-xl flex flex-col h-56 xl:h-64 flex-shrink-0 overflow-hidden">
                         <div className="flex items-center gap-2 px-4 pt-4 pb-2">
@@ -85,15 +88,13 @@ export default function BackpackPage() {
                         </div>
                     </div>
 
-                    {/* Network graph placeholder */}
+                    {/* Notebook graph */}
                     <div className="glass-panel border border-white/30 rounded-xl flex flex-col flex-1 overflow-hidden min-h-0">
-                        <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+                        <div className="flex items-center gap-2 px-4 pt-4 pb-2 flex-shrink-0">
                             <ShareIcon className="size-4 text-slate-500" />
                             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Notebook graph</span>
                         </div>
-                        <div className="flex-1 flex items-center justify-center">
-                            <p className="text-sm text-slate-400">Coming soon</p>
-                        </div>
+                        <NotebookGraph notebooks={displayNotebooks ?? []} links={allLinks} />
                     </div>
                 </div>
 
