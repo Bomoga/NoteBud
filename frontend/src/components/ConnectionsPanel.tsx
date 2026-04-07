@@ -114,7 +114,6 @@ export default function ConnectionsPanel({ notebookId }: Props) {
               onClick={handleAdd}
               disabled={!targetId || createLink.isPending}
               className="rounded-md p-1.5 text-emerald-600 hover:bg-emerald-500/10 disabled:opacity-30 transition-colors"
-              title="Add link"
             >
               <PlusIcon className="h-4 w-4" />
             </button>
@@ -219,7 +218,6 @@ export default function ConnectionsPanel({ notebookId }: Props) {
                           type="button"
                           onClick={() => handleSuggestLink(s.notebook_id)}
                           className="rounded p-0.5 text-slate-400 hover:text-emerald-600 transition-colors"
-                          title="Add as connection"
                         >
                           <PlusIcon className="h-3 w-3" />
                         </button>
