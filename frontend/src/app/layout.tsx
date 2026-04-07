@@ -20,7 +20,7 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `try{var t=JSON.parse(localStorage.getItem('notebud-theme')||'{}');if(t.state&&t.state.theme==='notion-dark')document.documentElement.dataset.theme='notion-dark';}catch(e){}` }} />
       </head>
