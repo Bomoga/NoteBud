@@ -8,6 +8,9 @@ import { Bars3Icon, BellIcon, XMarkIcon, HomeIcon, BookOpenIcon } from '@heroico
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../lib/store/auth'
 import { abortAllInFlightRequests, disableAuthHeadersFor } from '../lib/api/client'
+import { getNotebook } from '../lib/api'
+import { useQuery } from '@tanstack/react-query'
+import { ChevronRightIcon } from '@heroicons/react/24/outline'
 
 const navLinks = [
   { href: '/', label: 'Home', Icon: HomeIcon, protected: false },
@@ -34,6 +37,17 @@ export default function NavBar() {
   };
 
   const displayInitial = username?.trim()?.charAt(0).toUpperCase() || '?';
+
+  // Extract notebook ID from /backpack/[id]/... routes
+  const notebookIdMatch = pathname.match(/^\/backpack\/([^/]+)/);
+  const notebookId = notebookIdMatch?.[1];
+
+  const { data: currentNotebook } = useQuery({
+    queryKey: ['notebook', notebookId],
+    queryFn: () => getNotebook(notebookId!),
+    enabled: !!notebookId && !!token,
+    staleTime: 60 * 1000,
+  });
 
   return (
     <Disclosure as="nav" className="relative z-20 glass-panel backdrop-blur-[30px]">
@@ -66,6 +80,20 @@ export default function NavBar() {
               })}
             </div>
           </div>
+          {/* Notebook breadcrumb */}
+          {currentNotebook && (
+            <div className="hidden lg:flex items-center gap-1.5 ml-4 text-slate-400">
+              <ChevronRightIcon className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm font-medium text-slate-600 truncate max-w-[200px]">
+                {currentNotebook.course_code}
+              </span>
+              <span className="text-slate-300">·</span>
+              <span className="text-sm text-slate-500 truncate max-w-[240px]">
+                {currentNotebook.title}
+              </span>
+            </div>
+          )}
+
           {/* Search Bar */}
           <div className="flex flex-1 items-center justify-center px-2 lg:ml-6 lg:justify-end">
             <div className="grid w-full max-w-lg grid-cols-1 lg:max-w-xs">
