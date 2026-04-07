@@ -232,17 +232,19 @@ export default function NotebookGraph({ notebooks, links }: Props) {
               >
                 {(nb.course_code || nb.title).charAt(0).toUpperCase()}
               </text>
-              {/* Label below */}
-              <text
-                y={NODE_R_HOVER + 4}
-                textAnchor="middle"
-                fontSize={10}
-                fill="currentColor"
-                className="text-slate-500"
-                style={{ pointerEvents: "none", userSelect: "none" }}
-              >
-                {label}
-              </text>
+              {/* Label below — only on hover */}
+              {isHovered && (
+                <text
+                  y={NODE_R_HOVER + 4}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fill="currentColor"
+                  className="text-slate-500"
+                  style={{ pointerEvents: "none", userSelect: "none" }}
+                >
+                  {label}
+                </text>
+              )}
             </g>
           );
         })}
