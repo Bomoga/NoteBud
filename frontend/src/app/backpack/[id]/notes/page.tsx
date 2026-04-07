@@ -336,7 +336,7 @@ export default function NotesForNotebookPage() {
       </div>
 
       <main className="relative z-10 h-full overflow-hidden">
-        <div className="mx-auto max-w-full flex flex-row flex-1 pt-16 h-full gap-0">
+        <div className="mx-auto max-w-full flex flex-row flex-1 pt-16 h-full gap-2 px-2">
 
           {/* File tree pane (collapsible) */}
           <aside
@@ -345,7 +345,7 @@ export default function NotesForNotebookPage() {
             }`}
           >
             {leftPaneOpen && (
-              <div className="glass-panel border-r border-white/30 backdrop-blur-[30px] w-full h-full flex flex-col overflow-hidden">
+              <div className="glass-panel border border-white/30 backdrop-blur-[30px] w-full h-full flex flex-col overflow-hidden">
                 {/* Hidden upload inputs */}
                 <input ref={contentUploadRef} type="file" accept=".pdf,.docx,.pptx" className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadFile('material', f); e.target.value = ''; }} />
@@ -452,7 +452,7 @@ export default function NotesForNotebookPage() {
 
           {/* Notes pane (center) */}
           <section className="relative h-full flex-1 min-w-0 overflow-hidden flex flex-col">
-            <div className="glass-panel flex flex-col backdrop-blur-[30px] border-r border-white/30 flex-1 min-h-0 h-full overflow-hidden">
+            <div className="glass-panel flex flex-col backdrop-blur-[30px] border border-white/30 flex-1 min-h-0 h-full overflow-hidden">
               <NotesTabs
                 tabs={tabs}
                 activeTab={activeNoteId ?? ''}
