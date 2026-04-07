@@ -189,7 +189,6 @@ export default function ChatPanel({ notebookId }: Props) {
             <PaperAirplaneIcon className="h-4 w-4" />
           </button>
         </div>
-        <p className="text-[10px] text-slate-400 mt-1 text-center">Enter to send · Shift+Enter for newline</p>
       </div>
 
       <ConnectionsPanel notebookId={notebookId} />
