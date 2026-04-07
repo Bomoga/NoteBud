@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useParams } from 'next/navigation';
 import { TrashIcon } from '@heroicons/react/24/outline';
-import { PencilSquareIcon, DocumentTextIcon, AcademicCapIcon } from '@heroicons/react/24/solid';
+import { PencilSquareIcon, DocumentTextIcon, AcademicCapIcon, LockClosedIcon } from '@heroicons/react/24/solid';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import NotesTabs, { type NoteTab } from '../../../../components/NotesTabs';
 import FileTree, { type FileTreeNode, type SectionType } from '../../../../components/FileTree';
@@ -142,17 +142,7 @@ export default function NotesForNotebookPage() {
   const [leftPaneOpen, setLeftPaneOpen] = useState(true);
   const [rightPaneOpen, setRightPaneOpen] = useState(true);
   const [uploadAndCourseTagsModalOpen, setUploadAndCourseTagsModalOpen] = useState(false);
-  const [activeNavSection, setActiveNavSection] = useState<SectionType | null>('notes');
-
-  function handleNavClick(section: SectionType) {
-    if (leftPaneOpen && activeNavSection === section) {
-      setLeftPaneOpen(false);
-      setActiveNavSection(null);
-    } else {
-      setLeftPaneOpen(true);
-      setActiveNavSection(section);
-    }
-  }
+  const [activeSection, setActiveSection] = useState<SectionType>('notes');
 
   // Tabs
   const [openNoteIds, setOpenNoteIds] = useState<string[]>([]);
@@ -345,56 +335,65 @@ export default function NotesForNotebookPage() {
       <main className="relative z-10 h-full overflow-hidden">
         <div className="mx-auto max-w-full flex flex-row flex-1 pt-16 h-full gap-2 px-2 pb-2">
 
-          {/* Section navbar (always visible) */}
-          <aside className="flex-shrink-0 w-12 flex flex-col h-full">
-            <div className="glass-panel border-2 border-gray-300 rounded-xl backdrop-blur-[30px] flex flex-col items-center gap-1 py-3 h-full">
-              {(
-                [
-                  { section: 'notes' as SectionType, Icon: PencilSquareIcon, label: 'Pages', color: 'text-violet-600', activeBg: 'bg-violet-500/15' },
-                  { section: 'material' as SectionType, Icon: DocumentTextIcon, label: 'Material', color: 'text-sky-600', activeBg: 'bg-sky-500/15' },
-                  { section: 'syllabus' as SectionType, Icon: AcademicCapIcon, label: 'Syllabus', color: 'text-amber-600', activeBg: 'bg-amber-500/15' },
-                ] as const
-              ).map(({ section, Icon, label, color, activeBg }) => {
-                const isActive = leftPaneOpen && activeNavSection === section;
-                return (
-                  <button
-                    key={section}
-                    type="button"
-                    title={label}
-                    onClick={() => handleNavClick(section)}
-                    className={`rounded-lg p-2 transition-colors ${isActive ? `${activeBg} ${color}` : 'text-slate-400 hover:text-slate-700 hover:bg-white/30'}`}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </button>
-                );
-              })}
-            </div>
-          </aside>
-
           {/* File tree pane (collapsible) */}
           <aside
             className={`overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 ${
-              leftPaneOpen ? 'flex-[0_0_15%]' : 'flex-[0_0_0%]'
+              leftPaneOpen ? 'flex-[0_0_17%]' : 'flex-[0_0_0%]'
             }`}
           >
             {leftPaneOpen && (
-              <div className="glass-panel border-2 border-gray-300 rounded-xl backdrop-blur-[30px] w-full h-full overflow-auto p-3">
-                <FileTree
-                  nodes={treeNodes}
-                  onSelectFile={(node) => {
-                    if (notes.some((n) => n.id === node.id)) openNote(node.id);
-                    else if (documents.some((d) => d.id === node.id)) openDocument(node.id);
-                  }}
-                  onDeleteFile={(node) => deleteNote.mutate(node.id)}
-                  onMoveFile={handleMoveFile}
-                  onCreateFolder={handleCreateFolder}
-                  onRenameFolder={handleRenameFolder}
-                  onDeleteFolder={handleDeleteFolder}
-                  onAddNote={handleAddTab}
-                  onUploadFile={handleUploadFile}
-                  scrollToSection={activeNavSection}
-                  selectedId={activeNoteId ?? activeDocumentId ?? undefined}
-                />
+              <div className="glass-panel border-2 border-gray-300 rounded-xl backdrop-blur-[30px] w-full h-full flex flex-col overflow-hidden">
+                {/* Section tab bar */}
+                <div className="flex flex-shrink-0 border-b border-white/30">
+                  {(
+                    [
+                      { section: 'notes' as SectionType, Icon: PencilSquareIcon, label: 'Pages', activeColor: 'text-violet-600 border-violet-500', activeBg: 'bg-violet-500/8' },
+                      { section: 'material' as SectionType, Icon: DocumentTextIcon, label: 'Material', activeColor: 'text-sky-600 border-sky-500', activeBg: 'bg-sky-500/8' },
+                      { section: 'syllabus' as SectionType, Icon: AcademicCapIcon, label: 'Syllabus', activeColor: 'text-amber-600 border-amber-500', activeBg: 'bg-amber-500/8' },
+                    ] as const
+                  ).map(({ section, Icon, label, activeColor, activeBg }) => {
+                    const isActive = activeSection === section;
+                    return (
+                      <button
+                        key={section}
+                        type="button"
+                        onClick={() => setActiveSection(section)}
+                        title={label}
+                        className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium border-b-2 transition-colors ${
+                          isActive
+                            ? `${activeColor} ${activeBg}`
+                            : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-white/20'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{label}</span>
+                        {section === 'syllabus' && isActive && (
+                          <LockClosedIcon className="absolute right-1 top-1 h-2.5 w-2.5 text-amber-400" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Tree content */}
+                <div className="flex-1 overflow-auto p-2">
+                  <FileTree
+                    nodes={treeNodes.filter((n) => n.sectionType === activeSection)}
+                    onSelectFile={(node) => {
+                      if (notes.some((n) => n.id === node.id)) openNote(node.id);
+                      else if (documents.some((d) => d.id === node.id)) openDocument(node.id);
+                    }}
+                    onDeleteFile={(node) => deleteNote.mutate(node.id)}
+                    onMoveFile={handleMoveFile}
+                    onCreateFolder={handleCreateFolder}
+                    onRenameFolder={handleRenameFolder}
+                    onDeleteFolder={handleDeleteFolder}
+                    onAddNote={handleAddTab}
+                    onUploadFile={handleUploadFile}
+                    showSectionHeaders={false}
+                    selectedId={activeNoteId ?? activeDocumentId ?? undefined}
+                  />
+                </div>
               </div>
             )}
           </aside>
@@ -419,7 +418,7 @@ export default function NotesForNotebookPage() {
                 rightPaneOpen={rightPaneOpen}
                 handleOpenChatPanel={() => setRightPaneOpen(true)}
                 handleOpenLeftPane={() => setLeftPaneOpen(true)}
-                handleCloseLeftPane={() => { setLeftPaneOpen(false); setActiveNavSection(null); }}
+                handleCloseLeftPane={() => setLeftPaneOpen(false)}
                 handleCloseChatPanel={() => setRightPaneOpen(false)}
               />
               <div className="flex-1 min-h-0 overflow-auto relative">

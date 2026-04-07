@@ -50,7 +50,7 @@ type FileTreeProps = {
   onDeleteFolder?: (sectionType: SectionType, folderPath: string) => void;
   onAddNote?: (folderPath: string) => void;
   onUploadFile?: (sectionType: 'material' | 'syllabus', file: File) => void;
-  scrollToSection?: SectionType | null;
+  showSectionHeaders?: boolean;
   selectedId?: string;
   className?: string;
 };
@@ -169,6 +169,7 @@ function TreeBranch({
   onDropOnTarget,
   dragOverId,
   setDragOverId,
+  showSectionHeaders = true,
 }: {
   node: FileTreeNode;
   depth: number;
@@ -190,6 +191,7 @@ function TreeBranch({
   onDropOnTarget?: (targetFolderPath: string) => void;
   dragOverId: string | null;
   setDragOverId: (id: string | null) => void;
+  showSectionHeaders?: boolean;
 }) {
   const isOpen = expanded[node.id] ?? true;
   const isSelected = node.id === selectedId;
@@ -206,64 +208,49 @@ function TreeBranch({
 
     return (
       <li>
-        {/* Section header — drop target for root */}
+        {/* Section header — hidden when showSectionHeaders=false, still a drop target */}
         <div
           id={`filetree-section-${node.sectionType}`}
-          className={`group flex w-full items-center gap-1 py-[3px] pr-2 rounded-sm transition-colors ${meta.bgClass} ${dragOverId === node.id ? 'ring-1 ring-inset ring-emerald-400 bg-emerald-500/10' : ''}`}
-          style={{ paddingLeft: indent }}
+          className={`group flex w-full items-center gap-1 pr-2 rounded-sm transition-colors ${showSectionHeaders ? `py-[3px] ${meta.bgClass}` : 'py-0'} ${dragOverId === node.id ? 'ring-1 ring-inset ring-emerald-400 bg-emerald-500/10' : ''}`}
+          style={{ paddingLeft: showSectionHeaders ? indent : 0 }}
           onDragOver={(e) => { e.preventDefault(); setDragOverId(node.id); }}
           onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverId(null); }}
           onDrop={(e) => { e.preventDefault(); onDropOnTarget?.(''); setDragOverId(null); }}
         >
-          <span className={`flex-1 text-[11px] font-semibold uppercase tracking-wide ${meta.colorClass}`}>
-            {meta.label}
-          </span>
-          {node.sectionType === 'syllabus' && (
-            <LockClosedIcon
-              className="h-3 w-3 text-amber-400 flex-shrink-0"
-              title="Not included in AI search"
-            />
-          )}
-          <span className="text-[10px] text-slate-400 tabular-nums mr-1">{fileCount}</span>
-          {node.sectionType === 'notes' && (
+          {showSectionHeaders && (
             <>
-              <button
-                type="button"
-                title="New note"
-                onClick={() => onAddNote?.('')}
-                className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-violet-600 focus:opacity-100 hover:bg-white/30"
-              >
-                <PlusIcon className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                title="New folder"
-                onClick={() => onAddFolder?.(node.sectionType!, '')}
-                className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-slate-600 focus:opacity-100 hover:bg-white/30"
-              >
-                <FolderPlusIcon className="h-3.5 w-3.5" />
-              </button>
+              <span className={`flex-1 text-[11px] font-semibold uppercase tracking-wide ${meta.colorClass}`}>
+                {meta.label}
+              </span>
+              {node.sectionType === 'syllabus' && (
+                <LockClosedIcon className="h-3 w-3 text-amber-400 flex-shrink-0" title="Not included in AI search" />
+              )}
+              <span className="text-[10px] text-slate-400 tabular-nums mr-1">{fileCount}</span>
+              {node.sectionType === 'notes' && (
+                <>
+                  <button type="button" title="New note" onClick={() => onAddNote?.('')}
+                    className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-violet-600 focus:opacity-100 hover:bg-white/30">
+                    <PlusIcon className="h-3.5 w-3.5" />
+                  </button>
+                  <button type="button" title="New folder" onClick={() => onAddFolder?.(node.sectionType!, '')}
+                    className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-slate-600 focus:opacity-100 hover:bg-white/30">
+                    <FolderPlusIcon className="h-3.5 w-3.5" />
+                  </button>
+                </>
+              )}
+              {(node.sectionType === 'material' || node.sectionType === 'syllabus') && (
+                <button type="button" title="Upload file" onClick={() => onTriggerUpload?.(node.sectionType as 'material' | 'syllabus')}
+                  className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-sky-600 focus:opacity-100 hover:bg-white/30">
+                  <ArrowUpTrayIcon className="h-3.5 w-3.5" />
+                </button>
+              )}
+              {node.sectionType === 'material' && (
+                <button type="button" title="New folder" onClick={() => onAddFolder?.(node.sectionType!, '')}
+                  className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-slate-600 focus:opacity-100 hover:bg-white/30">
+                  <FolderPlusIcon className="h-3.5 w-3.5" />
+                </button>
+              )}
             </>
-          )}
-          {(node.sectionType === 'material' || node.sectionType === 'syllabus') && (
-            <button
-              type="button"
-              title="Upload file"
-              onClick={() => onTriggerUpload?.(node.sectionType as 'material' | 'syllabus')}
-              className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-sky-600 focus:opacity-100 hover:bg-white/30"
-            >
-              <ArrowUpTrayIcon className="h-3.5 w-3.5" />
-            </button>
-          )}
-          {node.sectionType === 'material' && (
-            <button
-              type="button"
-              title="New folder"
-              onClick={() => onAddFolder?.(node.sectionType!, '')}
-              className="opacity-0 group-hover:opacity-100 rounded p-0.5 text-slate-400 hover:text-slate-600 focus:opacity-100 hover:bg-white/30"
-            >
-              <FolderPlusIcon className="h-3.5 w-3.5" />
-            </button>
           )}
         </div>
 
@@ -292,6 +279,7 @@ function TreeBranch({
               onDropOnTarget={onDropOnTarget}
               dragOverId={dragOverId}
               setDragOverId={setDragOverId}
+              showSectionHeaders={showSectionHeaders}
             />
           ))}
           {isCreatingHere && (
@@ -443,7 +431,7 @@ export default function FileTree({
   onDeleteFolder,
   onAddNote,
   onUploadFile,
-  scrollToSection,
+  showSectionHeaders = true,
   selectedId,
   className = '',
 }: FileTreeProps) {
@@ -474,12 +462,6 @@ export default function FileTree({
     draggedNodeRef.current = null;
     setDragOverId(null);
   }
-
-  useEffect(() => {
-    if (!scrollToSection) return;
-    const el = document.getElementById(`filetree-section-${scrollToSection}`);
-    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [scrollToSection]);
 
   function handleTriggerUpload(sectionType: 'material' | 'syllabus') {
     if (sectionType === 'material') contentInputRef.current?.click();
@@ -609,6 +591,7 @@ export default function FileTree({
               onDropOnTarget={handleDropOnTarget}
               dragOverId={dragOverId}
               setDragOverId={setDragOverId}
+              showSectionHeaders={showSectionHeaders}
             />
           ))}
         </ul>
