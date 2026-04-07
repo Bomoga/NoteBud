@@ -15,6 +15,7 @@ from src.lib.repositories.notebook_link_repository import NotebookLinkRepository
 from src.lib.schemas.document import DocumentUpdate
 from src.lib.schemas.notebook import NotebookCreate, NotebookRead, NotebookUpdate
 from src.lib.schemas.notebook_link import (
+    AllLinksEdge,
     NotebookLinkCreate,
     NotebookLinksResponse,
     SimilarNotebookRead,
@@ -51,6 +52,15 @@ async def list_notebooks_endpoint(
     current_user: str = Depends(get_current_user),
 ):
     return await repo.list(owner_id=current_user)
+
+
+@router.get("/links", response_model=list[AllLinksEdge], status_code=200)
+async def list_all_links_endpoint(
+    driver: AsyncDriver = Depends(get_driver),
+    current_user: str = Depends(get_current_user),
+):
+    link_repo = NotebookLinkRepository(driver)
+    return await link_repo.list_all_for_user(current_user)
 
 
 @router.get("/{notebook_id}", response_model=NotebookRead, status_code=200)

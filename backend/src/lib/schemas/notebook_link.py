@@ -44,3 +44,11 @@ class SimilarNotebookRead(BaseModel):
 class NotebookLinksResponse(BaseModel):
     outbound: list[NotebookLinkRead]
     inbound: list[NotebookLinkInbound]
+
+
+class AllLinksEdge(BaseModel):
+    id: str
+    from_notebook_id: str
+    to_notebook_id: str
+    link_type: str
+    created_at: datetime

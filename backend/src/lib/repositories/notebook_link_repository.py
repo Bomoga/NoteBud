@@ -112,6 +112,27 @@ class NotebookLinkRepository:
             record = await result.single()
             return record is not None
 
+    async def list_all_for_user(self, user_id: str) -> list[dict]:
+        """Return all NOTEBOOK_LINK edges where either endpoint belongs to the user."""
+        query = """
+            MATCH (a:Notebook)-[r:NOTEBOOK_LINK]->(b:Notebook)
+            WHERE a.owner_id = $user_id OR b.owner_id = $user_id
+            RETURN r.id             AS id,
+                   a.id             AS from_notebook_id,
+                   b.id             AS to_notebook_id,
+                   r.link_type      AS link_type,
+                   r.created_at     AS created_at
+        """
+        async with self._driver.session() as session:
+            result = await session.run(query, user_id=user_id)
+            rows = []
+            async for record in result:
+                d = dict(record)
+                if isinstance(d.get("created_at"), Neo4jDateTime):
+                    d["created_at"] = d["created_at"].to_native()
+                rows.append(d)
+            return rows
+
     async def find_similar(self, notebook_id: str, owner_id: str) -> list[dict]:
         """Return other notebooks whose ContentChunks are SIMILAR to this one's."""
         query = """
