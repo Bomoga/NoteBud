@@ -262,13 +262,11 @@ async def delete_notebook_banner(
 async def get_notebook_banner(
     notebook_id: str,
     repo: NotebookRepository = Depends(get_repo),
-    current_user: str = Depends(get_current_user),
 ):
+    # No auth required — notebook_id UUID is unguessable and banners are non-sensitive.
     existing = await repo.get_by_id(notebook_id)
     if existing is None:
         raise HTTPException(status_code=404, detail="Notebook not found")
-    if existing["owner_id"] != current_user:
-        raise HTTPException(status_code=403, detail="Not authorized")
     gcs_uri = existing.get("banner_gcs_uri")
     if not gcs_uri:
         raise HTTPException(status_code=404, detail="No banner set")

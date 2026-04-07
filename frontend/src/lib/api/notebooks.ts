@@ -6,6 +6,7 @@ export interface NotebookResponse {
   course_code: string;
   description: string | null;
   semester: string;
+  banner_gcs_uri: string | null;
   created_at: string;
   updated_at: string;
   owner_id: string | null;
@@ -54,6 +55,30 @@ export async function updateNotebook(
 
 export async function deleteNotebook(id: string): Promise<void> {
   await apiClient.delete(`${BASE}/${id}`);
+}
+
+export function getNotebookBannerUrl(notebookId: string): string {
+  const base = (apiClient.defaults.baseURL ?? '').replace(/\/$/, '');
+  return `${base}/notebooks/${notebookId}/banner`;
+}
+
+export async function uploadNotebookBanner(
+  notebookId: string,
+  file: File,
+): Promise<NotebookResponse> {
+  const form = new FormData();
+  form.append('file', file);
+  const { data } = await apiClient.post<NotebookResponse>(
+    `${BASE}/${notebookId}/banner`,
+    form,
+    { headers: { 'Content-Type': undefined } },
+  );
+  return data;
+}
+
+export async function deleteNotebookBanner(notebookId: string): Promise<NotebookResponse> {
+  const { data } = await apiClient.delete<NotebookResponse>(`${BASE}/${notebookId}/banner`);
+  return data;
 }
 
 export interface UploadFileResponse {

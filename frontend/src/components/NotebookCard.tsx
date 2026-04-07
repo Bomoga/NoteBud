@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import type { NotebookResponse } from '../lib/api';
-import { EllipsisVerticalIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { EllipsisVerticalIcon, TrashIcon, CameraIcon } from '@heroicons/react/24/outline';
+import { getNotebookBannerUrl } from '../lib/api/notebooks';
+import { useUploadNotebookBanner } from '../hooks/useNotebooks';
 
 interface NotebookCardProps {
   notebook: NotebookResponse;
@@ -37,8 +39,12 @@ function formatDate(iso: string): string {
 export default function NotebookCard({ notebook, onDelete, isDeleting = false }: NotebookCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadBanner = useUploadNotebookBanner();
+
   const gradient = cardGradient(notebook.course_code || notebook.title);
   const initial = (notebook.course_code || notebook.title).charAt(0).toUpperCase();
+  const hasBanner = !!notebook.banner_gcs_uri;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -49,16 +55,56 @@ export default function NotebookCard({ notebook, onDelete, isDeleting = false }:
     return () => document.removeEventListener('mousedown', handler);
   }, [menuOpen]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadBanner.mutate({ notebookId: notebook.id, file });
+    e.target.value = '';
+  };
+
   return (
     <div className="glass-panel flex flex-col overflow-hidden shadow-sm transition-shadow hover:shadow-md">
-      {/* Colored header band */}
-      <Link href={`/backpack/${notebook.id}/notes`} className="block">
-        <div className={`bg-gradient-to-br ${gradient} h-24 flex items-end p-3`}>
-          <span className="flex size-10 items-center justify-center rounded-lg bg-white/20 text-lg font-bold text-white backdrop-blur-sm">
-            {initial}
-          </span>
-        </div>
-      </Link>
+      {/* Header — banner image or gradient, with hover upload overlay */}
+      <div className="relative group h-24 overflow-hidden">
+        <Link href={`/backpack/${notebook.id}/notes`} className="block w-full h-full">
+          {hasBanner ? (
+            <img
+              src={getNotebookBannerUrl(notebook.id)}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className={`bg-gradient-to-br ${gradient} w-full h-full flex items-end p-3`}>
+              <span className="flex size-10 items-center justify-center rounded-lg bg-white/20 text-lg font-bold text-white backdrop-blur-sm">
+                {initial}
+              </span>
+            </div>
+          )}
+        </Link>
+
+        {/* Upload overlay */}
+        <label
+          className={`absolute inset-0 flex flex-col items-center justify-center gap-1 cursor-pointer transition-opacity ${
+            uploadBanner.isPending
+              ? 'bg-black/50 opacity-100'
+              : 'bg-black/40 opacity-0 group-hover:opacity-100'
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {uploadBanner.isPending ? (
+            <div className="size-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+          ) : (
+            <CameraIcon className="size-6 text-white drop-shadow" />
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onClick={(e) => e.stopPropagation()}
+            onChange={handleFileChange}
+          />
+        </label>
+      </div>
 
       {/* Card body */}
       <div className="flex flex-1 flex-col p-4">
