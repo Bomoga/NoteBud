@@ -9,7 +9,8 @@ import {
 import NotebookCard from '../../components/NotebookCard';
 import NotebookGrid from '../../components/NotebookGrid';
 
-const CURRENT_SEMESTER = 'Spring 2026';
+const DEFAULT_SEMESTER = 'Spring 2026';
+const STORAGE_KEY = 'notebud_current_semester';
 
 const SEMESTER_ORDER = [
     'Spring', 'Summer', 'Fall',
@@ -25,11 +26,14 @@ export default function BackpackPage() {
     const { data: displayNotebooks, isLoading, isError } = useNotebooks();
     const createMutation = useCreateNotebook();
     const deleteMutation = useDeleteNotebook();
+    const [currentSemester, setCurrentSemester] = useState<string>(
+        () => (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null) ?? DEFAULT_SEMESTER
+    );
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [title, setTitle] = useState('');
     const [courseCode, setCourseCode] = useState('');
     const [description, setDescription] = useState('');
-    const [semester, setSemester] = useState(CURRENT_SEMESTER);
+    const [semester, setSemester] = useState(() => currentSemester);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,12 +43,12 @@ export default function BackpackPage() {
                 title: title.trim(),
                 course_code: courseCode.trim(),
                 description: description.trim() || null,
-                semester: semester.trim() || CURRENT_SEMESTER,
+                semester: semester.trim() || currentSemester,
             });
             setTitle('');
             setCourseCode('');
             setDescription('');
-            setSemester(CURRENT_SEMESTER);
+            setSemester(currentSemester);
             setShowCreateForm(false);
         } catch {
             // handled by mutation
@@ -53,12 +57,17 @@ export default function BackpackPage() {
 
     const handleDelete = (id: string) => deleteMutation.mutate(id);
 
+    const handleSetCurrent = (sem: string) => {
+        setCurrentSemester(sem);
+        localStorage.setItem(STORAGE_KEY, sem);
+    };
+
     // Group notebooks by semester, newest first
     const grouped = React.useMemo(() => {
         if (!displayNotebooks) return [];
         const map = new Map<string, typeof displayNotebooks>();
         for (const nb of displayNotebooks) {
-            const key = nb.semester ?? CURRENT_SEMESTER;
+            const key = nb.semester ?? currentSemester;
             if (!map.has(key)) map.set(key, []);
             map.get(key)!.push(nb);
         }
@@ -157,11 +166,19 @@ export default function BackpackPage() {
 
                     {grouped.map(([sem, notebooks]) => (
                         <section key={sem} className="mb-10">
-                            <div className="mb-4 flex items-center gap-3">
+                            <div className="group mb-4 flex items-center gap-3">
                                 <h2 className="text-xl font-bold text-slate-800">{sem}</h2>
                                 <span className="text-sm text-slate-400">{notebooks.length} notebook{notebooks.length !== 1 ? 's' : ''}</span>
-                                {sem === CURRENT_SEMESTER && (
+                                {sem === currentSemester ? (
                                     <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700">Current</span>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSetCurrent(sem)}
+                                        className="opacity-0 group-hover:opacity-100 rounded-full border border-slate-300/60 px-2 py-0.5 text-xs text-slate-400 hover:text-emerald-700 hover:border-emerald-400 transition-all"
+                                    >
+                                        Set as current
+                                    </button>
                                 )}
                             </div>
                             <NotebookGrid>
