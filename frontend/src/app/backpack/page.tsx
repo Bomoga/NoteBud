@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNotebooks, useCreateNotebook, useDeleteNotebook } from '../../hooks/useNotebooks';
 import NotebookCard from '../../components/NotebookCard';
 import NotebookGrid from '../../components/NotebookGrid';
@@ -21,6 +21,36 @@ function semesterSortKey(semester: string): number {
 export default function BackpackPage() {
     const { data: displayNotebooks, isLoading, isError } = useNotebooks();
     const { data: allLinks = [] } = useAllLinks();
+
+    // Resizable left panel
+    const [leftWidth, setLeftWidth] = useState(440);
+    const dragging = useRef(false);
+    const startX = useRef(0);
+    const startWidth = useRef(0);
+
+    const onDragStart = useCallback((e: React.MouseEvent) => {
+        dragging.current = true;
+        startX.current = e.clientX;
+        startWidth.current = leftWidth;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        const onMove = (ev: MouseEvent) => {
+            if (!dragging.current) return;
+            const delta = ev.clientX - startX.current;
+            const next = Math.min(700, Math.max(260, startWidth.current + delta));
+            setLeftWidth(next);
+        };
+        const onUp = () => {
+            dragging.current = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    }, [leftWidth]);
     const createMutation = useCreateNotebook();
     const deleteMutation = useDeleteNotebook();
     const [currentSemester, setCurrentSemester] = useState<string>(
@@ -73,10 +103,13 @@ export default function BackpackPage() {
             </div>
 
             {/* Two-column layout */}
-            <div className="relative z-10 flex h-full gap-3 p-3 pt-[4.5rem]">
+            <div className="relative z-10 flex h-full p-3 pt-[4.5rem] gap-0">
 
                 {/* ── Left panel: Calendar + Graph ── */}
-                <div className="hidden lg:flex w-[420px] xl:w-[480px] flex-shrink-0 flex-col gap-3 h-full">
+                <div
+                    className="hidden lg:flex flex-shrink-0 flex-col gap-3 h-full"
+                    style={{ width: leftWidth }}
+                >
                     {/* Calendar placeholder */}
                     <div className="glass-panel border border-white/30 rounded-xl flex flex-col h-56 xl:h-64 flex-shrink-0 overflow-hidden">
                         <div className="flex items-center gap-2 px-4 pt-4 pb-2">
@@ -96,6 +129,14 @@ export default function BackpackPage() {
                         </div>
                         <NotebookGraph notebooks={displayNotebooks ?? []} links={allLinks} />
                     </div>
+                </div>
+
+                {/* ── Drag handle ── */}
+                <div
+                    onMouseDown={onDragStart}
+                    className="hidden lg:flex w-3 flex-shrink-0 items-center justify-center cursor-col-resize group"
+                >
+                    <div className="w-0.5 h-12 rounded-full bg-white/30 group-hover:bg-white/60 transition-colors" />
                 </div>
 
                 {/* ── Right panel: Notebooks ── */}
