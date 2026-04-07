@@ -51,6 +51,8 @@ type FileTreeProps = {
   onAddNote?: (folderPath: string) => void;
   onUploadFile?: (sectionType: 'material' | 'syllabus', file: File) => void;
   showSectionHeaders?: boolean;
+  requestCreateFolder?: { sectionType: SectionType; parentPath: string } | null;
+  onCreateFolderHandled?: () => void;
   selectedId?: string;
   className?: string;
 };
@@ -432,6 +434,8 @@ export default function FileTree({
   onAddNote,
   onUploadFile,
   showSectionHeaders = true,
+  requestCreateFolder,
+  onCreateFolderHandled,
   selectedId,
   className = '',
 }: FileTreeProps) {
@@ -462,6 +466,12 @@ export default function FileTree({
     draggedNodeRef.current = null;
     setDragOverId(null);
   }
+
+  useEffect(() => {
+    if (!requestCreateFolder) return;
+    setCreatingIn(requestCreateFolder);
+    onCreateFolderHandled?.();
+  }, [requestCreateFolder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleTriggerUpload(sectionType: 'material' | 'syllabus') {
     if (sectionType === 'material') contentInputRef.current?.click();

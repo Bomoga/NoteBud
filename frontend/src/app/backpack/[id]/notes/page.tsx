@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useParams } from 'next/navigation';
 import { TrashIcon } from '@heroicons/react/24/outline';
-import { PencilSquareIcon, DocumentTextIcon, AcademicCapIcon, LockClosedIcon } from '@heroicons/react/24/solid';
+import { PencilSquareIcon, DocumentTextIcon, AcademicCapIcon, LockClosedIcon, PlusIcon, FolderPlusIcon, ArrowUpTrayIcon } from '@heroicons/react/24/solid';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import NotesTabs, { type NoteTab } from '../../../../components/NotesTabs';
 import FileTree, { type FileTreeNode, type SectionType } from '../../../../components/FileTree';
@@ -143,6 +143,7 @@ export default function NotesForNotebookPage() {
   const [rightPaneOpen, setRightPaneOpen] = useState(true);
   const [uploadAndCourseTagsModalOpen, setUploadAndCourseTagsModalOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<SectionType>('notes');
+  const [requestCreateFolder, setRequestCreateFolder] = useState<{ sectionType: SectionType; parentPath: string } | null>(null);
 
   // Tabs
   const [openNoteIds, setOpenNoteIds] = useState<string[]>([]);
@@ -153,6 +154,8 @@ export default function NotesForNotebookPage() {
   const [draftTitle, setDraftTitle] = useState('');
   const [draftContent, setDraftContent] = useState('');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const contentUploadRef = useRef<HTMLInputElement>(null);
+  const syllabusUploadRef = useRef<HTMLInputElement>(null);
 
   // Empty locally-created folders (lost on reload if no files placed in them)
   const [localFolders, setLocalFolders] = useState<Record<SectionType, string[]>>({
@@ -343,36 +346,76 @@ export default function NotesForNotebookPage() {
           >
             {leftPaneOpen && (
               <div className="glass-panel border-2 border-gray-300 rounded-xl backdrop-blur-[30px] w-full h-full flex flex-col overflow-hidden">
+                {/* Hidden upload inputs */}
+                <input ref={contentUploadRef} type="file" accept=".pdf,.docx,.pptx" className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadFile('material', f); e.target.value = ''; }} />
+                <input ref={syllabusUploadRef} type="file" accept=".pdf,.docx,.pptx" className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadFile('syllabus', f); e.target.value = ''; }} />
+
                 {/* Section tab bar */}
-                <div className="flex flex-shrink-0 border-b border-white/30">
-                  {(
-                    [
-                      { section: 'notes' as SectionType, Icon: PencilSquareIcon, label: 'Pages', activeColor: 'text-violet-600 border-violet-500', activeBg: 'bg-violet-500/8' },
-                      { section: 'material' as SectionType, Icon: DocumentTextIcon, label: 'Material', activeColor: 'text-sky-600 border-sky-500', activeBg: 'bg-sky-500/8' },
-                      { section: 'syllabus' as SectionType, Icon: AcademicCapIcon, label: 'Syllabus', activeColor: 'text-amber-600 border-amber-500', activeBg: 'bg-amber-500/8' },
-                    ] as const
-                  ).map(({ section, Icon, label, activeColor, activeBg }) => {
-                    const isActive = activeSection === section;
-                    return (
-                      <button
-                        key={section}
-                        type="button"
-                        onClick={() => setActiveSection(section)}
-                        title={label}
-                        className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium border-b-2 transition-colors ${
-                          isActive
-                            ? `${activeColor} ${activeBg}`
-                            : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-white/20'
-                        }`}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span>{label}</span>
-                        {section === 'syllabus' && isActive && (
-                          <LockClosedIcon className="absolute right-1 top-1 h-2.5 w-2.5 text-amber-400" />
-                        )}
+                <div className="flex flex-shrink-0 items-stretch border-b border-white/30">
+                  {/* Tabs */}
+                  <div className="flex flex-1">
+                    {(
+                      [
+                        { section: 'notes' as SectionType, Icon: PencilSquareIcon, label: 'Pages', activeColor: 'text-violet-600 border-violet-500', activeBg: 'bg-violet-500/8' },
+                        { section: 'material' as SectionType, Icon: DocumentTextIcon, label: 'Material', activeColor: 'text-sky-600 border-sky-500', activeBg: 'bg-sky-500/8' },
+                        { section: 'syllabus' as SectionType, Icon: AcademicCapIcon, label: 'Syllabus', activeColor: 'text-amber-600 border-amber-500', activeBg: 'bg-amber-500/8' },
+                      ] as const
+                    ).map(({ section, Icon, label, activeColor, activeBg }) => {
+                      const isActive = activeSection === section;
+                      return (
+                        <button
+                          key={section}
+                          type="button"
+                          onClick={() => setActiveSection(section)}
+                          title={label}
+                          className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium border-b-2 transition-colors ${
+                            isActive
+                              ? `${activeColor} ${activeBg}`
+                              : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-white/20'
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Action buttons for active section */}
+                  <div className="flex items-center gap-0.5 px-1.5 border-l border-white/20">
+                    {activeSection === 'notes' && (
+                      <>
+                        <button type="button" title="New note" onClick={() => handleAddTab()}
+                          className="rounded p-1 text-slate-400 hover:text-violet-600 hover:bg-white/30 transition-colors">
+                          <PlusIcon className="h-3.5 w-3.5" />
+                        </button>
+                        <button type="button" title="New folder" onClick={() => setRequestCreateFolder({ sectionType: 'notes', parentPath: '' })}
+                          className="rounded p-1 text-slate-400 hover:text-slate-600 hover:bg-white/30 transition-colors">
+                          <FolderPlusIcon className="h-3.5 w-3.5" />
+                        </button>
+                      </>
+                    )}
+                    {activeSection === 'material' && (
+                      <>
+                        <button type="button" title="Upload file" onClick={() => contentUploadRef.current?.click()}
+                          className="rounded p-1 text-slate-400 hover:text-sky-600 hover:bg-white/30 transition-colors">
+                          <ArrowUpTrayIcon className="h-3.5 w-3.5" />
+                        </button>
+                        <button type="button" title="New folder" onClick={() => setRequestCreateFolder({ sectionType: 'material', parentPath: '' })}
+                          className="rounded p-1 text-slate-400 hover:text-slate-600 hover:bg-white/30 transition-colors">
+                          <FolderPlusIcon className="h-3.5 w-3.5" />
+                        </button>
+                      </>
+                    )}
+                    {activeSection === 'syllabus' && (
+                      <button type="button" title="Upload syllabus" onClick={() => syllabusUploadRef.current?.click()}
+                        className="rounded p-1 text-slate-400 hover:text-amber-600 hover:bg-white/30 transition-colors">
+                        <ArrowUpTrayIcon className="h-3.5 w-3.5" />
                       </button>
-                    );
-                  })}
+                    )}
+                  </div>
                 </div>
 
                 {/* Tree content */}
@@ -391,6 +434,8 @@ export default function NotesForNotebookPage() {
                     onAddNote={handleAddTab}
                     onUploadFile={handleUploadFile}
                     showSectionHeaders={false}
+                    requestCreateFolder={requestCreateFolder}
+                    onCreateFolderHandled={() => setRequestCreateFolder(null)}
                     selectedId={activeNoteId ?? activeDocumentId ?? undefined}
                   />
                 </div>
