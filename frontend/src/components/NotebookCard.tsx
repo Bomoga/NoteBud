@@ -34,7 +34,7 @@ export default function NotebookCard({
   return (
     <Link
       href={`/backpack/${notebook.id}/notes`}
-      className="glass-panel rounded-xl p-5 shadow-sm backdrop-blur-[30px] transition-shadow hover:shadow-md hover:cursor-pointer flex flex-col"
+      className="glass-panel p-5 shadow-sm backdrop-blur-[30px] transition-shadow hover:shadow-md hover:cursor-pointer flex flex-col"
     >
       <div className="flex flex-col items-start">
         <h3 className="text-lg font-semibold text-slate-900">

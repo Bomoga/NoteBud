@@ -96,7 +96,7 @@ export default function NotebookUploadAndCourseTags({
   return (
     <div className={`flex flex-col gap-6 ${className ?? ''}`}>
       {/* File Upload */}
-      <div className="glass-panel rounded-xl p-6 shadow-sm backdrop-blur-[30px]">
+      <div className="glass-panel p-6 shadow-sm backdrop-blur-[30px]">
         <h2 className="mb-4 text-base font-semibold text-slate-900">Upload Document</h2>
 
         <div className="mb-4 flex gap-2">
@@ -163,7 +163,7 @@ export default function NotebookUploadAndCourseTags({
       </div>
 
       {/* Course Tags */}
-      <div className="glass-panel rounded-xl p-6 shadow-sm backdrop-blur-[30px]">
+      <div className="glass-panel p-6 shadow-sm backdrop-blur-[30px]">
         <h2 className="mb-4 text-base font-semibold text-slate-900">Course Tags</h2>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">

@@ -345,7 +345,7 @@ export default function NotesForNotebookPage() {
             }`}
           >
             {leftPaneOpen && (
-              <div className="glass-panel border-2 border-gray-300 rounded-xl backdrop-blur-[30px] w-full h-full flex flex-col overflow-hidden">
+              <div className="glass-panel border-2 border-gray-300 backdrop-blur-[30px] w-full h-full flex flex-col overflow-hidden">
                 {/* Hidden upload inputs */}
                 <input ref={contentUploadRef} type="file" accept=".pdf,.docx,.pptx" className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadFile('material', f); e.target.value = ''; }} />
@@ -452,7 +452,7 @@ export default function NotesForNotebookPage() {
 
           {/* Notes pane (center) */}
           <section className="relative h-full flex-1 min-w-0 overflow-hidden flex flex-col">
-            <div className="glass-panel flex flex-col backdrop-blur-[30px] border-2 border-gray-300 rounded-xl flex-1 min-h-0 h-full overflow-hidden">
+            <div className="glass-panel flex flex-col backdrop-blur-[30px] border-2 border-gray-300 flex-1 min-h-0 h-full overflow-hidden">
               <NotesTabs
                 tabs={tabs}
                 activeTab={activeNoteId ?? ''}
