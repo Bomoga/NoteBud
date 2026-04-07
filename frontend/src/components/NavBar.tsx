@@ -1,5 +1,6 @@
 "use client"
 
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
@@ -69,13 +70,13 @@ export default function NavBar() {
                 const defaultClass = 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 const resolvedHref = isProtected && !token ? '/login' : href
                 return (
-                  <>
-                    {i > 0 && <span key={`sep-${i}`} className="text-gray-300 text-2xl select-none">|</span>}
-                    <Link key={label} href={resolvedHref} className={`inline-flex items-center gap-1.5 border-b-2 px-1 pt-1 text-2xl font-semibold ${isActive ? activeClass : defaultClass}`}>
+                  <React.Fragment key={label}>
+                    {i > 0 && <span className="text-gray-300 text-2xl select-none">|</span>}
+                    <Link href={resolvedHref} className={`inline-flex items-center gap-1.5 border-b-2 px-1 pt-1 text-2xl font-semibold ${isActive ? activeClass : defaultClass}`}>
                       <Icon className="h-6 w-6" />
                       {label}
                     </Link>
-                  </>
+                  </React.Fragment>
                 )
               })}
             </div>
