@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.lib.config.settings import settings
 from src.lib.db.neo4j import startup, close_driver
-from src.api.routers import health, files, notebooks, notes, query, chat, courses, auth
+from src.api.routers import health, files, notebooks, notes, query, chat, courses, auth, users
 
 
 @asynccontextmanager
@@ -73,6 +73,13 @@ app.include_router(
     courses.router,
     prefix=f"{settings.API_V1_STR}",
     tags=["Courses"],
+)
+
+
+app.include_router(
+    users.router,
+    prefix=f"{settings.API_V1_STR}/users",
+    tags=["Users"],
 )
 
 

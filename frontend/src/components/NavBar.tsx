@@ -3,16 +3,15 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon } from '@heroicons/react/24/outline'
-import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../lib/store/auth'
-import { abortAllInFlightRequests, disableAuthHeadersFor } from '../lib/api/client'
 import { getNotebook } from '../lib/api'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
 import SettingsDropdown from './SettingsDropdown'
+import { useAvatarUrl } from '../hooks/useAvatar'
 
 const navLinks = [
   { href: '/', label: 'Home', Icon: HomeIcon, protected: false },
@@ -23,22 +22,9 @@ export default function NavBar() {
   const pathname = usePathname();
   const token = useAuthStore((s) => s.token);
   const username = useAuthStore((s) => s.username);
-  const clearSession = useAuthStore((s) => s.clearSession);
-  const queryClient = useQueryClient();
-
-  const handleLogout = () => {
-    // Prevent any already-started/soon-to-refetch queries from continuing
-    // after the user logs out.
-    queryClient.cancelQueries();
-    queryClient.clear();
-    abortAllInFlightRequests();
-    clearSession();
-    disableAuthHeadersFor(10000);
-    // Force a full reload so React Query cache + any bfcache restore can't show stale protected UI.
-    window.location.assign('/login');
-  };
 
   const displayInitial = username?.trim()?.charAt(0).toUpperCase() || '?';
+  const { blobUrl: avatarUrl } = useAvatarUrl();
 
   // Extract notebook ID from /backpack/[id]/... routes
   const notebookIdMatch = pathname.match(/^\/backpack\/([^/]+)/);
@@ -124,33 +110,17 @@ export default function NavBar() {
             <SettingsDropdown />
 
             {token ? (
-              <Menu as="div" className="relative ml-1 shrink-0">
-                <MenuButton className="relative flex items-center gap-2 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600">
-                  <span className="absolute -inset-1.5" />
-                  <span className="sr-only">Open profile menu</span>
-                  <span className="flex size-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-medium text-white outline -outline-offset-1 outline-black/10">
-                    {displayInitial}
-                  </span>
-                  <span className="max-w-[10rem] truncate text-sm font-medium text-gray-800">
-                    {username || 'Signed in'}
-                  </span>
-                </MenuButton>
-
-                <MenuItems
-                  transition
-                  className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg outline-1 outline-black/5 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
-                >
-                  <MenuItem>
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden"
-                    >
-                      Sign out
-                    </button>
-                  </MenuItem>
-                </MenuItems>
-              </Menu>
+              <div className="ml-1 flex items-center gap-2">
+                <span className="flex size-8 items-center justify-center rounded-full bg-emerald-600 text-sm font-medium text-white outline -outline-offset-1 outline-black/10 overflow-hidden">
+                  {avatarUrl
+                    ? <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    : displayInitial
+                  }
+                </span>
+                <span className="max-w-[10rem] truncate text-sm font-medium text-gray-800">
+                  {username || 'Signed in'}
+                </span>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Link
