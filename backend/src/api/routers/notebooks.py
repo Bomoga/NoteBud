@@ -8,8 +8,14 @@ from src.lib.db.neo4j import get_driver
 from src.lib.repositories.document_repository import DocumentRepository
 from src.lib.repositories.notebook_repository import NotebookRepository
 from src.lib.repositories.user_repository import UserRepository
+from src.lib.repositories.notebook_link_repository import NotebookLinkRepository
 from src.lib.schemas.document import DocumentUpdate
 from src.lib.schemas.notebook import NotebookCreate, NotebookRead, NotebookUpdate
+from src.lib.schemas.notebook_link import (
+    NotebookLinkCreate,
+    NotebookLinksResponse,
+    SimilarNotebookRead,
+)
 from src.lib.storage.gcs import storage_service
 
 logger = logging.getLogger(__name__)
@@ -113,6 +119,84 @@ async def patch_notebook_document_endpoint(
     if result is None:
         raise HTTPException(status_code=404, detail="Document not found")
     return result
+
+
+@router.post("/{notebook_id}/links", status_code=201)
+async def create_notebook_link_endpoint(
+    notebook_id: str,
+    data: NotebookLinkCreate,
+    repo: NotebookRepository = Depends(get_repo),
+    driver: AsyncDriver = Depends(get_driver),
+    current_user: str = Depends(get_current_user),
+):
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    if data.to_notebook_id == notebook_id:
+        raise HTTPException(status_code=400, detail="Cannot link a notebook to itself")
+    target = await repo.get_by_id(data.to_notebook_id)
+    if target is None:
+        raise HTTPException(status_code=404, detail="Target notebook not found")
+    link_repo = NotebookLinkRepository(driver)
+    result = await link_repo.create(notebook_id, data.to_notebook_id, data.link_type)
+    if result is None:
+        raise HTTPException(status_code=500, detail="Failed to create link")
+    return result
+
+
+@router.get("/{notebook_id}/links", response_model=NotebookLinksResponse, status_code=200)
+async def list_notebook_links_endpoint(
+    notebook_id: str,
+    repo: NotebookRepository = Depends(get_repo),
+    driver: AsyncDriver = Depends(get_driver),
+    current_user: str = Depends(get_current_user),
+):
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    link_repo = NotebookLinkRepository(driver)
+    outbound = await link_repo.list_outbound(notebook_id)
+    inbound = await link_repo.list_inbound(notebook_id)
+    return {"outbound": outbound, "inbound": inbound}
+
+
+@router.delete("/{notebook_id}/links/{link_id}", status_code=204)
+async def delete_notebook_link_endpoint(
+    notebook_id: str,
+    link_id: str,
+    repo: NotebookRepository = Depends(get_repo),
+    driver: AsyncDriver = Depends(get_driver),
+    current_user: str = Depends(get_current_user),
+):
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    link_repo = NotebookLinkRepository(driver)
+    deleted = await link_repo.delete(link_id, notebook_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Link not found")
+
+
+@router.get("/{notebook_id}/similar", response_model=list[SimilarNotebookRead], status_code=200)
+async def similar_notebooks_endpoint(
+    notebook_id: str,
+    repo: NotebookRepository = Depends(get_repo),
+    driver: AsyncDriver = Depends(get_driver),
+    current_user: str = Depends(get_current_user),
+):
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    link_repo = NotebookLinkRepository(driver)
+    return await link_repo.find_similar(notebook_id, current_user)
 
 
 @router.delete("/{notebook_id}", status_code=204)

@@ -48,6 +48,20 @@ export {
   type ChatEvent,
 } from './chat';
 
+// Notebook-to-notebook links
+export {
+  listLinks,
+  createLink,
+  deleteLink,
+  getSimilarNotebooks,
+  type NotebookLinkRead,
+  type NotebookLinkInbound,
+  type NotebookLinksResponse,
+  type SimilarNotebook,
+  type NotebookLinkCreate,
+  type LinkType,
+} from './links';
+
 // Courses and notebook tags
 export {
   getCourses,

@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { streamChat, type ChatCitation } from '../lib/api/chat';
+import ConnectionsPanel from './ConnectionsPanel';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -190,6 +191,8 @@ export default function ChatPanel({ notebookId }: Props) {
         </div>
         <p className="text-[10px] text-slate-400 mt-1 text-center">Enter to send · Shift+Enter for newline</p>
       </div>
+
+      <ConnectionsPanel notebookId={notebookId} />
     </div>
   );
 }
