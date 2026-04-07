@@ -5,6 +5,7 @@ export interface NotebookResponse {
   title: string;
   course_code: string;
   description: string | null;
+  semester: string;
   created_at: string;
   updated_at: string;
   owner_id: string | null;
@@ -14,12 +15,14 @@ export interface NotebookCreate {
   title: string;
   course_code: string;
   description?: string | null;
+  semester?: string;
 }
 
 export interface NotebookUpdate {
   title?: string;
   course_code?: string;
   description?: string | null;
+  semester?: string;
 }
 
 const BASE = '/notebooks';

@@ -9,6 +9,18 @@ import {
 import NotebookCard from '../../components/NotebookCard';
 import NotebookGrid from '../../components/NotebookGrid';
 
+const CURRENT_SEMESTER = 'Spring 2026';
+
+const SEMESTER_ORDER = [
+    'Spring', 'Summer', 'Fall',
+];
+
+function semesterSortKey(semester: string): number {
+    const [term, year] = semester.split(' ');
+    const termIndex = SEMESTER_ORDER.indexOf(term);
+    return parseInt(year ?? '0') * 10 + (termIndex === -1 ? 0 : termIndex);
+}
+
 export default function BackpackPage() {
     const { data: displayNotebooks, isLoading, isError } = useNotebooks();
     const createMutation = useCreateNotebook();
@@ -17,25 +29,43 @@ export default function BackpackPage() {
     const [title, setTitle] = useState('');
     const [courseCode, setCourseCode] = useState('');
     const [description, setDescription] = useState('');
+    const [semester, setSemester] = useState(CURRENT_SEMESTER);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim() || !courseCode.trim()) return;
-
         try {
-            await createMutation.mutateAsync({ title: title.trim(), course_code: courseCode.trim(), description: description.trim() || null });
+            await createMutation.mutateAsync({
+                title: title.trim(),
+                course_code: courseCode.trim(),
+                description: description.trim() || null,
+                semester: semester.trim() || CURRENT_SEMESTER,
+            });
             setTitle('');
             setCourseCode('');
             setDescription('');
+            setSemester(CURRENT_SEMESTER);
             setShowCreateForm(false);
         } catch {
-            // Error handled by mutation / global error handler
+            // handled by mutation
         }
     };
 
-    const handleDelete = (id: string) => {
-        deleteMutation.mutate(id);
-    };
+    const handleDelete = (id: string) => deleteMutation.mutate(id);
+
+    // Group notebooks by semester, newest first
+    const grouped = React.useMemo(() => {
+        if (!displayNotebooks) return [];
+        const map = new Map<string, typeof displayNotebooks>();
+        for (const nb of displayNotebooks) {
+            const key = nb.semester ?? CURRENT_SEMESTER;
+            if (!map.has(key)) map.set(key, []);
+            map.get(key)!.push(nb);
+        }
+        return Array.from(map.entries()).sort(
+            ([a], [b]) => semesterSortKey(b) - semesterSortKey(a)
+        );
+    }, [displayNotebooks]);
 
     return (
         <div className="fixed inset-0 z-0 overflow-hidden">
@@ -43,13 +73,13 @@ export default function BackpackPage() {
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(180,200,190,0.3)_0%,rgba(200,210,200,0.2)_50%,rgba(180,195,185,0.4)_100%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(220,230,225,0.4)_0%,transparent_60%)]" />
             </div>
-            <main className="relative z-10 min-h-screen p-6 pt-24 sm:p-8 sm:pt-28">
+            <main className="relative z-10 h-full overflow-y-auto p-6 pt-24 sm:p-8 sm:pt-28">
                 <div className="mx-auto max-w-6xl">
                     <div className="mb-6 flex justify-end">
                         <button
                             type="button"
                             onClick={() => setShowCreateForm(!showCreateForm)}
-                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 hover:cursor-pointer"
+                            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none"
                         >
                             {showCreateForm ? 'Cancel' : 'Create New'}
                         </button>
@@ -58,114 +88,94 @@ export default function BackpackPage() {
                     {showCreateForm && (
                         <form
                             onSubmit={handleCreate}
-                            className="mb-8 rounded-xl border border-slate-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-800/80"
+                            className="mb-8 border border-slate-200/80 bg-white/80 p-5 shadow-sm backdrop-blur-sm"
                         >
-                            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">
-                                New notebook
-                            </h2>
+                            <h2 className="mb-4 text-lg font-semibold text-slate-900">New notebook</h2>
+                            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+                                <div className="flex-1">
+                                    <label htmlFor="title" className="mb-1 block text-sm font-medium text-slate-700">Title</label>
+                                    <input id="title" type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+                                        placeholder="e.g. Intro to Biology" required
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <label htmlFor="courseCode" className="mb-1 block text-sm font-medium text-slate-700">Course code</label>
+                                    <input id="courseCode" type="text" value={courseCode} onChange={(e) => setCourseCode(e.target.value)}
+                                        placeholder="e.g. BIO 101" required
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <label htmlFor="semester" className="mb-1 block text-sm font-medium text-slate-700">Semester</label>
+                                    <input id="semester" type="text" value={semester} onChange={(e) => setSemester(e.target.value)}
+                                        placeholder="e.g. Spring 2026"
+                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                                </div>
+                            </div>
                             <div className="mb-3">
-                                    <label htmlFor="description" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        Description <span className="text-slate-400">(optional)</span>
-                                    </label>
-                                    <textarea
-                                        id="description"
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        placeholder="e.g. Notes on cell structure and genetics"
-                                        rows={2}
-                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder-slate-500"
-                                    />
-                                </div>
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                                <div className="flex-1">
-                                    <label htmlFor="title" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        Title
-                                    </label>
-                                    <input
-                                        id="title"
-                                        type="text"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        placeholder="e.g. Intro to Biology"
-                                        required
-                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder-slate-500"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <label htmlFor="courseCode" className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        Course code
-                                    </label>
-                                    <input
-                                        id="courseCode"
-                                        type="text"
-                                        value={courseCode}
-                                        onChange={(e) => setCourseCode(e.target.value)}
-                                        placeholder="e.g. BIO 101"
-                                        required
-                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder-slate-500"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                            disabled={createMutation.isPending}
-                                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 dark:bg-emerald-700 dark:hover:bg-emerald-600"
-                                >
-                            {createMutation.isPending ? 'Creating…' : 'Create'}
+                                <label htmlFor="description" className="mb-1 block text-sm font-medium text-slate-700">
+                                    Description <span className="text-slate-400">(optional)</span>
+                                </label>
+                                <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)}
+                                    placeholder="e.g. Notes on cell structure and genetics" rows={2}
+                                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                            </div>
+                            <div className="flex justify-end">
+                                <button type="submit" disabled={createMutation.isPending}
+                                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">
+                                    {createMutation.isPending ? 'Creating…' : 'Create'}
                                 </button>
                             </div>
                             {createMutation.isError && (
-                                <p className="mt-3 text-sm text-red-600 dark:text-red-400">
-                                    Failed to create notebook. Please try again.
-                                </p>
+                                <p className="mt-3 text-sm text-red-600">Failed to create notebook. Please try again.</p>
                             )}
                         </form>
                     )}
 
                     {isLoading && (
                         <div className="flex min-h-[200px] items-center justify-center">
-                            <p className="text-slate-600 dark:text-slate-400">Loading notebooks…</p>
+                            <p className="text-slate-600">Loading notebooks…</p>
                         </div>
                     )}
 
                     {isError && (
-                        <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900/50 dark:bg-red-900/20">
-                            <p className="font-medium text-red-800 dark:text-red-300">Failed to load notebooks</p>
-                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                                Check that the backend is running and try again.
-                            </p>
+                        <div className="border border-red-200 bg-red-50 p-6">
+                            <p className="font-medium text-red-800">Failed to load notebooks</p>
+                            <p className="mt-1 text-sm text-red-600">Check that the backend is running and try again.</p>
                         </div>
                     )}
 
                     {displayNotebooks?.length === 0 && !isLoading && !isError && (
-                        <div className="flex min-h-[200px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white/50 p-12 text-center dark:border-slate-600 dark:bg-slate-800/50">
-                            <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
-                                No notebooks yet
-                            </p>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                                Create your first notebook to get started.
-                            </p>
-                            <button
-                                type="button"
-                                onClick={() => setShowCreateForm(true)}
-                                className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600"
-                            >
+                        <div className="flex min-h-[200px] flex-col items-center justify-center border border-dashed border-slate-300 bg-white/50 p-12 text-center">
+                            <p className="text-lg font-medium text-slate-700">No notebooks yet</p>
+                            <p className="mt-1 text-sm text-slate-500">Create your first notebook to get started.</p>
+                            <button type="button" onClick={() => setShowCreateForm(true)}
+                                className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
                                 Create New Notebook
                             </button>
                         </div>
                     )}
 
-                    {displayNotebooks && displayNotebooks.length > 0 && (
-                        <NotebookGrid>
-                            {displayNotebooks.map((nb) => (
-                                <NotebookCard
-                                    key={nb.id}
-                                    notebook={nb}
-                                    onDelete={handleDelete}
-                                    isDeleting={deleteMutation.isPending && deleteMutation.variables === nb.id}
-                                />
-                            ))}
-                        </NotebookGrid>
-                    )}
+                    {grouped.map(([sem, notebooks]) => (
+                        <section key={sem} className="mb-10">
+                            <div className="mb-4 flex items-center gap-3">
+                                <h2 className="text-xl font-bold text-slate-800">{sem}</h2>
+                                <span className="text-sm text-slate-400">{notebooks.length} notebook{notebooks.length !== 1 ? 's' : ''}</span>
+                                {sem === CURRENT_SEMESTER && (
+                                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700">Current</span>
+                                )}
+                            </div>
+                            <NotebookGrid>
+                                {notebooks.map((nb) => (
+                                    <NotebookCard
+                                        key={nb.id}
+                                        notebook={nb}
+                                        onDelete={handleDelete}
+                                        isDeleting={deleteMutation.isPending && deleteMutation.variables === nb.id}
+                                    />
+                                ))}
+                            </NotebookGrid>
+                        </section>
+                    ))}
                 </div>
             </main>
         </div>
