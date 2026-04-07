@@ -50,6 +50,7 @@ type FileTreeProps = {
   onDeleteFolder?: (sectionType: SectionType, folderPath: string) => void;
   onAddNote?: (folderPath: string) => void;
   onUploadFile?: (sectionType: 'material' | 'syllabus', file: File) => void;
+  scrollToSection?: SectionType | null;
   selectedId?: string;
   className?: string;
 };
@@ -207,6 +208,7 @@ function TreeBranch({
       <li>
         {/* Section header — drop target for root */}
         <div
+          id={`filetree-section-${node.sectionType}`}
           className={`group flex w-full items-center gap-1 py-[3px] pr-2 rounded-sm transition-colors ${meta.bgClass} ${dragOverId === node.id ? 'ring-1 ring-inset ring-emerald-400 bg-emerald-500/10' : ''}`}
           style={{ paddingLeft: indent }}
           onDragOver={(e) => { e.preventDefault(); setDragOverId(node.id); }}
@@ -441,6 +443,7 @@ export default function FileTree({
   onDeleteFolder,
   onAddNote,
   onUploadFile,
+  scrollToSection,
   selectedId,
   className = '',
 }: FileTreeProps) {
@@ -471,6 +474,12 @@ export default function FileTree({
     draggedNodeRef.current = null;
     setDragOverId(null);
   }
+
+  useEffect(() => {
+    if (!scrollToSection) return;
+    const el = document.getElementById(`filetree-section-${scrollToSection}`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [scrollToSection]);
 
   function handleTriggerUpload(sectionType: 'material' | 'syllabus') {
     if (sectionType === 'material') contentInputRef.current?.click();
