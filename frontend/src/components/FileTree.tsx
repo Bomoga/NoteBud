@@ -164,6 +164,10 @@ function TreeBranch({
   onRenameCancel,
   onAddNote,
   onTriggerUpload,
+  onDragStartFile,
+  onDropOnTarget,
+  dragOverId,
+  setDragOverId,
 }: {
   node: FileTreeNode;
   depth: number;
@@ -181,6 +185,10 @@ function TreeBranch({
   onRenameCancel: () => void;
   onAddNote?: (folderPath: string) => void;
   onTriggerUpload?: (sectionType: 'material' | 'syllabus') => void;
+  onDragStartFile?: (node: FileTreeNode) => void;
+  onDropOnTarget?: (targetFolderPath: string) => void;
+  dragOverId: string | null;
+  setDragOverId: (id: string | null) => void;
 }) {
   const isOpen = expanded[node.id] ?? true;
   const isSelected = node.id === selectedId;
@@ -197,10 +205,13 @@ function TreeBranch({
 
     return (
       <li>
-        {/* Section header */}
+        {/* Section header — drop target for root */}
         <div
-          className={`group flex w-full items-center gap-1 py-[3px] pr-2 rounded-sm ${meta.bgClass}`}
+          className={`group flex w-full items-center gap-1 py-[3px] pr-2 rounded-sm transition-colors ${meta.bgClass} ${dragOverId === node.id ? 'ring-1 ring-inset ring-emerald-400 bg-emerald-500/10' : ''}`}
           style={{ paddingLeft: indent }}
+          onDragOver={(e) => { e.preventDefault(); setDragOverId(node.id); }}
+          onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverId(null); }}
+          onDrop={(e) => { e.preventDefault(); onDropOnTarget?.(''); setDragOverId(null); }}
         >
           <span className={`flex-1 text-[11px] font-semibold uppercase tracking-wide ${meta.colorClass}`}>
             {meta.label}
@@ -275,6 +286,10 @@ function TreeBranch({
               onRenameCancel={onRenameCancel}
               onAddNote={onAddNote}
               onTriggerUpload={onTriggerUpload}
+              onDragStartFile={onDragStartFile}
+              onDropOnTarget={onDropOnTarget}
+              dragOverId={dragOverId}
+              setDragOverId={setDragOverId}
             />
           ))}
           {isCreatingHere && (
@@ -316,14 +331,19 @@ function TreeBranch({
       );
     }
 
+    const isDragTarget = dragOverId === node.id;
+
     return (
       <li>
         <button
           type="button"
-          className={`${rowBase} text-slate-600 hover:bg-white/30 hover:text-slate-900`}
+          className={`${rowBase} text-slate-600 hover:bg-white/30 hover:text-slate-900 ${isDragTarget ? 'ring-1 ring-inset ring-emerald-400 bg-emerald-500/10' : ''}`}
           style={{ paddingLeft: indent }}
           onClick={() => toggleExpanded(node.id)}
           onContextMenu={(e) => onContextMenu?.(e, node)}
+          onDragOver={(e) => { e.preventDefault(); setDragOverId(node.id); }}
+          onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOverId(null); }}
+          onDrop={(e) => { e.preventDefault(); onDropOnTarget?.(node.folderPath!); setDragOverId(null); }}
           aria-expanded={isOpen}
         >
           <span className="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center text-slate-400">
@@ -358,6 +378,12 @@ function TreeBranch({
                 renamingPath={renamingPath}
                 onRenameConfirm={onRenameConfirm}
                 onRenameCancel={onRenameCancel}
+                onAddNote={onAddNote}
+                onTriggerUpload={onTriggerUpload}
+                onDragStartFile={onDragStartFile}
+                onDropOnTarget={onDropOnTarget}
+                dragOverId={dragOverId}
+                setDragOverId={setDragOverId}
               />
             ))}
             {isCreatingHere && (
@@ -383,10 +409,13 @@ function TreeBranch({
     <li>
       <button
         type="button"
-        className={`${rowBase} ${rowColor}`}
+        draggable
+        className={`${rowBase} ${rowColor} cursor-grab active:cursor-grabbing`}
         style={{ paddingLeft: indent + 20 }}
         onClick={() => onSelectFile?.(node)}
         onContextMenu={(e) => onContextMenu?.(e, node)}
+        onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; onDragStartFile?.(node); }}
+        onDragEnd={() => setDragOverId(null)}
       >
         {fileIcon(node.fileItemType ?? 'note', false)}
         <span className="truncate flex-1">{node.name}</span>
@@ -425,9 +454,23 @@ export default function FileTree({
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [creatingIn, setCreatingIn] = useState<{ sectionType: SectionType; parentPath: string } | null>(null);
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const draggedNodeRef = useRef<FileTreeNode | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const contentInputRef = useRef<HTMLInputElement>(null);
   const syllabusInputRef = useRef<HTMLInputElement>(null);
+
+  function handleDragStartFile(node: FileTreeNode) {
+    draggedNodeRef.current = node;
+  }
+
+  function handleDropOnTarget(targetFolderPath: string) {
+    if (draggedNodeRef.current) {
+      onMoveFile?.(draggedNodeRef.current, targetFolderPath);
+    }
+    draggedNodeRef.current = null;
+    setDragOverId(null);
+  }
 
   function handleTriggerUpload(sectionType: 'material' | 'syllabus') {
     if (sectionType === 'material') contentInputRef.current?.click();
@@ -553,6 +596,10 @@ export default function FileTree({
               onRenameCancel={() => { setRenamingPath(null); setContextMenu(null); }}
               onAddNote={onAddNote}
               onTriggerUpload={handleTriggerUpload}
+              onDragStartFile={handleDragStartFile}
+              onDropOnTarget={handleDropOnTarget}
+              dragOverId={dragOverId}
+              setDragOverId={setDragOverId}
             />
           ))}
         </ul>

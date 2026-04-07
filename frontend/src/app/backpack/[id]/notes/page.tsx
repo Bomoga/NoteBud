@@ -229,6 +229,8 @@ export default function NotesForNotebookPage() {
 
   async function handleAddTab(folderPath = '') {
     const note = await createNote.mutateAsync({ title: 'New Note', content: '', folder_path: folderPath });
+    setDraftTitle('New Note');
+    setDraftContent('');
     openNote(note.id);
   }
 
