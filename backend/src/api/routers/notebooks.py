@@ -1,6 +1,9 @@
+import io
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+import anyio
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
 from neo4j import AsyncDriver
 
 from src.lib.auth.jwt import get_current_user
@@ -199,6 +202,91 @@ async def similar_notebooks_endpoint(
     return await link_repo.find_similar(notebook_id, current_user)
 
 
+_ALLOWED_BANNER_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+
+@router.post("/{notebook_id}/banner", response_model=NotebookRead, status_code=200)
+async def upload_notebook_banner(
+    notebook_id: str,
+    file: UploadFile = File(...),
+    repo: NotebookRepository = Depends(get_repo),
+    current_user: str = Depends(get_current_user),
+):
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    if file.content_type not in _ALLOWED_BANNER_TYPES:
+        raise HTTPException(status_code=415, detail="Unsupported image type. Use JPEG, PNG, WebP, or GIF.")
+
+    # Delete old banner if present
+    old_uri = existing.get("banner_gcs_uri")
+    if old_uri:
+        try:
+            await storage_service.delete_blob(old_uri)
+        except Exception:
+            logger.warning("Could not delete old banner blob %s", old_uri)
+
+    gcs_uri = await storage_service.upload_file(file, folder=f"notebook_banners/{notebook_id}")
+    updated = await repo.update(notebook_id, NotebookUpdate(banner_gcs_uri=gcs_uri))
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    return updated
+
+
+@router.delete("/{notebook_id}/banner", response_model=NotebookRead, status_code=200)
+async def delete_notebook_banner(
+    notebook_id: str,
+    repo: NotebookRepository = Depends(get_repo),
+    current_user: str = Depends(get_current_user),
+):
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    old_uri = existing.get("banner_gcs_uri")
+    if old_uri:
+        try:
+            await storage_service.delete_blob(old_uri)
+        except Exception:
+            logger.warning("Could not delete banner blob %s", old_uri)
+    updated = await repo.update(notebook_id, NotebookUpdate(banner_gcs_uri=None))
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    return updated
+
+
+@router.get("/{notebook_id}/banner")
+async def get_notebook_banner(
+    notebook_id: str,
+    repo: NotebookRepository = Depends(get_repo),
+    current_user: str = Depends(get_current_user),
+):
+    existing = await repo.get_by_id(notebook_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Notebook not found")
+    if existing["owner_id"] != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    gcs_uri = existing.get("banner_gcs_uri")
+    if not gcs_uri:
+        raise HTTPException(status_code=404, detail="No banner set")
+
+    without_scheme = gcs_uri[len("gs://"):]
+    bucket_name, _, blob_path = without_scheme.partition("/")
+    bucket = storage_service.client.bucket(bucket_name)
+    blob = bucket.blob(blob_path)
+
+    data = await anyio.to_thread.run_sync(blob.download_as_bytes)
+    content_type = blob.content_type or "image/jpeg"
+    return StreamingResponse(
+        io.BytesIO(data),
+        media_type=content_type,
+        headers={"Cache-Control": "private, max-age=3600"},
+    )
+
+
 @router.delete("/{notebook_id}", status_code=204)
 async def delete_notebook_endpoint(
     notebook_id: str,
@@ -212,9 +300,10 @@ async def delete_notebook_endpoint(
         raise HTTPException(status_code=403, detail="Not authorized")
 
     gcs_uris = await repo.get_document_uris(notebook_id)
+    banner_uri = existing.get("banner_gcs_uri")
     await repo.delete(notebook_id)
 
-    for uri in gcs_uris:
+    for uri in gcs_uris + ([banner_uri] if banner_uri else []):
         try:
             await storage_service.delete_blob(uri)
         except Exception:
