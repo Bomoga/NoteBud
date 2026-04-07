@@ -152,17 +152,10 @@
 [data-theme="notion-dark"] [role="menu"] [data-focus] { background: rgba(255, 255, 255, 0.06); }
 [data-theme="notion-dark"] [role="menuitem"]:hover { background: rgba(255, 255, 255, 0.06); }
 
-/* Settings modal inner text */
-[data-theme="notion-dark"] .settings-modal h2 { color: #e8e8e8; }
-[data-theme="notion-dark"] .settings-modal h3 { color: #9b9b9b; }
-[data-theme="notion-dark"] .settings-modal .text-slate-600,
-[data-theme="notion-dark"] .settings-modal .text-slate-500 { color: #9b9b9b; }
-[data-theme="notion-dark"] .settings-modal button:not(.bg-emerald-600) {
-  border-color: rgba(255, 255, 255, 0.07);
-}
-[data-theme="notion-dark"] .settings-modal button:not(.bg-emerald-600):hover {
-  background: rgba(255, 255, 255, 0.05);
-}
+/* Settings dropdown */
+[data-theme="notion-dark"] .settings-dropdown-item { color: #e8e8e8; }
+[data-theme="notion-dark"] .settings-dropdown-item:hover { background: rgba(255,255,255,0.05); }
+[data-theme="notion-dark"] .bg-emerald-50\/60 { background: rgba(67,137,81,0.15) !important; }
 
 /* General panel text — slate palette */
 [data-theme="notion-dark"] .text-slate-900 { color: #e8e8e8; }

@@ -1,18 +1,18 @@
 "use client"
 
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import { Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon } from '@heroicons/react/24/outline'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../lib/store/auth'
 import { abortAllInFlightRequests, disableAuthHeadersFor } from '../lib/api/client'
 import { getNotebook } from '../lib/api'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
-import SettingsModal from '../modals/SettingsModal'
+import SettingsDropdown from './SettingsDropdown'
 
 const navLinks = [
   { href: '/', label: 'Home', Icon: HomeIcon, protected: false },
@@ -38,7 +38,6 @@ export default function NavBar() {
     window.location.assign('/login');
   };
 
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const displayInitial = username?.trim()?.charAt(0).toUpperCase() || '?';
 
   // Extract notebook ID from /backpack/[id]/... routes
@@ -122,15 +121,7 @@ export default function NavBar() {
             </DisclosureButton>
           </div>
           <div className="hidden lg:ml-4 lg:flex lg:items-center lg:gap-3">
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(true)}
-              className="relative shrink-0 rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-emerald-600"
-            >
-              <span className="absolute -inset-1.5" />
-              <span className="sr-only">Open settings</span>
-              <Cog6ToothIcon aria-hidden="true" className="size-6" />
-            </button>
+            <SettingsDropdown />
 
             {token ? (
               <Menu as="div" className="relative ml-1 shrink-0">
@@ -179,8 +170,6 @@ export default function NavBar() {
           </div>
         </div>
       </div>
-
-      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       <DisclosurePanel className="lg:hidden">
         <div className="space-y-1 pt-2 pb-3">
