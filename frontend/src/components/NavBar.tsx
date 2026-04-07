@@ -6,7 +6,9 @@ import { usePathname } from 'next/navigation'
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { Bars3Icon, XMarkIcon, HomeIcon, BookOpenIcon } from '@heroicons/react/24/outline'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../lib/store/auth'
+import { abortAllInFlightRequests, disableAuthHeadersFor } from '../lib/api/client'
 import { getNotebook } from '../lib/api'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
@@ -22,6 +24,17 @@ export default function NavBar() {
   const pathname = usePathname();
   const token = useAuthStore((s) => s.token);
   const username = useAuthStore((s) => s.username);
+  const clearSession = useAuthStore((s) => s.clearSession);
+  const queryClient = useQueryClient();
+
+  const handleLogout = () => {
+    queryClient.cancelQueries();
+    queryClient.clear();
+    abortAllInFlightRequests();
+    clearSession();
+    disableAuthHeadersFor(10000);
+    window.location.assign('/login');
+  };
 
   const displayInitial = username?.trim()?.charAt(0).toUpperCase() || '?';
   const { blobUrl: avatarUrl } = useAvatarUrl();
