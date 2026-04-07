@@ -6,6 +6,7 @@ import {
   createLink,
   deleteLink,
   getSimilarNotebooks,
+  listAllLinks,
   type NotebookLinkCreate,
 } from '../lib/api/links';
 
@@ -33,6 +34,14 @@ export function useDeleteLink(notebookId: string) {
   return useMutation({
     mutationFn: (linkId: string) => deleteLink(notebookId, linkId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: linksKey(notebookId) }),
+  });
+}
+
+export function useAllLinks() {
+  return useQuery({
+    queryKey: ['notebook-links-all'],
+    queryFn: listAllLinks,
+    staleTime: 30_000,
   });
 }
 

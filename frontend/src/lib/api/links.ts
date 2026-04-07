@@ -58,3 +58,16 @@ export async function getSimilarNotebooks(notebookId: string): Promise<SimilarNo
   const { data } = await apiClient.get<SimilarNotebook[]>(`/notebooks/${notebookId}/similar`);
   return data;
 }
+
+export interface AllLinksEdge {
+  id: string;
+  from_notebook_id: string;
+  to_notebook_id: string;
+  link_type: LinkType;
+  created_at: string;
+}
+
+export async function listAllLinks(): Promise<AllLinksEdge[]> {
+  const { data } = await apiClient.get<AllLinksEdge[]>('/notebooks/links');
+  return data;
+}
