@@ -104,7 +104,7 @@ export default function ChatPanel({ notebookId }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full glass-panel border-2 border-gray-300 bg-white/10 backdrop-blur-[30px] overflow-hidden">
+    <div className="flex flex-col h-full glass-panel bg-white/10 backdrop-blur-[30px] overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/20 flex-shrink-0">
         <p className="text-sm font-semibold text-slate-700">Notebook Chat</p>
