@@ -4,14 +4,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, BellIcon, XMarkIcon, HomeIcon, BookOpenIcon } from '@heroicons/react/24/outline'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../lib/store/auth'
 import { abortAllInFlightRequests, disableAuthHeadersFor } from '../lib/api/client'
 
 const navLinks = [
-  { href: '/', label: 'Home', emoji: '🏠', protected: false },
-  { href: '/backpack', label: 'Backpack', emoji: '🎒', protected: true },
+  { href: '/', label: 'Home', Icon: HomeIcon, protected: false },
+  { href: '/backpack', label: 'Backpack', Icon: BookOpenIcon, protected: true },
 ];
 
 export default function NavBar() {
@@ -48,7 +48,7 @@ export default function NavBar() {
               />
             </div>
             <div className="hidden lg:ml-6 lg:flex lg:items-center lg:gap-3">
-              {navLinks.map(({ href, label, emoji, protected: isProtected }, i) => {
+              {navLinks.map(({ href, label, Icon, protected: isProtected }, i) => {
                 const linkPath = href.split('?')[0]
                 const isActive = href !== '#' && pathname === linkPath
                 const activeClass = 'border-emerald-600 text-gray-900'
@@ -58,7 +58,7 @@ export default function NavBar() {
                   <>
                     {i > 0 && <span key={`sep-${i}`} className="text-gray-300 text-2xl select-none">|</span>}
                     <Link key={label} href={resolvedHref} className={`inline-flex items-center gap-1.5 border-b-2 px-1 pt-1 text-2xl font-semibold ${isActive ? activeClass : defaultClass}`}>
-                      <span>{emoji}</span>
+                      <Icon className="h-6 w-6" />
                       {label}
                     </Link>
                   </>
