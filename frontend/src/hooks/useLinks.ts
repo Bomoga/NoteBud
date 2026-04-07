@@ -25,7 +25,10 @@ export function useCreateLink(notebookId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: NotebookLinkCreate) => createLink(notebookId, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: linksKey(notebookId) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: linksKey(notebookId) });
+      queryClient.invalidateQueries({ queryKey: ['notebook-links-all'] });
+    },
   });
 }
 
@@ -33,7 +36,10 @@ export function useDeleteLink(notebookId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (linkId: string) => deleteLink(notebookId, linkId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: linksKey(notebookId) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: linksKey(notebookId) });
+      queryClient.invalidateQueries({ queryKey: ['notebook-links-all'] });
+    },
   });
 }
 
