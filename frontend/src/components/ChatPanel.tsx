@@ -108,16 +108,10 @@ export default function ChatPanel({ notebookId }: Props) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/20 flex-shrink-0">
         <p className="text-sm font-semibold text-slate-700">Notebook Chat</p>
-        <p className="text-xs text-slate-400">Ask questions about your materials</p>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
-        {messages.length === 0 && (
-          <p className="text-xs text-slate-400 text-center mt-4">
-            Ask a question about your uploaded materials or notes.
-          </p>
-        )}
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
