@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { streamChat, type ChatCitation } from '../lib/api/chat';
+import ConnectionsPanel from './ConnectionsPanel';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -103,20 +104,14 @@ export default function ChatPanel({ notebookId }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full glass-panel border-2 border-gray-300 rounded-xl bg-white/10 backdrop-blur-[30px] overflow-hidden">
+    <div className="flex flex-col h-full glass-panel border border-white/30 bg-white/10 backdrop-blur-[30px] overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/20 flex-shrink-0">
-        <p className="text-sm font-semibold text-slate-700">Notebook Chat</p>
-        <p className="text-xs text-slate-400">Ask questions about your materials</p>
+      <div className="px-4 py-3 border-b border-white/20 flex-shrink-0 flex items-center justify-center">
+        <p className="text-lg font-semibold text-slate-700">Notebook Chat</p>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
-        {messages.length === 0 && (
-          <p className="text-xs text-slate-400 text-center mt-4">
-            Ask a question about your uploaded materials or notes.
-          </p>
-        )}
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div
@@ -161,21 +156,21 @@ export default function ChatPanel({ notebookId }: Props) {
 
       {/* Input */}
       <div className="flex-shrink-0 px-3 pb-3 pt-2 border-t border-white/20">
-        <div className="flex items-end gap-2 bg-white/30 border border-white/40 rounded-xl px-3 py-2">
+        <div className="flex items-center gap-2 bg-white/30 border border-white/40 rounded-xl px-3 py-2">
           <textarea
             ref={textareaRef}
             rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a question…"
+            placeholder=""
             disabled={isStreaming}
-            className="flex-1 resize-none bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none min-h-[20px] max-h-[120px] leading-5 disabled:opacity-50"
-            style={{ height: 'auto' }}
+            className="flex-1 resize-none bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none leading-5 disabled:opacity-50 overflow-hidden"
+            style={{ height: '20px' }}
             onInput={(e) => {
               const el = e.currentTarget;
-              el.style.height = 'auto';
-              el.style.height = `${el.scrollHeight}px`;
+              el.style.height = '20px';
+              el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
             }}
           />
           <button
@@ -188,8 +183,9 @@ export default function ChatPanel({ notebookId }: Props) {
             <PaperAirplaneIcon className="h-4 w-4" />
           </button>
         </div>
-        <p className="text-[10px] text-slate-400 mt-1 text-center">Enter to send · Shift+Enter for newline</p>
       </div>
+
+      <ConnectionsPanel notebookId={notebookId} />
     </div>
   );
 }

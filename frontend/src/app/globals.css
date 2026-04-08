@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
 @theme {
   --color-primary: #405449;
   --color-primary-light: #3B4540;
@@ -69,6 +77,122 @@
     border: 1px solid rgba(255, 255, 255, 0.5);
     box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.15);
   }
+
+/* ── Notion Dark theme ──────────────────────────────────────────────────── */
+
+/* Page background */
+[data-theme="notion-dark"] body {
+  background: #191919;
+}
+[data-theme="notion-dark"] .forest-background {
+  background-image: none !important;
+  background-color: #191919 !important;
+}
+[data-theme="notion-dark"] .forest-background > * {
+  display: none;
+}
+
+/* Glass panel overrides → solid dark surfaces */
+[data-theme="notion-dark"] .glass,
+[data-theme="notion-dark"] .glass-panel {
+  background: rgba(37, 37, 37, 0.98) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="notion-dark"] .glass-light {
+  background: rgba(47, 47, 47, 0.98) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: none !important;
+}
+[data-theme="notion-dark"] .glass-elevated {
+  background: rgba(47, 47, 47, 0.98) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
+[data-theme="notion-dark"] .glass-input {
+  background: rgba(55, 55, 55, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
+
+/* NavBar text */
+[data-theme="notion-dark"] nav .text-gray-900 { color: #e8e8e8; }
+[data-theme="notion-dark"] nav .text-gray-800 { color: #d4d4d4; }
+[data-theme="notion-dark"] nav .text-gray-700 { color: #c4c4c4; }
+[data-theme="notion-dark"] nav .text-gray-500 { color: #9b9b9b; }
+[data-theme="notion-dark"] nav .text-gray-400 { color: #6b6b6b; }
+[data-theme="notion-dark"] nav .text-gray-300 { color: rgba(255, 255, 255, 0.15); }
+[data-theme="notion-dark"] nav .hover\:text-gray-700:hover { color: #e8e8e8; }
+[data-theme="notion-dark"] nav .hover\:text-gray-500:hover { color: #c4c4c4; }
+[data-theme="notion-dark"] nav input[type="search"] {
+  background: rgba(55, 55, 55, 0.9);
+  color: #e8e8e8;
+  outline-color: rgba(255, 255, 255, 0.1);
+}
+[data-theme="notion-dark"] nav input[type="search"]::placeholder { color: #6b6b6b; }
+[data-theme="notion-dark"] nav .text-slate-600 { color: #9b9b9b; }
+[data-theme="notion-dark"] nav .text-slate-500 { color: #6b6b6b; }
+[data-theme="notion-dark"] nav .text-slate-400 { color: #555; }
+[data-theme="notion-dark"] nav .text-slate-300 { color: rgba(255, 255, 255, 0.12); }
+
+/* Headlessui dropdown menus */
+[data-theme="notion-dark"] [role="menu"] {
+  background: #2f2f2f !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  outline: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="notion-dark"] [role="menu"] button,
+[data-theme="notion-dark"] [role="menu"] a { color: #e8e8e8; }
+[data-theme="notion-dark"] [role="menu"] [data-focus] { background: rgba(255, 255, 255, 0.06); }
+[data-theme="notion-dark"] [role="menuitem"]:hover { background: rgba(255, 255, 255, 0.06); }
+
+/* Settings dropdown */
+[data-theme="notion-dark"] .settings-dropdown-item { color: #e8e8e8; }
+[data-theme="notion-dark"] .settings-dropdown-item:hover { background: rgba(255,255,255,0.05); }
+[data-theme="notion-dark"] .bg-emerald-50\/60 { background: rgba(67,137,81,0.15) !important; }
+
+/* General panel text — slate palette */
+[data-theme="notion-dark"] .text-slate-900 { color: #e8e8e8; }
+[data-theme="notion-dark"] .text-slate-800 { color: #d4d4d4; }
+[data-theme="notion-dark"] .text-slate-700 { color: #c4c4c4; }
+[data-theme="notion-dark"] .text-slate-600 { color: #9b9b9b; }
+[data-theme="notion-dark"] .text-slate-500 { color: #6b6b6b; }
+[data-theme="notion-dark"] .text-slate-400 { color: #555; }
+
+/* General panel text — gray palette */
+[data-theme="notion-dark"] .text-gray-900 { color: #e8e8e8; }
+[data-theme="notion-dark"] .text-gray-800 { color: #d4d4d4; }
+[data-theme="notion-dark"] .text-gray-700 { color: #c4c4c4; }
+[data-theme="notion-dark"] .text-gray-600 { color: #9b9b9b; }
+[data-theme="notion-dark"] .text-gray-500 { color: #6b6b6b; }
+
+/* White/light backgrounds → dark surfaces */
+[data-theme="notion-dark"] .bg-white { background: #252525 !important; }
+[data-theme="notion-dark"] .bg-white\/80 { background: rgba(37, 37, 37, 0.98) !important; }
+[data-theme="notion-dark"] .bg-white\/50 { background: rgba(37, 37, 37, 0.9) !important; }
+[data-theme="notion-dark"] .bg-white\/40 { background: rgba(37, 37, 37, 0.8) !important; }
+[data-theme="notion-dark"] .bg-white\/20 { background: rgba(255, 255, 255, 0.04) !important; }
+[data-theme="notion-dark"] .bg-slate-50 { background: #2f2f2f !important; }
+[data-theme="notion-dark"] .bg-gray-50 { background: #2f2f2f !important; }
+[data-theme="notion-dark"] .bg-gray-100 { background: #333 !important; }
+[data-theme="notion-dark"] .hover\:bg-gray-100:hover { background: rgba(255, 255, 255, 0.05) !important; }
+[data-theme="notion-dark"] .hover\:bg-gray-50:hover { background: rgba(255, 255, 255, 0.04) !important; }
+[data-theme="notion-dark"] .hover\:bg-white\/50:hover { background: rgba(255, 255, 255, 0.06) !important; }
+[data-theme="notion-dark"] .hover\:bg-white\/40:hover { background: rgba(255, 255, 255, 0.05) !important; }
+
+/* Borders */
+[data-theme="notion-dark"] .border-white\/30 { border-color: rgba(255, 255, 255, 0.07) !important; }
+[data-theme="notion-dark"] .border-white\/40 { border-color: rgba(255, 255, 255, 0.08) !important; }
+[data-theme="notion-dark"] .border-gray-200 { border-color: rgba(255, 255, 255, 0.08) !important; }
+[data-theme="notion-dark"] .border-slate-200 { border-color: rgba(255, 255, 255, 0.08) !important; }
+[data-theme="notion-dark"] .border-slate-300 { border-color: rgba(255, 255, 255, 0.1) !important; }
+[data-theme="notion-dark"] .divide-gray-200 > * { border-color: rgba(255, 255, 255, 0.07) !important; }
 
 /* ── Tiptap / ProseMirror editor ────────────────────────────────────────── */
 
@@ -184,3 +308,29 @@
 
 /* Selection */
 .ProseMirror ::selection { background: rgba(67, 137, 81, 0.2); }
+
+/* ── ProseMirror overrides for Notion Dark ──────────────────────────────── */
+[data-theme="notion-dark"] .ProseMirror {
+  color: #e8e8e8;
+  caret-color: #e8e8e8;
+}
+[data-theme="notion-dark"] .ProseMirror h1,
+[data-theme="notion-dark"] .ProseMirror h2,
+[data-theme="notion-dark"] .ProseMirror h3 { color: #e8e8e8; }
+[data-theme="notion-dark"] .ProseMirror blockquote { color: #9b9b9b; }
+[data-theme="notion-dark"] .ProseMirror code {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #7dd3ba;
+}
+[data-theme="notion-dark"] .ProseMirror pre {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="notion-dark"] .ProseMirror pre code { color: #e8e8e8; background: transparent; border: none; }
+[data-theme="notion-dark"] .ProseMirror hr { border-color: rgba(255, 255, 255, 0.1); }
+[data-theme="notion-dark"] .ProseMirror p.is-editor-empty:first-child::before { color: #6b6b6b; }
+[data-theme="notion-dark"] .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  border-color: #555;
+}
+[data-theme="notion-dark"] .ProseMirror ::selection { background: rgba(67, 137, 81, 0.3); }

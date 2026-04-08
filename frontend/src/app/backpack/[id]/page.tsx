@@ -104,7 +104,7 @@ export default function NotebookDetailPage() {
 
           {notebook && (
             <>
-            <div className="glass-panel rounded-xl p-6 shadow-sm backdrop-blur-[30px]">
+            <div className="glass-panel p-6 shadow-sm backdrop-blur-[30px]">
               {isEditing ? (
                 <form onSubmit={handleSave} className="flex flex-col gap-4">
                   <div>

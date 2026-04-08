@@ -5,6 +5,7 @@ export interface NoteResponse {
   notebook_id: string;
   title: string;
   content: string;
+  folder_path: string;
   created_at: string;
   updated_at: string;
   owner_id: string;
@@ -13,11 +14,13 @@ export interface NoteResponse {
 export interface NoteCreate {
   title: string;
   content?: string;
+  folder_path?: string;
 }
 
 export interface NoteUpdate {
   title?: string;
   content?: string;
+  folder_path?: string;
 }
 
 const base = (notebookId: string) => `/notebooks/${notebookId}/notes`;

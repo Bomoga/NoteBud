@@ -44,6 +44,25 @@ class UserRepository:
                 return None
             return dict(record["u"])
 
+    async def get_by_id(self, user_id: str) -> dict | None:
+        """Return a :User node by ID, or None if not found."""
+        query = "MATCH (u:User {id: $user_id}) RETURN u"
+        async with self._driver.session() as session:
+            result = await session.run(query, user_id=user_id)
+            record = await result.single()
+            if record is None:
+                return None
+            return dict(record["u"])
+
+    async def set_avatar_uri(self, user_id: str, uri: str | None) -> None:
+        """Set or clear the avatar_gcs_uri on a User node."""
+        query = """
+            MATCH (u:User {id: $user_id})
+            SET u.avatar_gcs_uri = $uri
+        """
+        async with self._driver.session() as session:
+            await session.run(query, user_id=user_id, uri=uri)
+
     async def create_or_get(self, user_id: str) -> dict:
         """Upsert a :User node by ID and return its properties."""
         query = """

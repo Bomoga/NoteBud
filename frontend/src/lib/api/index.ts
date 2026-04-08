@@ -12,6 +12,9 @@ export {
   deleteNotebook,
   uploadFile,
   queryNotebook,
+  getNotebookBannerUrl,
+  uploadNotebookBanner,
+  deleteNotebookBanner,
   type NotebookResponse,
   type NotebookCreate,
   type NotebookUpdate,
@@ -19,10 +22,12 @@ export {
   type QueryNotebookResponse,
 } from './notebooks';
 
-// Document listing
+// Document listing and patching
 export {
   listDocuments,
+  patchDocument,
   type DocumentResponse,
+  type DocumentUpdate,
 } from './documents';
 
 // Note crud operations
@@ -46,6 +51,20 @@ export {
   type ChatEvent,
 } from './chat';
 
+// Notebook-to-notebook links
+export {
+  listLinks,
+  createLink,
+  deleteLink,
+  getSimilarNotebooks,
+  type NotebookLinkRead,
+  type NotebookLinkInbound,
+  type NotebookLinksResponse,
+  type SimilarNotebook,
+  type NotebookLinkCreate,
+  type LinkType,
+} from './links';
+
 // Courses and notebook tags
 export {
   getCourses,
@@ -54,3 +73,15 @@ export {
   type CourseResponse,
   type NotebookTagResponse,
 } from './courses';
+
+// Calendar events
+export {
+  listEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  type CalendarEvent,
+  type CalendarEventCreate,
+  type CalendarEventUpdate,
+  type EventType,
+} from './events';

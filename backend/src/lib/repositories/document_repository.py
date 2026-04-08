@@ -12,6 +12,7 @@ class DocumentRepository:
         filename: str,
         file_type: str,
         source_type: str = "content",
+        folder_path: str = "",
     ) -> dict:
         """MERGE a :Document node with all properties. Idempotent on id."""
         query = """
@@ -20,6 +21,7 @@ class DocumentRepository:
                 d.filename     = $filename,
                 d.file_type    = $file_type,
                 d.source_type  = $source_type,
+                d.folder_path  = $folder_path,
                 d.status       = "processing"
             RETURN d
         """
@@ -31,6 +33,7 @@ class DocumentRepository:
                 filename=filename,
                 file_type=file_type,
                 source_type=source_type,
+                folder_path=folder_path,
             )
             record = await result.single()
             return dict(record["d"])
@@ -49,8 +52,28 @@ class DocumentRepository:
                 doc = dict(record["d"])
                 # Default source_type for documents created before this field was added
                 doc.setdefault("source_type", "content")
+                doc.setdefault("folder_path", "")
                 rows.append(doc)
             return rows
+
+    async def update(self, doc_id: str, updates: dict) -> dict | None:
+        """Patch arbitrary properties on a Document node."""
+        if not updates:
+            return None
+        query = """
+            MATCH (d:Document {id: $doc_id})
+            SET d += $updates
+            RETURN d
+        """
+        async with self._driver.session() as session:
+            result = await session.run(query, doc_id=doc_id, updates=updates)
+            record = await result.single()
+            if record is None:
+                return None
+            doc = dict(record["d"])
+            doc.setdefault("source_type", "content")
+            doc.setdefault("folder_path", "")
+            return doc
 
     async def update_status(self, doc_id: str, status: str) -> None:
         """Update the status field on a Document node."""

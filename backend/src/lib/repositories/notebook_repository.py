@@ -16,6 +16,7 @@ def _node_to_dict(node) -> dict:
         val = props.get(key)
         if isinstance(val, Neo4jDateTime):
             props[key] = val.to_native()
+    props.setdefault("semester", "Spring 2026")
     return props
 
 
@@ -32,6 +33,7 @@ class NotebookRepository:
                 n.title = $title,
                 n.course_code = $course_code,
                 n.description = $description,
+                n.semester = $semester,
                 n.created_at = $now,
                 n.updated_at = $now,
                 n.owner_id = $owner_id
@@ -39,6 +41,7 @@ class NotebookRepository:
                 n.title = $title,
                 n.course_code = $course_code,
                 n.description = $description,
+                n.semester = $semester,
                 n.updated_at = $now,
                 n.owner_id = $owner_id
             RETURN n
@@ -50,6 +53,7 @@ class NotebookRepository:
                 title=data.title,
                 course_code=data.course_code,
                 description=data.description,
+                semester=data.semester,
                 now=now,
                 owner_id=owner_id,
             )

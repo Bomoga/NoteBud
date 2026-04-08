@@ -70,7 +70,7 @@ export default function NoteEditor({ noteId, content, onChange }: Props) {
     if (!editor) return;
     const incoming = content || '';
     if (editor.getHTML() !== incoming) {
-      editor.commands.setContent(incoming, false);
+      editor.commands.setContent(incoming, { emitUpdate: false });
     }
   }, [noteId]); // eslint-disable-line react-hooks/exhaustive-deps
 

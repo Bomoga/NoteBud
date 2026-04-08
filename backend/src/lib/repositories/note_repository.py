@@ -14,6 +14,7 @@ def _node_to_dict(node) -> dict:
         val = props.get(key)
         if isinstance(val, Neo4jDateTime):
             props[key] = val.to_native()
+    props.setdefault("folder_path", "")
     return props
 
 
@@ -31,6 +32,7 @@ class NoteRepository:
                 notebook_id: $notebook_id,
                 title: $title,
                 content: $content,
+                folder_path: $folder_path,
                 created_at: $now,
                 updated_at: $now,
                 owner_id: $owner_id
@@ -45,6 +47,7 @@ class NoteRepository:
                 id=note_id,
                 title=data.title,
                 content=data.content,
+                folder_path=data.folder_path,
                 now=now,
                 owner_id=owner_id,
             )

@@ -10,6 +10,8 @@ import {
   createNotebook,
   updateNotebook,
   deleteNotebook,
+  uploadNotebookBanner,
+  deleteNotebookBanner,
   type NotebookCreate,
   type NotebookUpdate,
 } from '../lib/api';
@@ -77,6 +79,29 @@ export function useDeleteNotebook(options: UseNotebooksOptions = {}) {
       useMock ? deleteMockNotebook(id) : deleteNotebook(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: NOTEBOOKS_QUERY_KEY });
+    },
+  });
+}
+
+export function useUploadNotebookBanner() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ notebookId, file }: { notebookId: string; file: File }) =>
+      uploadNotebookBanner(notebookId, file),
+    onSuccess: (_data, { notebookId }) => {
+      queryClient.invalidateQueries({ queryKey: NOTEBOOKS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['notebook', notebookId] });
+    },
+  });
+}
+
+export function useDeleteNotebookBanner() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (notebookId: string) => deleteNotebookBanner(notebookId),
+    onSuccess: (_data, notebookId) => {
+      queryClient.invalidateQueries({ queryKey: NOTEBOOKS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['notebook', notebookId] });
     },
   });
 }
