@@ -4,7 +4,7 @@ from typing import Optional
 
 class NotebookCreate(BaseModel):
     title: str
-    course_code: str
+    course_code: str = "UC"
     description: Optional[str] = None
     semester: str = "Spring 2026"
 

@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../../lib/store/auth';
 import { useNotebooks, useCreateNotebook, useDeleteNotebook } from '../../hooks/useNotebooks';
 import NotebookCard from '../../components/NotebookCard';
 import NotebookGrid from '../../components/NotebookGrid';
 import { PlusIcon, ShareIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 import NotebookGraph from '../../components/NotebookGraph';
+import MiniCalendar from '../../components/MiniCalendar';
 import { useAllLinks } from '../../hooks/useLinks';
 
 const DEFAULT_SEMESTER = 'Spring 2026';
@@ -19,30 +22,37 @@ function semesterSortKey(semester: string): number {
 }
 
 export default function BackpackPage() {
+    const router = useRouter();
+    const token = useAuthStore((s) => s.token);
+
+    useEffect(() => {
+        if (!token) router.replace('/');
+    }, [token, router]);
+
     const { data: displayNotebooks, isLoading, isError } = useNotebooks();
     const { data: allLinks = [] } = useAllLinks();
 
-    // Resizable left panel
+    // Resizable left panel (horizontal)
     const [leftWidth, setLeftWidth] = useState(440);
-    const dragging = useRef(false);
-    const startX = useRef(0);
-    const startWidth = useRef(0);
+    const colDragging = useRef(false);
+    const colStartX = useRef(0);
+    const colStartWidth = useRef(0);
 
     const onDragStart = useCallback((e: React.MouseEvent) => {
-        dragging.current = true;
-        startX.current = e.clientX;
-        startWidth.current = leftWidth;
+        colDragging.current = true;
+        colStartX.current = e.clientX;
+        colStartWidth.current = leftWidth;
         document.body.style.cursor = 'col-resize';
         document.body.style.userSelect = 'none';
 
         const onMove = (ev: MouseEvent) => {
-            if (!dragging.current) return;
-            const delta = ev.clientX - startX.current;
-            const next = Math.min(700, Math.max(260, startWidth.current + delta));
+            if (!colDragging.current) return;
+            const delta = ev.clientX - colStartX.current;
+            const next = Math.min(700, Math.max(260, colStartWidth.current + delta));
             setLeftWidth(next);
         };
         const onUp = () => {
-            dragging.current = false;
+            colDragging.current = false;
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
             window.removeEventListener('mousemove', onMove);
@@ -51,6 +61,36 @@ export default function BackpackPage() {
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onUp);
     }, [leftWidth]);
+
+    // Resizable calendar / neural map (vertical)
+    const [calendarHeight, setCalendarHeight] = useState(340);
+    const rowDragging = useRef(false);
+    const rowStartY = useRef(0);
+    const rowStartHeight = useRef(0);
+
+    const onRowDragStart = useCallback((e: React.MouseEvent) => {
+        rowDragging.current = true;
+        rowStartY.current = e.clientY;
+        rowStartHeight.current = calendarHeight;
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+
+        const onMove = (ev: MouseEvent) => {
+            if (!rowDragging.current) return;
+            const delta = ev.clientY - rowStartY.current;
+            const next = Math.min(600, Math.max(180, rowStartHeight.current + delta));
+            setCalendarHeight(next);
+        };
+        const onUp = () => {
+            rowDragging.current = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    }, [calendarHeight]);
     const createMutation = useCreateNotebook();
     const deleteMutation = useDeleteNotebook();
     const [currentSemester, setCurrentSemester] = useState<string>(
@@ -68,7 +108,7 @@ export default function BackpackPage() {
         try {
             await createMutation.mutateAsync({
                 title: title.trim(),
-                course_code: courseCode.trim(),
+                course_code: courseCode.trim() || 'UC',
                 description: description.trim() || null,
                 semester: semester.trim() || currentSemester,
             });
@@ -94,6 +134,8 @@ export default function BackpackPage() {
         return Array.from(map.entries()).sort(([a], [b]) => semesterSortKey(b) - semesterSortKey(a));
     }, [displayNotebooks]);
 
+    if (!token) return null;
+
     return (
         <div className="fixed inset-0 overflow-hidden">
             {/* Background */}
@@ -103,22 +145,33 @@ export default function BackpackPage() {
             </div>
 
             {/* Two-column layout */}
-            <div className="relative z-10 flex h-full p-3 pt-[4.5rem] gap-0">
+            <div className="relative z-10 flex h-full p-3 pt-[4.75rem] gap-0">
 
                 {/* ── Left panel: Calendar + Graph ── */}
                 <div
-                    className="hidden lg:flex flex-shrink-0 flex-col gap-3 h-full"
+                    className="hidden lg:flex flex-shrink-0 flex-col h-full"
                     style={{ width: leftWidth }}
                 >
-                    {/* Calendar placeholder */}
-                    <div className="glass-panel border border-white/30 rounded-xl flex flex-col h-56 xl:h-64 flex-shrink-0 overflow-hidden">
-                        <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+                    {/* Calendar */}
+                    <div
+                        className="glass-panel border border-white/30 rounded-xl flex flex-col flex-shrink-0 overflow-hidden"
+                        style={{ height: calendarHeight }}
+                    >
+                        <div className="flex items-center gap-2 px-4 pt-3 pb-1 flex-shrink-0">
                             <CalendarDaysIcon className="size-4 text-slate-500" />
                             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Calendar</span>
                         </div>
-                        <div className="flex-1 flex items-center justify-center">
-                            <p className="text-sm text-slate-400">Coming soon</p>
+                        <div className="flex-1 min-h-0">
+                            <MiniCalendar />
                         </div>
+                    </div>
+
+                    {/* Vertical drag handle */}
+                    <div
+                        onMouseDown={onRowDragStart}
+                        className="h-3 flex-shrink-0 flex items-center justify-center cursor-row-resize group"
+                    >
+                        <div className="h-0.5 w-12 rounded-full bg-white/30 group-hover:bg-white/60 transition-colors" />
                     </div>
 
                     {/* Notebook graph */}
@@ -171,9 +224,9 @@ export default function BackpackPage() {
                                                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
                                         </div>
                                         <div className="flex-1">
-                                            <label className="mb-1 block text-xs font-medium text-slate-700">Course code</label>
+                                            <label className="mb-1 block text-xs font-medium text-slate-700">Course code <span className="text-slate-400">(optional)</span></label>
                                             <input type="text" value={courseCode} onChange={(e) => setCourseCode(e.target.value)}
-                                                placeholder="e.g. BIO 101" required
+                                                placeholder="e.g. BIO 101 — leave blank for UC"
                                                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
                                         </div>
                                         <div className="flex-1">

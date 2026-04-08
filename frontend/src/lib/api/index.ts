@@ -73,3 +73,15 @@ export {
   type CourseResponse,
   type NotebookTagResponse,
 } from './courses';
+
+// Calendar events
+export {
+  listEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  type CalendarEvent,
+  type CalendarEventCreate,
+  type CalendarEventUpdate,
+  type EventType,
+} from './events';

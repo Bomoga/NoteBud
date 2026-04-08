@@ -29,25 +29,18 @@ export default function RegisterPage() {
   const registerMutation = useRegisterAndLogin();
 
   useEffect(() => {
-    if (token) {
-      router.replace('/backpack');
-    }
+    if (token) router.replace('/backpack');
   }, [token, router]);
+
+  if (token) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const local = validateRegisterFields(username, password);
-    if (local) {
-      setFieldErrors(local);
-      return;
-    }
+    if (local) { setFieldErrors(local); return; }
     setFieldErrors(null);
     registerMutation.mutate({ username: username.trim(), password });
   };
-
-  if (token) {
-    return null;
-  }
 
   const conflictMessage =
     registerMutation.isError &&
@@ -61,132 +54,107 @@ export default function RegisterPage() {
     isAxiosError(registerMutation.error) &&
     registerMutation.error.response?.status === 422
       ? firstValidationMessage(registerMutation.error.response?.data?.detail) ??
-        'Please check username and password against the requirements.'
+        'Please check your username and password.'
       : null;
 
   const genericError =
-    registerMutation.isError &&
-    !conflictMessage &&
-    !validationError
+    registerMutation.isError && !conflictMessage && !validationError
       ? 'Could not create your account. Check your network and try again.'
       : null;
 
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden">
-      <div className="absolute inset-0 bg-[url('/forest-bg.png')] bg-center bg-cover bg-no-repeat">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(180,200,190,0.3)_0%,rgba(200,210,200,0.2)_50%,rgba(180,195,185,0.4)_100%)]" />
+    <>
+      {/* Background */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <div className="forest-background absolute inset-0 bg-[url('/forest-bg.png')] bg-center bg-cover bg-no-repeat" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,20,15,0.72)_0%,rgba(10,20,15,0.55)_50%,rgba(10,20,15,0.70)_100%)]" />
       </div>
-      <main className="relative z-10 flex min-h-screen items-center justify-center p-6 pt-24 sm:pt-28">
-        <div className="glass-panel w-full max-w-md rounded-2xl border border-white/40 p-8 shadow-lg">
-          <h1 className="text-2xl font-semibold text-gray-900">Create account</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Choose a username and password. You will be signed in after registering.
-          </p>
 
-          <div className="mt-4 rounded-lg border border-gray-200/80 bg-white/50 px-3 py-2 text-xs text-gray-700">
-            <p className="font-medium text-gray-800">Username</p>
-            <ul className="mt-1 list-inside list-disc space-y-0.5">
-              {USERNAME_REQUIREMENTS.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-            <p className="mt-2 font-medium text-gray-800">Password</p>
-            <ul className="mt-1 list-inside list-disc space-y-0.5">
-              {PASSWORD_REQUIREMENTS.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
+      <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 pt-20 pb-16 text-center">
+
+        {/* ── Headline ── */}
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">
+          Create your account
+        </h1>
+        <p className="mt-3 text-base text-white/50">
+          You'll be signed in automatically after registering.
+        </p>
+
+        {/* ── Register card ── */}
+        <div className="mt-8 w-full max-w-sm text-left">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-7 shadow-2xl">
+
+            {/* Requirements hint */}
+            <div className="mb-5 rounded-lg border border-white/8 bg-white/5 px-3.5 py-3 text-xs text-white/40 space-y-1.5">
+              <p><span className="text-white/60 font-medium">Username: </span>{USERNAME_REQUIREMENTS.join(' · ')}</p>
+              <p><span className="text-white/60 font-medium">Password: </span>{PASSWORD_REQUIREMENTS.join(' · ')}</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <input
+                  id="username"
+                  name="username"
+                  autoComplete="username"
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => { setUsername(e.target.value); setFieldErrors(null); }}
+                  minLength={USERNAME_MIN}
+                  maxLength={USERNAME_MAX}
+                  required
+                  aria-invalid={Boolean(fieldErrors?.username)}
+                  aria-describedby={fieldErrors?.username ? 'username-err' : undefined}
+                  className="w-full rounded-lg border border-white/10 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+                {fieldErrors?.username && (
+                  <p id="username-err" className="mt-1 text-xs text-red-400">{fieldErrors.username}</p>
+                )}
+              </div>
+
+              <div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setFieldErrors(null); }}
+                  minLength={PASSWORD_MIN}
+                  maxLength={PASSWORD_MAX}
+                  required
+                  aria-invalid={Boolean(fieldErrors?.password)}
+                  aria-describedby={fieldErrors?.password ? 'password-err' : undefined}
+                  className="w-full rounded-lg border border-white/10 bg-white/10 px-3 py-2.5 text-sm text-white placeholder-white/30 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+                {fieldErrors?.password && (
+                  <p id="password-err" className="mt-1 text-xs text-red-400">{fieldErrors.password}</p>
+                )}
+              </div>
+
+              {validationError && <p className="text-xs text-red-400">{validationError}</p>}
+              {conflictMessage && <p className="text-xs text-amber-400">{conflictMessage}</p>}
+              {genericError    && <p className="text-xs text-red-400">{genericError}</p>}
+
+              <button
+                type="submit"
+                disabled={registerMutation.isPending}
+                className="w-full rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-50 transition-colors"
+              >
+                {registerMutation.isPending ? 'Creating account…' : 'Register'}
+              </button>
+            </form>
+
+            <p className="mt-4 text-center text-xs text-white/40">
+              Already have an account?{' '}
+              <Link href="/" className="text-emerald-400 hover:text-emerald-300 font-medium">
+                Sign in
+              </Link>
+            </p>
           </div>
-
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Username
-              </label>
-              <input
-                id="username"
-                name="username"
-                autoComplete="username"
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setFieldErrors(null);
-                }}
-                minLength={USERNAME_MIN}
-                maxLength={USERNAME_MAX}
-                className="mt-1 w-full rounded-lg border border-gray-300 bg-white/80 px-3 py-2 text-gray-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                required
-                aria-invalid={Boolean(fieldErrors?.username)}
-                aria-describedby={fieldErrors?.username ? 'username-err' : undefined}
-              />
-              {fieldErrors?.username && (
-                <p id="username-err" className="mt-1 text-sm text-red-600">
-                  {fieldErrors.username}
-                </p>
-              )}
-            </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setFieldErrors(null);
-                }}
-                minLength={PASSWORD_MIN}
-                maxLength={PASSWORD_MAX}
-                className="mt-1 w-full rounded-lg border border-gray-300 bg-white/80 px-3 py-2 text-gray-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                required
-                aria-invalid={Boolean(fieldErrors?.password)}
-                aria-describedby={fieldErrors?.password ? 'password-err' : undefined}
-              />
-              {fieldErrors?.password && (
-                <p id="password-err" className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>
-              )}
-            </div>
-
-            {validationError && (
-              <p className="text-sm text-red-600">{validationError}</p>
-            )}
-            {conflictMessage && (
-              <p className="text-sm text-amber-800">{conflictMessage}</p>
-            )}
-            {genericError && (
-              <p className="text-sm text-red-600">{genericError}</p>
-            )}
-
-            <button
-              type="submit"
-              disabled={registerMutation.isPending}
-              className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-            >
-              {registerMutation.isPending ? 'Creating account…' : 'Register'}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <Link
-              href="/login"
-              className="font-medium text-emerald-700 hover:text-emerald-800"
-            >
-              Sign in
-            </Link>
-          </p>
         </div>
+
       </main>
-    </div>
+    </>
   );
 }
