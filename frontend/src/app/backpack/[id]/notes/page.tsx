@@ -142,6 +142,7 @@ function buildFileTree(
 export default function NotesForNotebookPage() {
   const { id } = useParams<{ id: string }>();
   const isFocusMode = useUiStore((s) => s.isFocusMode);
+  const setIsFocusMode = useUiStore((s) => s.setIsFocusMode);
 
   const [leftPaneOpen, setLeftPaneOpen] = useState(true);
   const [rightPaneOpen, setRightPaneOpen] = useState(true);
@@ -340,14 +341,17 @@ export default function NotesForNotebookPage() {
       </div>
 
       <main className="relative z-10 flex h-full min-h-0 flex-col overflow-hidden">
-        <DraggableFloatingWidget
-          storageKey={id ? `notebud-pomodoro-pos-${id}` : 'notebud-pomodoro-pos'}
-          defaultTop={isFocusMode ? 64 : 72}
-        >
-          <StudyToolsPanel
-            storageKeyExpanded={id ? `notebud-study-panel-open-${id}` : 'notebud-study-panel-open'}
-          />
-        </DraggableFloatingWidget>
+        {isFocusMode ? (
+          <DraggableFloatingWidget
+            storageKey={id ? `notebud-pomodoro-pos-${id}` : 'notebud-pomodoro-pos'}
+            defaultTop={64}
+            onClose={() => setIsFocusMode(false)}
+          >
+            <StudyToolsPanel
+              storageKeyExpanded={id ? `notebud-study-panel-open-${id}` : 'notebud-study-panel-open'}
+            />
+          </DraggableFloatingWidget>
+        ) : null}
         <div
           className={`mx-auto flex min-h-0 w-full max-w-full flex-1 flex-row gap-2 px-2 ${
             isFocusMode ? 'pt-0' : 'pt-16'

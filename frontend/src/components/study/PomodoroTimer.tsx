@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, type Dispatch } from 'react';
 import { playPhaseChime } from '../../lib/study/phaseChime';
 
 const FOCUS_SECONDS = 25 * 60;
@@ -9,25 +9,25 @@ const BREAK_SECONDS = 5 * 60;
 type Phase = 'focus' | 'break';
 type RunState = 'idle' | 'running' | 'paused';
 
-type State = {
+export type PomodoroState = {
   phase: Phase;
   remaining: number;
   runState: RunState;
 };
 
-type Action =
+type PomodoroAction =
   | { type: 'TICK' }
   | { type: 'START' }
   | { type: 'PAUSE' }
   | { type: 'RESET' };
 
-function formatMmSs(totalSeconds: number): string {
+export function formatMmSs(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function reducer(state: State, action: Action): State {
+function reducer(state: PomodoroState, action: PomodoroAction): PomodoroState {
   switch (action.type) {
     case 'RESET':
       return {
@@ -50,7 +50,6 @@ function reducer(state: State, action: Action): State {
       if (state.remaining === 1) {
         return { ...state, remaining: 0 };
       }
-      // remaining === 0: phase ended (user already saw 0:00 for 1s)
       playPhaseChime();
       if (state.phase === 'focus') {
         return {
@@ -70,17 +69,13 @@ function reducer(state: State, action: Action): State {
   }
 }
 
-const initialState: State = {
+const initialState: PomodoroState = {
   phase: 'focus',
   remaining: FOCUS_SECONDS,
   runState: 'idle',
 };
 
-type PomodoroTimerProps = {
-  className?: string;
-};
-
-export default function PomodoroTimer({ className = '' }: PomodoroTimerProps) {
+export function usePomodoroTimer() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
@@ -89,6 +84,16 @@ export default function PomodoroTimer({ className = '' }: PomodoroTimerProps) {
     return () => window.clearInterval(id);
   }, [state.runState]);
 
+  return { state, dispatch };
+}
+
+type PomodoroTimerProps = {
+  className?: string;
+  state: PomodoroState;
+  dispatch: Dispatch<PomodoroAction>;
+};
+
+export default function PomodoroTimer({ className = '', state, dispatch }: PomodoroTimerProps) {
   const label = state.phase === 'focus' ? 'Focus' : 'Break';
 
   return (

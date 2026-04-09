@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 type Position = { left: number; top: number };
 
@@ -20,6 +21,8 @@ type Props = {
   defaultTop?: number;
   defaultRight?: number;
   className?: string;
+  /** Typically exits focus mode so the navbar returns. */
+  onClose?: () => void;
 };
 
 export default function DraggableFloatingWidget({
@@ -28,6 +31,7 @@ export default function DraggableFloatingWidget({
   defaultTop = 72,
   defaultRight = 16,
   className = '',
+  onClose,
 }: Props) {
   const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -68,9 +72,12 @@ export default function DraggableFloatingWidget({
     );
   }, [storageKey, defaultTop, defaultRight]);
 
+  // Re-run when `portalEl` becomes available: first effect pass runs before the portaled
+  // shell exists, so `rootRef` is null until after `document.body` is set — without
+  // `portalEl` in deps, position would stay null and the widget would stay invisible.
   useLayoutEffect(() => {
     measureAndPlace();
-  }, [measureAndPlace]);
+  }, [portalEl, measureAndPlace]);
 
   useEffect(() => {
     function onResize() {
@@ -143,19 +150,34 @@ export default function DraggableFloatingWidget({
           : { left: 0, top: 0 }
       }
     >
-      <div
-        className="flex cursor-grab touch-none select-none items-center justify-center gap-0.5 border-b border-white/25 bg-white/15 py-2 active:cursor-grabbing"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        aria-label="Drag to move timer"
-      >
-        <span className="flex gap-1 rounded-sm px-2 py-0.5">
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <span key={i} className="h-1 w-1 rounded-full bg-slate-400/90" />
-          ))}
-        </span>
+      <div className="flex min-h-[2.5rem] touch-none select-none items-stretch border-b border-white/25 bg-white/15">
+        <div
+          className="flex flex-1 cursor-grab items-center justify-center gap-0.5 py-2 active:cursor-grabbing"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          aria-label="Drag to move study tools"
+        >
+          <span className="flex gap-1 rounded-sm px-2 py-0.5">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <span key={i} className="h-1 w-1 rounded-full bg-slate-400/90" />
+            ))}
+          </span>
+        </div>
+        {onClose ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="flex shrink-0 items-center justify-center border-l border-white/20 px-2.5 text-slate-500 transition-colors hover:bg-white/20 hover:text-slate-800"
+            aria-label="Exit focus mode"
+          >
+            <XMarkIcon className="h-5 w-5" aria-hidden />
+          </button>
+        ) : null}
       </div>
       <div className="min-w-0">{children}</div>
     </div>

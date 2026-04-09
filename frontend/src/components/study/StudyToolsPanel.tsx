@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import PomodoroTimer from './PomodoroTimer';
+import PomodoroTimer, { formatMmSs, usePomodoroTimer } from './PomodoroTimer';
 import AmbientAudioPlayer from './AmbientAudioPlayer';
 
 type Props = {
@@ -12,6 +12,7 @@ type Props = {
 
 export default function StudyToolsPanel({ storageKeyExpanded }: Props) {
   const [expanded, setExpanded] = useState(true);
+  const { state: pomoState, dispatch: pomoDispatch } = usePomodoroTimer();
 
   useEffect(() => {
     if (!storageKeyExpanded || typeof window === 'undefined') return;
@@ -42,14 +43,25 @@ export default function StudyToolsPanel({ storageKeyExpanded }: Props) {
         aria-expanded={expanded}
       >
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">Study tools</span>
-        {expanded ? (
-          <ChevronUpIcon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
-        ) : (
-          <ChevronDownIcon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
-        )}
+        <span className="flex min-w-0 flex-1 items-center justify-end gap-2">
+          {!expanded ? (
+            <span className="font-mono text-sm tabular-nums tracking-tight text-slate-800">
+              {formatMmSs(pomoState.remaining)}
+            </span>
+          ) : null}
+          {expanded ? (
+            <ChevronUpIcon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+          ) : (
+            <ChevronDownIcon className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+          )}
+        </span>
       </button>
       <div className={expanded ? 'block' : 'hidden'}>
-        <PomodoroTimer className="w-full rounded-none border-0 shadow-none" />
+        <PomodoroTimer
+          state={pomoState}
+          dispatch={pomoDispatch}
+          className="w-full rounded-none border-0 shadow-none"
+        />
         <AmbientAudioPlayer />
       </div>
     </div>

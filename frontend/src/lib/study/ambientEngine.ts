@@ -3,6 +3,8 @@ export type AmbientTrack = 'off' | 'lofi' | 'rain' | 'white';
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 const stoppers: Array<() => void> = [];
+/** Invalidates in-flight `resume().then(...)` when a new `setAmbientTrack` runs. */
+let ambientGeneration = 0;
 
 function getAudioContext(): AudioContext {
   if (typeof window === 'undefined') {
@@ -83,33 +85,42 @@ function playRain(c: AudioContext, dest: AudioNode) {
   });
 }
 
-/** Simple soft pad (synth “lo-fi” vibe, no external files). */
+/**
+ * Soft pad (“lo-fi” vibe, no external files).
+ * Uses a looping buffer like white/rain so playback matches those code paths
+ * (OscillatorNode output can be silent until `AudioContext` has fully resumed).
+ * Integer Hz + 1s buffer so the loop seam stays phase-aligned.
+ */
 function playLofiPad(c: AudioContext, dest: AudioNode) {
-  const freqs = [130.81, 164.81, 196.0, 246.94]; // C3, E3, G3, B3
-  const oscillators: OscillatorNode[] = [];
-  const gains: GainNode[] = [];
-  for (const f of freqs) {
-    const osc = c.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.value = f;
-    const g = c.createGain();
-    g.gain.value = 0.04;
-    osc.connect(g);
-    g.connect(dest);
-    osc.start();
-    oscillators.push(osc);
-    gains.push(g);
-  }
-  pushStop(() => {
-    for (const osc of oscillators) {
-      try {
-        osc.stop();
-      } catch {
-        /* ignore */
-      }
-      osc.disconnect();
+  const dur = 1;
+  const freqs = [110, 130, 165, 196];
+  const n = c.sampleRate * dur;
+  const buffer = c.createBuffer(1, n, c.sampleRate);
+  const ch = buffer.getChannelData(0);
+  for (let i = 0; i < n; i++) {
+    const t = i / c.sampleRate;
+    let s = 0;
+    for (const f of freqs) {
+      s += Math.sin(2 * Math.PI * f * t);
     }
-    for (const g of gains) g.disconnect();
+    ch[i] = s * 0.16;
+  }
+  const src = c.createBufferSource();
+  src.buffer = buffer;
+  src.loop = true;
+  const g = c.createGain();
+  g.gain.value = 0.38;
+  src.connect(g);
+  g.connect(dest);
+  src.start();
+  pushStop(() => {
+    try {
+      src.stop();
+    } catch {
+      /* ignore */
+    }
+    src.disconnect();
+    g.disconnect();
   });
 }
 
@@ -128,27 +139,36 @@ export function setAmbientMasterVolume(volume01: number): void {
 export function setAmbientTrack(track: AmbientTrack, volume01: number): void {
   if (typeof window === 'undefined') return;
 
+  const gen = ++ambientGeneration;
   const c = getAudioContext();
   clearSounds();
 
   if (!master) return;
 
-  void c.resume().catch(() => {});
+  const vol = Math.max(0, Math.min(1, volume01));
 
   if (track === 'off') {
     master.gain.value = 0;
+    void c.resume().catch(() => {});
     return;
   }
 
-  if (track === 'white') {
-    playWhiteNoise(c, master);
-  } else if (track === 'rain') {
-    playRain(c, master);
-  } else {
-    playLofiPad(c, master);
-  }
+  // Buffers + BufferSource must start after the context is running; a fire-and-forget
+  // `resume()` leaves `state === 'suspended'` long enough that playback is silent.
+  void c.resume().then(() => {
+    if (gen !== ambientGeneration) return;
+    if (!master) return;
 
-  setAmbientMasterVolume(volume01);
+    if (track === 'white') {
+      playWhiteNoise(c, master);
+    } else if (track === 'rain') {
+      playRain(c, master);
+    } else if (track === 'lofi') {
+      playLofiPad(c, master);
+    }
+
+    setAmbientMasterVolume(vol);
+  });
 }
 
 export function stopAmbient(): void {
