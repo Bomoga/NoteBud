@@ -15,6 +15,9 @@ import DocumentViewer from '../../../../components/DocumentViewer';
 import { useNotes, useCreateNote, useUpdateNote, useDeleteNote } from '../../../../hooks/useNotes';
 import { useDocuments, usePatchDocument } from '../../../../hooks/useDocuments';
 import { uploadFile, type NoteResponse, type DocumentResponse } from '../../../../lib/api';
+import DraggableFloatingWidget from '../../../../components/study/DraggableFloatingWidget';
+import StudyToolsPanel from '../../../../components/study/StudyToolsPanel';
+import { useUiStore } from '../../../../lib/store/ui';
 
 // ---------------------------------------------------------------------------
 // buildFileTree — trie-based from folder_path strings
@@ -138,6 +141,8 @@ function buildFileTree(
 
 export default function NotesForNotebookPage() {
   const { id } = useParams<{ id: string }>();
+  const isFocusMode = useUiStore((s) => s.isFocusMode);
+  const setIsFocusMode = useUiStore((s) => s.setIsFocusMode);
 
   const [leftPaneOpen, setLeftPaneOpen] = useState(true);
   const [rightPaneOpen, setRightPaneOpen] = useState(true);
@@ -335,12 +340,27 @@ export default function NotesForNotebookPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(220,230,225,0.4)_0%,transparent_60%)]" />
       </div>
 
-      <main className="relative z-10 h-full overflow-hidden">
-        <div className="mx-auto max-w-full flex flex-row flex-1 pt-16 h-full gap-2 px-2">
+      <main className="relative z-10 flex h-full min-h-0 flex-col overflow-hidden">
+        {isFocusMode ? (
+          <DraggableFloatingWidget
+            storageKey={id ? `notebud-pomodoro-pos-${id}` : 'notebud-pomodoro-pos'}
+            defaultTop={64}
+            onClose={() => setIsFocusMode(false)}
+          >
+            <StudyToolsPanel
+              storageKeyExpanded={id ? `notebud-study-panel-open-${id}` : 'notebud-study-panel-open'}
+            />
+          </DraggableFloatingWidget>
+        ) : null}
+        <div
+          className={`mx-auto flex min-h-0 w-full max-w-full flex-1 flex-row gap-2 px-2 ${
+            isFocusMode ? 'pt-0' : 'pt-16'
+          }`}
+        >
 
           {/* File tree pane (collapsible) */}
           <aside
-            className={`overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 ${
+            className={`min-h-0 h-full overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 ${
               leftPaneOpen ? 'flex-[0_0_17%]' : 'flex-[0_0_0%]'
             }`}
           >
@@ -451,7 +471,7 @@ export default function NotesForNotebookPage() {
           />
 
           {/* Notes pane (center) */}
-          <section className="relative h-full flex-1 min-w-0 overflow-hidden flex flex-col">
+          <section className="relative flex min-h-0 h-full min-w-0 flex-1 flex-col overflow-hidden">
             <div className="glass-panel flex flex-col backdrop-blur-[30px] border border-white/30 flex-1 min-h-0 h-full overflow-hidden">
               <NotesTabs
                 tabs={tabs}
@@ -535,7 +555,7 @@ export default function NotesForNotebookPage() {
 
           {/* Chat pane (right) */}
           <aside
-            className={`overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 ${
+            className={`min-h-0 h-full overflow-hidden transition-[flex-basis] duration-200 flex-shrink-0 min-w-0 ${
               rightPaneOpen ? 'flex-[0_0_25%]' : 'flex-[0_0_0%]'
             }`}
           >

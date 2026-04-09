@@ -20,7 +20,7 @@ async def neo4j_driver(neo4j_container):
 
     driver = AsyncGraphDatabase.driver(
         neo4j_container.get_connection_url(),
-        auth=("neo4j", "password"),
+        auth=(neo4j_container.username, neo4j_container.password),
     )
     await startup.__wrapped__(driver) if hasattr(startup, "__wrapped__") else await _run_startup(driver)
     yield driver
