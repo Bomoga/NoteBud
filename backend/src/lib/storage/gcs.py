@@ -10,18 +10,25 @@ from google.oauth2 import service_account
 from src.lib.config.settings import settings
 from pathlib import Path
 
+def _resolve_credentials_path() -> Path:
+    """Pick first explicit path from env/settings, else ./service-account-key.json under cwd."""
+    credentials_path_str = (
+        os.getenv("GCS_CREDENTIALS_PATH")
+        or os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+        or getattr(settings, "GCS_CREDENTIALS_PATH", None)
+        or getattr(settings, "GOOGLE_APPLICATION_CREDENTIALS", None)
+    )
+    if credentials_path_str:
+        raw = Path(credentials_path_str).expanduser()
+        return raw if raw.is_absolute() else (Path.cwd() / raw).resolve()
+    return (Path.cwd() / "service-account-key.json").resolve()
+
+
 class StorageService:
     def __init__(self):
         self.bucket_name = settings.GCS_BUCKET_NAME
 
-        # Determine credentials path from settings or environment, with a generic fallback.
-        credentials_path_str = getattr(settings, "GCS_CREDENTIALS_PATH", None) or os.getenv("GCS_CREDENTIALS_PATH")
-
-        if credentials_path_str:
-            credentials_path = Path(credentials_path_str)
-        else:
-            # Fallback to a default location in the current working directory.
-            credentials_path = Path.cwd() / "service-account-key.json"
+        credentials_path = _resolve_credentials_path()
         if credentials_path.exists():
             print("SUCCESS: Found GCS credentials file.")
             self.credentials = service_account.Credentials.from_service_account_file(str(credentials_path))

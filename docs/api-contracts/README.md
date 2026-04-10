@@ -64,7 +64,8 @@ Sample request + sample response
 | File | Feature | Status | Approved By |
 |---|---|---|---|
 | [AUTH.md](./AUTH.md) | Register, login (`/auth/token`), JWT Bearer, validation rules | ✅ Aligned with implementation | Update sign-off if you change auth behavior |
-| [NOTEBOOK.md](./NOTEBOOK.md) | Create notebook, list notebooks, upload file | ✅ Approved | FE + BE |
+| [NOTEBOOK.md](./NOTEBOOK.md) | Create notebook, list notebooks | ✅ Approved | FE + BE |
+| [FILES.md](./FILES.md) | Notebook upload + list + FE/polling context; `files.py` + `GET …/documents` | Align with implementation | Update sign-off if you change upload or document list |
 
 > Add a new row every time a new contract is merged.
 
@@ -76,6 +77,7 @@ Use all caps, one word per feature area:
 
 - `AUTH.md`
 - `NOTEBOOK.md`
+- `FILES.md`
 - `CHAT.md`
 - `PLANNER.md`
 - `RAG.md`

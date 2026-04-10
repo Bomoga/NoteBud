@@ -10,6 +10,10 @@ env/
 *.egg-info/
 .pytest_cache/
 
+# Credentials
+credentials/
+service-account-key.json
+
 # Node
 node_modules/
 .next/
