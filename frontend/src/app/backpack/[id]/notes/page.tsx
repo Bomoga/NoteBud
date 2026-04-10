@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useParams } from 'next/navigation';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { PencilSquareIcon, DocumentTextIcon, AcademicCapIcon, LockClosedIcon, PlusIcon, FolderPlusIcon, ArrowUpTrayIcon } from '@heroicons/react/24/solid';
+import { isAxiosError } from 'axios';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import NotesTabs, { type NoteTab } from '../../../../components/NotesTabs';
 import FileTree, { type FileTreeNode, type SectionType } from '../../../../components/FileTree';
@@ -179,6 +180,17 @@ export default function NotesForNotebookPage() {
     mutationFn: ({ file, sourceType }: { file: File; sourceType: 'content' | 'syllabus' }) =>
       uploadFile(id, file, sourceType),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['documents', id] }),
+    onError: (error) => {
+      if (isAxiosError(error)) {
+        console.error('[upload]', {
+          status: error.response?.status,
+          data: error.response?.data,
+          url: error.config?.baseURL ? `${error.config.baseURL}${error.config.url ?? ''}` : error.config?.url,
+        });
+      } else {
+        console.error('[upload]', error);
+      }
+    },
   });
 
   function handleUploadFile(sectionType: 'material' | 'syllabus', file: File) {
