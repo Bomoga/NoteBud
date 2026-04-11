@@ -62,7 +62,7 @@ export default function NotebookCard({ notebook, onDelete, isDeleting = false }:
   };
 
   return (
-    <div className="glass-panel flex flex-col overflow-hidden shadow-sm transition-shadow hover:shadow-md">
+    <div className="border rounded-lg glass-panel flex flex-col overflow-hidden shadow-sm transition-shadow hover:shadow-md">
       {/* Header — banner image or gradient, with hover upload overlay */}
       <div className="relative group h-24 overflow-hidden">
         <Link href={`/backpack/${notebook.id}/notes`} className="block w-full h-full">

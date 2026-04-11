@@ -102,7 +102,7 @@ export default function SettingsDropdown() {
       <button
         type="button"
         onClick={() => { setOpen((v) => !v); if (open) { setThemeExpanded(false); setAccountExpanded(false) } }}
-        className="relative flex items-center justify-center rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-emerald-600"
+        className="relative flex cursor-pointer items-center justify-center rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-emerald-600"
         aria-label="Open settings"
       >
         <span className="absolute -inset-1.5" />
@@ -116,7 +116,7 @@ export default function SettingsDropdown() {
           <button
             type="button"
             onClick={() => setThemeExpanded((v) => !v)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/20 transition-colors"
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/20"
           >
             <SwatchIcon className="size-4 text-slate-500 flex-shrink-0" />
             <span className="flex-1 text-sm font-medium text-slate-700">Theme</span>
@@ -130,7 +130,7 @@ export default function SettingsDropdown() {
                   key={id}
                   type="button"
                   onClick={() => setTheme(id)}
-                  className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg text-left transition-colors ${
+                  className={`flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
                     theme === id ? 'bg-emerald-50/60' : 'hover:bg-white/30'
                   }`}
                 >
@@ -152,7 +152,7 @@ export default function SettingsDropdown() {
           <button
             type="button"
             onClick={() => setAccountExpanded((v) => !v)}
-            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/20 transition-colors"
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/20"
           >
             <UserCircleIcon className="size-4 text-slate-500 flex-shrink-0" />
             <span className="flex-1 text-sm font-medium text-slate-700">Account settings</span>
@@ -192,7 +192,7 @@ export default function SettingsDropdown() {
                     type="button"
                     onClick={handleRemoveAvatar}
                     disabled={!blobUrl || uploading}
-                    className="text-xs text-slate-400 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="cursor-pointer text-xs text-slate-400 transition-colors hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Remove photo
                   </button>
@@ -203,7 +203,7 @@ export default function SettingsDropdown() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50/60 transition-colors"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50/60"
               >
                 <ArrowRightStartOnRectangleIcon className="size-4 flex-shrink-0" />
                 Sign out
