@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Rounded square background -->
+  <rect x="4" y="4" width="92" height="92" rx="22" ry="22" fill="#86BF7A"/>
+
+  <!-- Note paper body (white, with folded corner) -->
+  <path d="M28 22 L64 22 L72 30 L72 78 L28 78 Z" fill="white" opacity="0.95"/>
+
+  <!-- Folded corner triangle -->
+  <path d="M64 22 L64 30 L72 30 Z" fill="#86BF7A" opacity="0.6"/>
+
+  <!-- Ruled lines on the note -->
+  <line x1="35" y1="42" x2="65" y2="42" stroke="#86BF7A" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="35" y1="51" x2="65" y2="51" stroke="#86BF7A" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="35" y1="60" x2="55" y2="60" stroke="#86BF7A" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Eyes -->
+  <circle cx="42" cy="34" r="2.8" fill="#4A8A3F"/>
+  <circle cx="58" cy="34" r="2.8" fill="#4A8A3F"/>
+
+  <!-- Eye shine -->
+  <circle cx="43.2" cy="32.8" r="0.9" fill="white"/>
+  <circle cx="59.2" cy="32.8" r="0.9" fill="white"/>
+
+  <!-- Rosy cheeks -->
+  <circle cx="37" cy="39" r="4" fill="#F4A7A7" opacity="0.5"/>
+  <circle cx="63" cy="39" r="4" fill="#F4A7A7" opacity="0.5"/>
+
+  <!-- Smile -->
+  <path d="M43 38.5 Q50 44 57 38.5" stroke="#4A8A3F" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+</svg>

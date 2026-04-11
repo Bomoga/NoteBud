@@ -50,14 +50,14 @@ export default function NavBar() {
 
   return (
     <Disclosure as="nav" className="relative z-20 glass-panel backdrop-blur-[30px]">
-      <div className="mx-auto max-w-8xl sm:px-6 lg:px-12">
+      <div className="mx-auto max-w-8xl sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex px-4 lg:px-6">
             <div className="flex shrink-0 items-center">
               <img
                 alt="NoteBud Logo"
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=emerald&shade=600"
-                className="h-8 w-auto"
+                src="/logo.svg"
+                className="h-14 w-auto"
               />
             </div>
             <div className="hidden lg:ml-6 lg:flex lg:items-center lg:gap-3">

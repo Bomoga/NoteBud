@@ -2,6 +2,8 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { streamChat, type ChatCitation } from '../lib/api/chat';
 import ConnectionsPanel from './ConnectionsPanel';
 
@@ -112,45 +114,71 @@ export default function ChatPanel({ notebookId }: Props) {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div
-              className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
-                msg.role === 'user'
-                  ? 'bg-green-600/80 text-white'
-                  : 'bg-white/40 text-slate-800 border border-white/30'
-              }`}
-            >
-              <p className="whitespace-pre-wrap break-words leading-relaxed">
-                {msg.content}
-                {msg.role === 'assistant' && isStreaming && i === messages.length - 1 && (
-                  <span className="inline-block w-1 h-3 ml-0.5 bg-slate-500 animate-pulse align-middle" />
+        {messages.map((msg, i) => {
+          const isLastStreaming = isStreaming && i === messages.length - 1 && msg.role === 'assistant';
+          return (
+            <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+              <div
+                className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+                  msg.role === 'user'
+                    ? 'bg-emerald-600/80 text-white'
+                    : 'bg-white/40 text-white border border-white/30'
+                }`}
+              >
+                {msg.role === 'assistant' ? (
+                  <div className="prose prose-sm prose-slate max-w-none break-words
+                    prose-p:leading-relaxed prose-p:my-1 prose-p:text-white
+                    prose-headings:font-semibold prose-headings:my-1 prose-headings:text-white
+                    prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-li:text-white
+                    prose-code:bg-white/20 prose-code:rounded prose-code:px-1 prose-code:text-[11px] prose-code:text-white
+                    prose-pre:bg-white/20 prose-pre:rounded-lg prose-pre:text-[11px]
+                    prose-strong:text-white prose-a:text-emerald-300">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
                 )}
-              </p>
 
-              {/* Citations */}
-              {msg.citations && msg.citations.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-white/30 space-y-1">
-                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Sources</p>
-                  {msg.citations.map((c, ci) => (
-                    <div key={ci} className="text-[11px] text-slate-500 leading-snug">
-                      <span className="font-medium text-slate-600">{c.filename}</span>
-                      {' · '}
-                      <span className="italic">{c.snippet}</span>
-                    </div>
-                  ))}
+                {/* Citations */}
+                {msg.citations && msg.citations.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-white/30 space-y-1">
+                    <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Sources</p>
+                    {msg.citations.map((c, ci) => (
+                      <div key={ci} className="text-[11px] text-white/70 leading-snug">
+                        {c.notebook_title && (
+                          <span className="inline-block mr-1.5 rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-white/20 text-white/80">
+                            {c.notebook_title}
+                          </span>
+                        )}
+                        <span className="font-medium text-white/90">{c.filename}</span>
+                        {' · '}
+                        <span className="italic">{c.snippet}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Low confidence warning */}
+                {msg.low_confidence && msg.role === 'assistant' && !isStreaming && (
+                  <p className="mt-1 text-[10px] text-amber-300">
+                    Low confidence — limited relevant content found.
+                  </p>
+                )}
+              </div>
+
+              {/* Pulsating dots shown below the bubble while streaming */}
+              {isLastStreaming && (
+                <div className="flex items-center gap-1 mt-1.5 ml-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:150ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:300ms]" />
                 </div>
               )}
-
-              {/* Low confidence warning */}
-              {msg.low_confidence && msg.role === 'assistant' && !isStreaming && (
-                <p className="mt-1 text-[10px] text-amber-600">
-                  Low confidence — limited relevant content found.
-                </p>
-              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
@@ -177,7 +205,7 @@ export default function ChatPanel({ notebookId }: Props) {
             type="button"
             onClick={handleSubmit}
             disabled={!input.trim() || isStreaming}
-            className="flex-shrink-0 rounded-lg p-1.5 text-green-600 hover:bg-green-600/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="flex-shrink-0 rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-600/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             aria-label="Send"
           >
             <PaperAirplaneIcon className="h-4 w-4" />

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 * {
   scrollbar-width: none;
@@ -9,12 +10,25 @@
 }
 
 @theme {
-  --color-primary: #405449;
-  --color-primary-light: #3B4540;
-  --color-accent: #438951;
-  --color-background: #f8faf8;
+  --color-primary: #4A7A40;
+  --color-primary-light: #3d6636;
+  --color-accent: #6aab5e;
+  --color-background: #f4faf2;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Rethemed emerald palette to match the NoteBud logo light green (#86BF7A) */
+  --color-emerald-50:  #f0f9ed;
+  --color-emerald-100: #ddf2d8;
+  --color-emerald-200: #bce5b4;
+  --color-emerald-300: #93d189;
+  --color-emerald-400: #86BF7A;
+  --color-emerald-500: #6aab5e;
+  --color-emerald-600: #548e49;
+  --color-emerald-700: #43723a;
+  --color-emerald-800: #365b2f;
+  --color-emerald-900: #2b4a26;
+  --color-emerald-950: #162613;
 }
 
 /* Glassmorphism – frosted glass effect (outside @layer so backdrop-filter applies in Firefox) */
@@ -155,7 +169,7 @@
 /* Settings dropdown */
 [data-theme="notion-dark"] .settings-dropdown-item { color: #e8e8e8; }
 [data-theme="notion-dark"] .settings-dropdown-item:hover { background: rgba(255,255,255,0.05); }
-[data-theme="notion-dark"] .bg-emerald-50\/60 { background: rgba(67,137,81,0.15) !important; }
+[data-theme="notion-dark"] .bg-emerald-50\/60 { background: rgba(134,191,122,0.15) !important; }
 
 /* General panel text — slate palette */
 [data-theme="notion-dark"] .text-slate-900 { color: #e8e8e8; }
@@ -198,7 +212,7 @@
 
 .ProseMirror {
   outline: none;
-  caret-color: #405449;
+  caret-color: #4A7A40;
   color: #1e293b;
   line-height: 1.7;
   font-size: 0.9375rem;
@@ -245,8 +259,8 @@
   margin-top: 0.2em;
 }
 .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
-  background-color: #438951;
-  border-color: #438951;
+  background-color: #548e49;
+  border-color: #548e49;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4l3 3 5-6' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-size: 70%;
   background-repeat: no-repeat;
@@ -284,7 +298,7 @@
 
 /* Blockquote */
 .ProseMirror blockquote {
-  border-left: 3px solid #438951;
+  border-left: 3px solid #548e49;
   margin: 0.75em 0;
   padding: 0.25em 0 0.25em 1rem;
   color: #475569;
@@ -300,14 +314,14 @@
 
 /* Links */
 .ProseMirror a {
-  color: #438951;
+  color: #548e49;
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
 }
 
 /* Selection */
-.ProseMirror ::selection { background: rgba(67, 137, 81, 0.2); }
+.ProseMirror ::selection { background: rgba(134, 191, 122, 0.25); }
 
 /* ── ProseMirror overrides for Notion Dark ──────────────────────────────── */
 [data-theme="notion-dark"] .ProseMirror {
@@ -333,4 +347,4 @@
 [data-theme="notion-dark"] .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
   border-color: #555;
 }
-[data-theme="notion-dark"] .ProseMirror ::selection { background: rgba(67, 137, 81, 0.3); }
+[data-theme="notion-dark"] .ProseMirror ::selection { background: rgba(134, 191, 122, 0.35); }

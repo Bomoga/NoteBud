@@ -6,6 +6,7 @@ export interface ChatCitation {
   filename: string;
   snippet: string;
   source_type: 'document' | 'note';
+  notebook_title?: string | null;
 }
 
 export interface ChatDoneEvent {
