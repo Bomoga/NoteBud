@@ -38,12 +38,12 @@ _CONFIDENCE_THRESHOLD = 0.75  # for the low_confidence flag
 _MIN_CONFIDENT_CHUNKS = 2
 
 _SYSTEM_INSTRUCTION = (
-    "You are a helpful study assistant. Answer the user's question based ONLY "
-    "on the provided context from their notebook documents. If the context "
-    "doesn't contain enough information to answer the question, say so clearly. "
-    "Be concise and accurate. "
-    "When you use information from a source, cite it inline using [Source N] "
-    "where N matches the source number in the context provided."
+    "You are a helpful study assistant. Use the provided context from the user's "
+    "notebook documents as your primary source. When the context covers the topic, "
+    "cite it inline using [Source N] where N matches the source number. "
+    "When the context is silent or incomplete, answer from your own knowledge — "
+    "do not refuse or say the context doesn't contain the information. "
+    "Be concise and accurate."
 )
 
 
@@ -89,26 +89,46 @@ class GraphRAGService:
         )
 
     # ------------------------------------------------------------------
-    # 2. Retrieve top-5 chunks scoped to notebook (documents + notes)
+    # 1b. Resolve the full set of notebook IDs to search
+    #     (current notebook + all directly connected notebooks)
+    # ------------------------------------------------------------------
+    async def _get_search_notebook_ids(self, notebook_id: str) -> list[str]:
+        """Return notebook_id plus the IDs of all notebooks connected to it
+        via a NOTEBOOK_LINK relationship in either direction."""
+        cypher = """
+            MATCH (nb:Notebook {id: $notebook_id})-[:NOTEBOOK_LINK]-(other:Notebook)
+            RETURN other.id AS connected_id
+        """
+        async with self._driver.session() as session:
+            result = await session.run(cypher, notebook_id=notebook_id)
+            rows = await result.data()
+        connected = [r["connected_id"] for r in rows]
+        return [notebook_id] + connected
+
+    # ------------------------------------------------------------------
+    # 2. Retrieve top-K chunks across notebook + connected notebooks
     # ------------------------------------------------------------------
     async def _retrieve_chunks(
         self,
         notebook_id: str,
         query_embedding: list[float],
     ) -> list[dict]:
+        notebook_ids = await self._get_search_notebook_ids(notebook_id)
+
         content_cypher = """
             CALL db.index.vector.queryNodes($index, $top_k, $embedding)
             YIELD node AS chunk, score
-            MATCH (nb:Notebook {id: $notebook_id})
-                  -[:CONTAINS]->(d:Document)
-                  -[:HAS_CHUNK]->(chunk)
-            WHERE score >= $floor
-            RETURN chunk.id          AS chunk_id,
-                   chunk.text        AS text,
-                   chunk.source_file AS source_file,
-                   chunk.page_number AS page_number,
+            MATCH (nb:Notebook)-[:CONTAINS]->(d:Document)-[:HAS_CHUNK]->(chunk)
+            WHERE nb.id IN $notebook_ids AND score >= $floor
+            RETURN chunk.id           AS chunk_id,
+                   chunk.text         AS text,
+                   chunk.source_file  AS source_file,
+                   chunk.page_number  AS page_number,
                    chunk.slide_number AS slide_number,
-                   'document'        AS source_type,
+                   'document'         AS source_type,
+                   nb.id              AS notebook_id,
+                   nb.title           AS notebook_title,
+                   nb.course_code     AS notebook_course_code,
                    score
             ORDER BY score DESC
             LIMIT $limit
@@ -116,16 +136,17 @@ class GraphRAGService:
         note_cypher = """
             CALL db.index.vector.queryNodes($index, $top_k, $embedding)
             YIELD node AS chunk, score
-            MATCH (nb:Notebook {id: $notebook_id})
-                  -[:HAS_NOTE]->(n:Note)
-                  -[:HAS_CHUNK]->(chunk)
-            WHERE score >= $floor
-            RETURN chunk.id         AS chunk_id,
-                   chunk.text       AS text,
-                   chunk.note_title AS source_file,
-                   null             AS page_number,
-                   null             AS slide_number,
-                   'note'           AS source_type,
+            MATCH (nb:Notebook)-[:HAS_NOTE]->(n:Note)-[:HAS_CHUNK]->(chunk)
+            WHERE nb.id IN $notebook_ids AND score >= $floor
+            RETURN chunk.id          AS chunk_id,
+                   chunk.text        AS text,
+                   chunk.note_title  AS source_file,
+                   null              AS page_number,
+                   null              AS slide_number,
+                   'note'            AS source_type,
+                   nb.id             AS notebook_id,
+                   nb.title          AS notebook_title,
+                   nb.course_code    AS notebook_course_code,
                    score
             ORDER BY score DESC
             LIMIT $limit
@@ -133,7 +154,7 @@ class GraphRAGService:
         params = dict(
             top_k=_RETRIEVAL_TOP_K,
             embedding=query_embedding,
-            notebook_id=notebook_id,
+            notebook_ids=notebook_ids,
             floor=_SIMILARITY_FLOOR,
             limit=_RESULT_LIMIT,
         )
@@ -164,7 +185,9 @@ class GraphRAGService:
         for i, chunk in enumerate(chunks, 1):
             name = chunk["source_file"] or "unknown"
             label = "Note" if chunk.get("source_type") == "note" else "Document"
-            parts.append(f"[Source {i} ({label}): {name}]\n{chunk['text']}")
+            nb_label = chunk.get("notebook_course_code") or chunk.get("notebook_title") or ""
+            nb_suffix = f", {nb_label}" if nb_label else ""
+            parts.append(f"[Source {i} ({label}{nb_suffix}): {name}]\n{chunk['text']}")
         return "\n\n".join(parts)
 
     # ------------------------------------------------------------------
@@ -178,6 +201,7 @@ class GraphRAGService:
                 "filename": c["source_file"] or "unknown",
                 "snippet": c["text"][:120],
                 "source_type": c.get("source_type", "document"),
+                "notebook_title": c.get("notebook_course_code") or c.get("notebook_title") or None,
             }
             for c in chunks
         ]
@@ -198,6 +222,7 @@ class GraphRAGService:
                 "filename": chunks[i - 1]["source_file"] or "unknown",
                 "snippet": chunks[i - 1]["text"][:120],
                 "source_type": chunks[i - 1].get("source_type", "document"),
+                "notebook_title": chunks[i - 1].get("notebook_course_code") or chunks[i - 1].get("notebook_title") or None,
             }
             for i in sorted(referenced)
             if 1 <= i <= len(chunks)

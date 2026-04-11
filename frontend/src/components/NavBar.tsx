@@ -138,87 +138,57 @@ export default function NavBar() {
     const notebookIdMatch = pathname.match(/^\/backpack\/([^/]+)/);
     const notebookId = notebookIdMatch?.[1];
 
-    const { data: currentNotebook } = useQuery({
-        queryKey: ['notebook', notebookId],
-        queryFn: () => getNotebook(notebookId!),
-        enabled: !!notebookId && !!token,
-        staleTime: 60 * 1000,
-    });
+  const { data: currentNotebook } = useQuery({
+    queryKey: ['notebook', notebookId],
+    queryFn: () => getNotebook(notebookId!),
+    enabled: !!notebookId && !!token,
+    staleTime: 60 * 1000,
+  });
 
-    const isFocusMode = useUiStore((s) => s.isFocusMode);
-
-    const panelProps: NavBarPanelProps = {
-        token,
-        pathname,
-        isFocusMode,
-        displayInitial,
-        username,
-        handleLogout,
-    };
-
-    if (isFocusMode) {
-        return (
-            <Disclosure as="nav" className="pointer-events-none fixed left-1/2 -translate-x-1/2 top-3 z-[60] flex flex-col items-center">
-                <div className="pointer-events-auto relative flex flex-col items-start gap-2">
-                    <div className="flex items-start gap-1 rounded-2xl border border-white/50 bg-white/80 px-1.5 py-1 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl">
-                        <DisclosureButton className="group relative inline-flex cursor-pointer items-center justify-center rounded-xl p-2 text-slate-600 transition-colors hover:bg-white/60 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                            <span className="sr-only">Open navigation menu</span>
-                            <Bars3Icon aria-hidden="true" className="block size-6 group-data-open:hidden" />
-                            <XMarkIcon aria-hidden="true" className="hidden size-6 group-data-open:block" />
-                        </DisclosureButton>
-                        {token ? <FocusToggle /> : null}
-                    </div>
-                    <DisclosurePanel className="absolute center top-[calc(100%+6px)] z-50 max-h-[min(85vh,560px)] w-[min(calc(100vw-1.5rem),20rem)] overflow-y-auto rounded-xl border border-white/40 bg-white/95 shadow-xl backdrop-blur-md outline-none">
-                        <NavMenuPanel {...panelProps} />
-                    </DisclosurePanel>
-                </div>
-            </Disclosure>
-        );
-    }
-
-    return (
-        <Disclosure as="nav" className="relative z-20 glass-panel backdrop-blur-[30px]">
-            <div className="mx-auto max-w-8xl sm:px-6 lg:px-12">
-                <div className="flex h-16 justify-between">
-                    <div className="flex px-4 lg:px-6">
-                        <div className="flex shrink-0 items-center">
-                            <img
-                                alt="NoteBud Logo"
-                                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=emerald&shade=600"
-                                className="h-8 w-auto"
-                            />
-                        </div>
-                        <div className="hidden lg:ml-6 lg:flex lg:items-center lg:gap-3 pb-1">
-                            {navLinks.map(({ href, label, Icon, protected: isProtected }, i) => {
-                                const linkPath = href.split('?')[0]
-                                const isActive = href !== '#' && pathname === linkPath
-                                const activeClass = 'border-emerald-600 text-gray-900'
-                                const defaultClass = 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                                const resolvedHref = isProtected && !token ? '/login' : href
-                                return (
-                                    <React.Fragment key={label}>
-                                        {i > 0 && <span className="text-gray-300 text-2xl select-none">|</span>}
-                                        <Link href={resolvedHref} className={`inline-flex cursor-pointer items-center gap-1.5 border-b-2 px-1 pt-1 text-lg font-semibold ${isActive ? activeClass : defaultClass}`}>
-                                            <Icon className="h-4 w-4" />
-                                            {label}
-                                        </Link>
-                                    </React.Fragment>
-                                )
-                            })}
-                        </div>
-                    </div>
-                    {currentNotebook && (
-                        <div className="hidden lg:flex items-center gap-1.5 ml-4 text-slate-400">
-                            <ChevronRightIcon className="h-4 w-4 flex-shrink-0" />
-                            <span className="text-sm font-medium text-slate-600 truncate max-w-[200px]">
-                                {currentNotebook.course_code}
-                            </span>
-                            <span className="text-slate-300">·</span>
-                            <span className="text-sm text-slate-500 truncate max-w-[240px]">
-                                {currentNotebook.title}
-                            </span>
-                        </div>
-                    )}
+  return (
+    <Disclosure as="nav" className="relative z-20 glass-panel backdrop-blur-[30px]">
+      <div className="mx-auto max-w-8xl sm:px-6 lg:px-8">
+        <div className="flex h-16 justify-between">
+          <div className="flex px-4 lg:px-6">
+            <div className="flex shrink-0 items-center">
+              <img
+                alt="NoteBud Logo"
+                src="/logo.svg"
+                className="h-14 w-auto"
+              />
+            </div>
+            <div className="hidden lg:ml-6 lg:flex lg:items-center lg:gap-3">
+              {navLinks.map(({ href, label, Icon, protected: isProtected }, i) => {
+                const linkPath = href.split('?')[0]
+                const isActive = href !== '#' && pathname === linkPath
+                const activeClass = 'border-emerald-600 text-gray-900'
+                const defaultClass = 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                const resolvedHref = isProtected && !token ? '/login' : href
+                return (
+                  <React.Fragment key={label}>
+                    {i > 0 && <span className="text-gray-300 text-2xl select-none">|</span>}
+                    <Link href={resolvedHref} className={`inline-flex items-center gap-1.5 border-b-2 px-1 pt-1 text-2xl font-semibold ${isActive ? activeClass : defaultClass}`}>
+                      <Icon className="h-6 w-6" />
+                      {label}
+                    </Link>
+                  </React.Fragment>
+                )
+              })}
+            </div>
+          </div>
+          {/* Notebook breadcrumb */}
+          {currentNotebook && (
+            <div className="hidden lg:flex items-center gap-1.5 ml-4 text-slate-400">
+              <ChevronRightIcon className="h-4 w-4 flex-shrink-0" />
+              <span className="text-sm font-medium text-slate-600 truncate max-w-[200px]">
+                {currentNotebook.course_code}
+              </span>
+              <span className="text-slate-300">·</span>
+              <span className="text-sm text-slate-500 truncate max-w-[240px]">
+                {currentNotebook.title}
+              </span>
+            </div>
+          )}
 
                     <div className="flex items-center lg:hidden">
                         <DisclosureButton className="group relative inline-flex cursor-pointer items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-2 focus:-outline-offset-1 focus:outline-emerald-600">
