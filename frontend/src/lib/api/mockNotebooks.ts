@@ -10,6 +10,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     updated_at: '2025-03-01T14:30:00Z',
     owner_id: null,
     semester: "Spring 2026",
+    banner_gcs_uri: null,
   },
   {
     id: 'mock-2',
@@ -20,6 +21,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     updated_at: '2025-03-05T11:00:00Z',
     owner_id: null,
     semester: "Spring 2026",
+    banner_gcs_uri: null,
   },
   {
     id: 'mock-3',
@@ -30,6 +32,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     updated_at: '2025-02-10T08:00:00Z',
     owner_id: null,
     semester: "Spring 2026",
+    banner_gcs_uri: null,
   },
   {
     id: 'mock-4',
@@ -40,6 +43,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     updated_at: '2025-03-07T16:45:00Z',
     owner_id: null,
     semester: "Spring 2026",
+    banner_gcs_uri: null,
   },
   {
     id: 'mock-5',
@@ -50,6 +54,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     updated_at: '2025-03-02T09:15:00Z',
     owner_id: null,
     semester: "Spring 2026",
+    banner_gcs_uri: null,
   },
   {
     id: 'mock-6',
@@ -60,6 +65,7 @@ export const MOCK_NOTEBOOKS: NotebookResponse[] = [
     updated_at: '2025-02-28T17:00:00Z',
     owner_id: null,
     semester: "Spring 2026",
+    banner_gcs_uri: null,
   },
 ];
 
