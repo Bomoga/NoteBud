@@ -134,6 +134,7 @@ export default function NavBar() {
 
     const displayInitial = username?.trim()?.charAt(0).toUpperCase() || '?';
     const { blobUrl: avatarUrl } = useAvatarUrl();
+    const isFocusMode = useUiStore((s) => s.isFocusMode);
 
     const notebookIdMatch = pathname.match(/^\/backpack\/([^/]+)/);
     const notebookId = notebookIdMatch?.[1];
@@ -235,7 +236,14 @@ export default function NavBar() {
             </div>
 
             <DisclosurePanel className="border-t border-gray-200 lg:hidden">
-                <NavMenuPanel {...panelProps} />
+                <NavMenuPanel
+                    token={token}
+                    pathname={pathname}
+                    isFocusMode={isFocusMode}
+                    displayInitial={displayInitial}
+                    username={username}
+                    handleLogout={handleLogout}
+                />
             </DisclosurePanel>
         </Disclosure>
     )
