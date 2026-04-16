@@ -63,6 +63,20 @@ apiClient.interceptors.request.use((config) => {
   const controller = new AbortController();
   inFlightControllers.add(controller);
   (config as any)[controllerKey] = controller;
+
+  // Compose with any caller-provided signal so both caller-aborts and
+  // logout-aborts are respected without silently dropping either.
+  const callerSignal = config.signal as AbortSignal | undefined;
+  if (callerSignal) {
+    const onCallerAbort = () => controller.abort(callerSignal.reason);
+    callerSignal.addEventListener('abort', onCallerAbort, { once: true });
+    // Clean up the listener if our controller aborts first (e.g. on logout).
+    controller.signal.addEventListener(
+      'abort',
+      () => callerSignal.removeEventListener('abort', onCallerAbort),
+      { once: true }
+    );
+  }
   config.signal = controller.signal;
 
   if (Date.now() < authDisabledUntil) {

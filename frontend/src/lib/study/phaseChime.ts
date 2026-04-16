@@ -1,14 +1,27 @@
+let sharedAudioContext: AudioContext | null = null;
+
+function getSharedAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+
+  const Ctor: (new () => AudioContext) | undefined =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: new () => AudioContext }).webkitAudioContext;
+  if (!Ctor) return null;
+
+  if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+    sharedAudioContext = new Ctor();
+  }
+
+  return sharedAudioContext;
+}
+
 /**
  * Short soft chime when a Pomodoro phase ends. Uses Web Audio (no network).
  * Call after a user gesture (e.g. Start) so AudioContext is allowed in strict browsers.
  */
 export function playPhaseChime(): void {
-  if (typeof window === 'undefined') return;
-
-  const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!Ctor) return;
-
-  const ctx = new Ctor();
+  const ctx = getSharedAudioContext();
+  if (!ctx) return;
   const t0 = ctx.currentTime;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();

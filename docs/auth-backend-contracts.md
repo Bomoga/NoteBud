@@ -145,15 +145,13 @@ interface AuthState {
 
 ## Axios Interceptor
 
-The axios client at `frontend/src/lib/api/client.ts` has a TODO on line 14 to attach the token. Once S5-40 is implemented it will read from the Zustand store automatically:
+The axios client at `frontend/src/lib/api/client.ts` now includes a full interceptor implementation. Current behavior:
 
-```typescript
-// client.ts line 14 — to be implemented in S5-40
-const token = useAuthStore.getState().token;
-if (token) config.headers.Authorization = `Bearer ${token}`;
-```
+- **Token attachment** — authenticated requests automatically attach `Authorization: Bearer <token>`. The token is read from the Zustand store (`useAuthStore`) and cross-checked against the persisted `localStorage` value; if the two disagree (e.g. stale store state after sign-out) no `Authorization` header is sent.
+- **Request cancellation** — every outgoing request is tracked by an `AbortController`. Caller-supplied `AbortSignal` values are composed with the internal controller so both component-level cancellations and logout-initiated aborts work correctly.
+- **`401` handling** — non-auth requests that receive a `401` response automatically call `clearSession()` and redirect to `/login`, ensuring auth failures are handled consistently across the app.
 
-Until S5-40 is done, you can manually set the header in individual requests for testing, but the login page itself only calls the two unauthenticated auth endpoints so this isn't blocking.
+Callers should use the shared `apiClient` rather than manually attaching `Authorization` headers. The only exceptions are the two unauthenticated endpoints (`/auth/register` and `/auth/token`), which are excluded from the auth-header logic automatically.
 
 ---
 

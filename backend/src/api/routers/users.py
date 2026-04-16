@@ -80,6 +80,9 @@ async def get_avatar(
     if not gcs_uri:
         raise HTTPException(status_code=404, detail="No avatar set")
 
+    if not storage_service.client:
+        raise HTTPException(status_code=500, detail="Storage service is not configured")
+
     without_scheme = gcs_uri[len("gs://"):]
     bucket_name, _, blob_path = without_scheme.partition("/")
     bucket = storage_service.client.bucket(bucket_name)

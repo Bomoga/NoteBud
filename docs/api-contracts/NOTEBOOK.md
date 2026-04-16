@@ -15,13 +15,13 @@
 **Success response (201):**
 ```json
 {
-    "id": "integer",
+    "id": "string (UUID)",
     "title": "string",
     "course_code": "string",
     "description": "string",
     "created_at": "datetime",
     "updated_at": "datetime",
-    "owner_id": "integer"
+    "owner_id": "string (UUID)"
 }
 ```
 
@@ -39,13 +39,13 @@
 ```json
 [
   {
-    "id": "integer",
+    "id": "string (UUID)",
     "title": "string",
     "course_code": "string",
     "description": "string",
     "created_at": "datetime",
     "updated_at": "datetime",
-    "owner_id": "integer"
+    "owner_id": "string (UUID)"
   }
 ]
 ```

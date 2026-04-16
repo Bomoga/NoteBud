@@ -106,7 +106,7 @@ async def update_note_endpoint(
     updated = await repo.update(note_id, data)
     if updated is None:
         raise HTTPException(status_code=404, detail="Note not found")
-    if "content" in data.model_dump(exclude_unset=True):
+    if "content" in data.model_dump(exclude_unset=True) and updated["content"] is not None:
         background_tasks.add_task(
             ingest_note,
             driver, note_id, updated["title"], updated["content"], notebook_id,

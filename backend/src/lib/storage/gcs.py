@@ -5,6 +5,7 @@ from typing import Optional
 
 import anyio
 from fastapi import UploadFile
+from google.api_core.exceptions import NotFound
 from google.cloud import storage
 from google.oauth2 import service_account
 from src.lib.config.settings import settings
@@ -66,7 +67,10 @@ class StorageService:
 
         bucket = self.client.bucket(bucket_name)
         blob = bucket.blob(blob_path)
-        await anyio.to_thread.run_sync(lambda: blob.delete(if_generation_match=None))
+        try:
+            await anyio.to_thread.run_sync(lambda: blob.delete(if_generation_match=None))
+        except NotFound:
+            pass
 
     def download_to_tempfile(self, gcs_uri: str) -> str:
         """Download a GCS object to a local temp file.

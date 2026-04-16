@@ -1,15 +1,12 @@
 'use client';
 
-import { type ReactNode } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import NotebookUploadAndCourseTags from './NotebookUploadAndCourseTags';
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit?: (notebookId: string, courseTags: string[]) => void;
   notebookId?: string | null;
-  children?: ReactNode;
 };
 
 export default function NotebookUploadAndCourseTagsModal({
