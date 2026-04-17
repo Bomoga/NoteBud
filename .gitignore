@@ -10,6 +10,10 @@ env/
 *.egg-info/
 .pytest_cache/
 
+# Credentials
+credentials/
+service-account-key.json
+
 # Node
 node_modules/
 .next/
@@ -53,3 +57,4 @@ uploads/
 temp_files/
 
 .cursor
+CLAUDE.md

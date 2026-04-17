@@ -1,11 +1,350 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
 
 @theme {
-
-  --color-primary: #405449;
-  --color-primary-light: #3B4540;
-  --color-accent: #438951;
-  --color-background: #f8faf8;
+  --color-primary: #4A7A40;
+  --color-primary-light: #3d6636;
+  --color-accent: #6aab5e;
+  --color-background: #f4faf2;
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Rethemed emerald palette to match the NoteBud logo light green (#86BF7A) */
+  --color-emerald-50:  #f0f9ed;
+  --color-emerald-100: #ddf2d8;
+  --color-emerald-200: #bce5b4;
+  --color-emerald-300: #93d189;
+  --color-emerald-400: #86BF7A;
+  --color-emerald-500: #6aab5e;
+  --color-emerald-600: #548e49;
+  --color-emerald-700: #43723a;
+  --color-emerald-800: #365b2f;
+  --color-emerald-900: #2b4a26;
+  --color-emerald-950: #162613;
 }
+
+/* Glassmorphism – frosted glass effect (outside @layer so backdrop-filter applies in Firefox) */
+.glass {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.35) 100%);
+    backdrop-filter: blur(60px);
+    -webkit-backdrop-filter: blur(60px);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 0 20px rgba(255, 255, 255, 0.1);
+    border-radius: 32px;
+    isolation: isolate;
+  }
+
+/* Lighter variant: bottom tabs, study buttons (Deep Focus, Pomodoro, etc.) */
+.glass-light {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.25) 100%);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.4);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.08), inset 0 0 15px rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    isolation: isolate;
+  }
+
+/* Alias for semantic use on panels/nav */
+.glass-panel {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.35) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    isolation: isolate;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+
+/* Inner elements: more opaque for depth (bubbles, inputs, buttons) */
+.glass-elevated {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.5) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    isolation: isolate;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.1);
+  }
+
+/* Pill-shaped inputs / primary actions */
+.glass-input {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.55) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    isolation: isolate;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.15);
+  }
+
+/* ── Notion Dark theme ──────────────────────────────────────────────────── */
+
+/* Page background */
+[data-theme="notion-dark"] body {
+  background: #191919;
+}
+[data-theme="notion-dark"] .forest-background {
+  background-image: none !important;
+  background-color: #191919 !important;
+}
+[data-theme="notion-dark"] .forest-background > * {
+  display: none;
+}
+
+/* Glass panel overrides → solid dark surfaces */
+[data-theme="notion-dark"] .glass,
+[data-theme="notion-dark"] .glass-panel {
+  background: rgba(37, 37, 37, 0.98) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="notion-dark"] .glass-light {
+  background: rgba(47, 47, 47, 0.98) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.04) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: none !important;
+}
+[data-theme="notion-dark"] .glass-elevated {
+  background: rgba(47, 47, 47, 0.98) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
+[data-theme="notion-dark"] .glass-input {
+  background: rgba(55, 55, 55, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
+
+/* NavBar text */
+[data-theme="notion-dark"] nav .text-gray-900 { color: #e8e8e8; }
+[data-theme="notion-dark"] nav .text-gray-800 { color: #d4d4d4; }
+[data-theme="notion-dark"] nav .text-gray-700 { color: #c4c4c4; }
+[data-theme="notion-dark"] nav .text-gray-500 { color: #9b9b9b; }
+[data-theme="notion-dark"] nav .text-gray-400 { color: #6b6b6b; }
+[data-theme="notion-dark"] nav .text-gray-300 { color: rgba(255, 255, 255, 0.15); }
+[data-theme="notion-dark"] nav .hover\:text-gray-700:hover { color: #e8e8e8; }
+[data-theme="notion-dark"] nav .hover\:text-gray-500:hover { color: #c4c4c4; }
+[data-theme="notion-dark"] nav input[type="search"] {
+  background: rgba(55, 55, 55, 0.9);
+  color: #e8e8e8;
+  outline-color: rgba(255, 255, 255, 0.1);
+}
+[data-theme="notion-dark"] nav input[type="search"]::placeholder { color: #6b6b6b; }
+[data-theme="notion-dark"] nav .text-slate-600 { color: #9b9b9b; }
+[data-theme="notion-dark"] nav .text-slate-500 { color: #6b6b6b; }
+[data-theme="notion-dark"] nav .text-slate-400 { color: #555; }
+[data-theme="notion-dark"] nav .text-slate-300 { color: rgba(255, 255, 255, 0.12); }
+
+/* Headlessui dropdown menus */
+[data-theme="notion-dark"] [role="menu"] {
+  background: #2f2f2f !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+  outline: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="notion-dark"] [role="menu"] button,
+[data-theme="notion-dark"] [role="menu"] a { color: #e8e8e8; }
+[data-theme="notion-dark"] [role="menu"] [data-focus] { background: rgba(255, 255, 255, 0.06); }
+[data-theme="notion-dark"] [role="menuitem"]:hover { background: rgba(255, 255, 255, 0.06); }
+
+/* Settings dropdown */
+[data-theme="notion-dark"] .settings-dropdown-item { color: #e8e8e8; }
+[data-theme="notion-dark"] .settings-dropdown-item:hover { background: rgba(255,255,255,0.05); }
+[data-theme="notion-dark"] .bg-emerald-50\/60 { background: rgba(134,191,122,0.15) !important; }
+
+/* General panel text — slate palette */
+[data-theme="notion-dark"] .text-slate-900 { color: #e8e8e8; }
+[data-theme="notion-dark"] .text-slate-800 { color: #d4d4d4; }
+[data-theme="notion-dark"] .text-slate-700 { color: #c4c4c4; }
+[data-theme="notion-dark"] .text-slate-600 { color: #9b9b9b; }
+[data-theme="notion-dark"] .text-slate-500 { color: #6b6b6b; }
+[data-theme="notion-dark"] .text-slate-400 { color: #555; }
+
+/* General panel text — gray palette */
+[data-theme="notion-dark"] .text-gray-900 { color: #e8e8e8; }
+[data-theme="notion-dark"] .text-gray-800 { color: #d4d4d4; }
+[data-theme="notion-dark"] .text-gray-700 { color: #c4c4c4; }
+[data-theme="notion-dark"] .text-gray-600 { color: #9b9b9b; }
+[data-theme="notion-dark"] .text-gray-500 { color: #6b6b6b; }
+
+/* White/light backgrounds → dark surfaces */
+[data-theme="notion-dark"] .bg-white { background: #252525 !important; }
+[data-theme="notion-dark"] .bg-white\/80 { background: rgba(37, 37, 37, 0.98) !important; }
+[data-theme="notion-dark"] .bg-white\/50 { background: rgba(37, 37, 37, 0.9) !important; }
+[data-theme="notion-dark"] .bg-white\/40 { background: rgba(37, 37, 37, 0.8) !important; }
+[data-theme="notion-dark"] .bg-white\/20 { background: rgba(255, 255, 255, 0.04) !important; }
+[data-theme="notion-dark"] .bg-slate-50 { background: #2f2f2f !important; }
+[data-theme="notion-dark"] .bg-gray-50 { background: #2f2f2f !important; }
+[data-theme="notion-dark"] .bg-gray-100 { background: #333 !important; }
+[data-theme="notion-dark"] .hover\:bg-gray-100:hover { background: rgba(255, 255, 255, 0.05) !important; }
+[data-theme="notion-dark"] .hover\:bg-gray-50:hover { background: rgba(255, 255, 255, 0.04) !important; }
+[data-theme="notion-dark"] .hover\:bg-white\/50:hover { background: rgba(255, 255, 255, 0.06) !important; }
+[data-theme="notion-dark"] .hover\:bg-white\/40:hover { background: rgba(255, 255, 255, 0.05) !important; }
+
+/* Borders */
+[data-theme="notion-dark"] .border-white\/30 { border-color: rgba(255, 255, 255, 0.07) !important; }
+[data-theme="notion-dark"] .border-white\/40 { border-color: rgba(255, 255, 255, 0.08) !important; }
+[data-theme="notion-dark"] .border-gray-200 { border-color: rgba(255, 255, 255, 0.08) !important; }
+[data-theme="notion-dark"] .border-slate-200 { border-color: rgba(255, 255, 255, 0.08) !important; }
+[data-theme="notion-dark"] .border-slate-300 { border-color: rgba(255, 255, 255, 0.1) !important; }
+[data-theme="notion-dark"] .divide-gray-200 > * { border-color: rgba(255, 255, 255, 0.07) !important; }
+
+/* ── Tiptap / ProseMirror editor ────────────────────────────────────────── */
+
+.ProseMirror {
+  outline: none;
+  caret-color: #4A7A40;
+  color: #1e293b;
+  line-height: 1.7;
+  font-size: 0.9375rem;
+}
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Headings */
+.ProseMirror h1 { font-size: 1.75rem; font-weight: 700; margin: 1.2em 0 0.4em; line-height: 1.25; color: #1e293b; }
+.ProseMirror h2 { font-size: 1.35rem; font-weight: 600; margin: 1em 0 0.35em; line-height: 1.3; color: #1e293b; }
+.ProseMirror h3 { font-size: 1.1rem;  font-weight: 600; margin: 0.9em 0 0.3em; line-height: 1.4; color: #1e293b; }
+
+/* Paragraphs */
+.ProseMirror p { margin: 0.25em 0; }
+
+/* Lists */
+.ProseMirror ul,
+.ProseMirror ol { padding-left: 1.5rem; margin: 0.4em 0; }
+.ProseMirror ul { list-style-type: disc; }
+.ProseMirror ol { list-style-type: decimal; }
+.ProseMirror li { margin: 0.15em 0; }
+.ProseMirror li > p { margin: 0; }
+
+/* Task list */
+.ProseMirror ul[data-type="taskList"] { list-style: none; padding-left: 0.25rem; }
+.ProseMirror ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; }
+.ProseMirror ul[data-type="taskList"] li > label { flex-shrink: 0; padding-top: 0.1em; }
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1rem; height: 1rem;
+  border: 2px solid #64748b;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.2em;
+}
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+  background-color: #548e49;
+  border-color: #548e49;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4l3 3 5-6' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 70%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div { opacity: 0.5; text-decoration: line-through; }
+
+/* Inline code */
+.ProseMirror code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  background: rgba(100, 116, 139, 0.12);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  color: #0f766e;
+}
+
+/* Code block */
+.ProseMirror pre {
+  background: rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 0.75em 0;
+  overflow-x: auto;
+}
+.ProseMirror pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.875rem;
+  color: #1e293b;
+}
+
+/* Blockquote */
+.ProseMirror blockquote {
+  border-left: 3px solid #548e49;
+  margin: 0.75em 0;
+  padding: 0.25em 0 0.25em 1rem;
+  color: #475569;
+  font-style: italic;
+}
+
+/* Horizontal rule */
+.ProseMirror hr {
+  border: none;
+  border-top: 2px solid rgba(100, 116, 139, 0.2);
+  margin: 1.5em 0;
+}
+
+/* Links */
+.ProseMirror a {
+  color: #548e49;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+/* Selection */
+.ProseMirror ::selection { background: rgba(134, 191, 122, 0.25); }
+
+/* ── ProseMirror overrides for Notion Dark ──────────────────────────────── */
+[data-theme="notion-dark"] .ProseMirror {
+  color: #e8e8e8;
+  caret-color: #e8e8e8;
+}
+[data-theme="notion-dark"] .ProseMirror h1,
+[data-theme="notion-dark"] .ProseMirror h2,
+[data-theme="notion-dark"] .ProseMirror h3 { color: #e8e8e8; }
+[data-theme="notion-dark"] .ProseMirror blockquote { color: #9b9b9b; }
+[data-theme="notion-dark"] .ProseMirror code {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #7dd3ba;
+}
+[data-theme="notion-dark"] .ProseMirror pre {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="notion-dark"] .ProseMirror pre code { color: #e8e8e8; background: transparent; border: none; }
+[data-theme="notion-dark"] .ProseMirror hr { border-color: rgba(255, 255, 255, 0.1); }
+[data-theme="notion-dark"] .ProseMirror p.is-editor-empty:first-child::before { color: #6b6b6b; }
+[data-theme="notion-dark"] .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  border-color: #555;
+}
+[data-theme="notion-dark"] .ProseMirror ::selection { background: rgba(134, 191, 122, 0.35); }

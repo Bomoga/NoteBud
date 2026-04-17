@@ -1,24 +1,59 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
+
+from pydantic import AliasChoices, Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_JWT_DEV_PLACEHOLDER = "dev-jwt-secret-change-in-production"
+
 
 class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     PROJECT_NAME: str = "NoteBud API"
     API_V1_STR: str = "/api/v1"
 
-    POSTGRES_USER: str = "notebud"
-    POSTGRES_PASSWORD: str = "notebud_password1228"
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_PORT: str = "5433"
-    POSTGRES_DB: str = "notebud_dev"
+    NEO4J_URI: str = Field(
+        default="bolt://localhost:7687",
+        validation_alias=AliasChoices("NEO4J_URI", "NEO4J_BOLT_URL"),
+    )
+    NEO4J_USERNAME: str = Field(
+        default="neo4j",
+        validation_alias=AliasChoices("NEO4J_USERNAME", "NEO4J_USER"),
+    )
+    NEO4J_PASSWORD: str = Field(
+        default="notebud_password",
+        validation_alias=AliasChoices("NEO4J_PASSWORD", "NEO4J_PASS"),
+    )
 
     GCS_BUCKET_NAME: str = "notebud-dev-bucket"
     GOOGLE_APPLICATION_CREDENTIALS: str = "./service-account-key.json"
 
-    @property
-    def DATABASE_URL(self) -> str:
-        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+    JWT_SECRET: str = _JWT_DEV_PLACEHOLDER
 
-    model_config = SettingsConfigDict(env_file=f".env.{os.getenv('ENVIRONMENT', 'development')}", env_file_encoding="utf-8")
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+    # Optional until embedding / LLM paths are wired; omit or leave placeholder for local CRUD-only dev.
+    gemini_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("GEMINI_API_KEY", "gemini_api_key"),
+    )
+
+    gemini_model: str = Field(
+        default="gemini-2.5-flash",
+        validation_alias=AliasChoices("GEMINI_MODEL", "gemini_model"),
+    )
+
+    model_config = SettingsConfigDict(
+        env_file=(".env", f".env.{os.getenv('ENVIRONMENT', 'development')}"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @model_validator(mode="after")
+    def _require_strong_jwt_secret_in_prod(self) -> "Settings":
+        if self.ENVIRONMENT != "development" and self.JWT_SECRET == _JWT_DEV_PLACEHOLDER:
+            raise ValueError(
+                "JWT_SECRET must be set to a strong secret in non-development environments."
+            )
+        return self
 
 settings = Settings()

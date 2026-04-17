@@ -1,22 +1,22 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-from src.lib.db.session import get_db
+from fastapi import APIRouter
+from src.lib.db.neo4j import get_driver
 
 router = APIRouter()
 
+
 @router.get("/health")
-async def health_check(db: AsyncSession = Depends(get_db)):
+async def health_check():
     try:
-        result = await db.execute(text("SELECT 1"))
+        driver = get_driver()
+        await driver.verify_connectivity()
         return {
             "status": "online",
             "database": "connected",
-            "message": "backend systems ready"
+            "message": "backend systems ready",
         }
     except Exception as e:
         return {
             "status": "online",
             "database": "disconnected",
-            "error": str(e)
+            "error": str(e),
         }

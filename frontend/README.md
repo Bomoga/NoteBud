@@ -1,36 +1,181 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NoteBud Frontend
 
-## Getting Started
+Setup instructions for the NoteBud Next.js frontend.
 
-First, run the development server:
+---
+
+## Prerequisites
+
+- **Node.js** 20+ (LTS recommended)
+- **npm** (included with Node.js)
+
+---
+
+## Local Development
+
+### 1. Install dependencies
+
+```bash
+cd frontend
+npm install
+```
+
+> **Note:** Run this after cloning, switching branches, or if you see `Cannot find module 'next'` or similar. Dependencies are not committed; `node_modules` must be installed locally.
+
+### 2. Start the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file in the `frontend` directory if you need to override defaults:
 
-## Learn More
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
 
-To learn more about Next.js, take a look at the following resources:
+The value must include the `/api/v1` prefix: the client calls paths like `/notebooks`, which Axios joins to this base (full URL: `http://localhost:8000/api/v1/notebooks`). A base of `http://localhost:8000` alone will hit the wrong routes and fail even if the backend is up.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Authentication
 
-## Deploy on Vercel
+- **Pages:** [http://localhost:3000/login](http://localhost:3000/login) and [http://localhost:3000/register](http://localhost:3000/register).
+- **State:** `src/lib/store/auth.ts` (Zustand + persistence) holds the JWT; `src/lib/api/client.ts` attaches it to API requests.
+- **Rules:** Username and password constraints for **registration** are defined in `src/lib/authPolicy.ts` and must stay aligned with the backend (`backend/src/api/routers/auth.py`). Full API wording: [../docs/api-contracts/AUTH.md](../docs/api-contracts/AUTH.md).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Backpack and mock data
+
+The **Backpack** page lists notebooks and calls the backend (`GET /api/v1/notebooks`) via React Query.
+
+The hooks in `src/hooks/useNotebooks.ts` also support **`{ mock: true }`**, which uses the in-memory store in `src/lib/api/mockNotebooks.ts` instead of the network (handy for Storybook, tests, or a temporary demo page). The default Backpack route does not enable mock mode; wire `useSearchParams` or a dev toggle if you want `?mock=1` in the URL again.
+
+---
+
+## Notes workspace routing and UI
+
+- **Primary notes route:** `src/app/backpack/[id]/notes/page.tsx` (`/backpack/:id/notes`).
+- **Notebook navigation:** `src/components/NotebookCard.tsx` uses `next/link` to open notebook-scoped notes pages.
+- **Legacy `/notes` route:** This route has been removed and is no longer available; notes should be opened from a notebook context via `/backpack/:id/notes`.
+- **Left pane file tree:** `src/components/FileTree.tsx` renders nested folders/files with expand/collapse support.
+- **Upload modal:** `src/modals/NotebookUploadAndCourseTagsModal.tsx` is viewport-centered and expects notebook context from backpack-scoped notes.
+- **Architecture doc:** [../docs/notes-workspace-ui-architecture.md](../docs/notes-workspace-ui-architecture.md)
+
+### `FileTree` quick usage
+
+```tsx
+import FileTree, { type FileTreeNode } from '../../components/FileTree';
+
+const nodes: FileTreeNode[] = [
+  {
+    id: 'folder-1',
+    name: 'Lecture Notes',
+    type: 'folder',
+    children: [{ id: 'file-1', name: 'Week 1.md', type: 'file' }],
+  },
+];
+
+<FileTree nodes={nodes} onSelectFile={(file) => console.log(file.name)} />;
+```
+
+---
+
+## Docker
+
+### Build
+
+```bash
+cd frontend
+docker build -t notebud-frontend .
+```
+
+To point at a different backend (e.g., when using Docker Compose):
+
+```bash
+docker build --build-arg NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1 -t notebud-frontend .
+```
+
+`NEXT_PUBLIC_*` values are fixed at build time. Rebuild the image if you change the API URL.
+
+### Run
+
+```bash
+docker run -p 3000:3000 notebud-frontend
+```
+
+### Run with hot reload (development)
+
+```bash
+# Build the dev image
+docker build --target dev -t notebud-frontend:dev .
+
+# Run with volume mount (edit files locally, changes reflect in the container)
+# Use your UID/GID so files written to .next/ are not owned by root (see Troubleshooting).
+docker run --rm \
+  --user "$(id -u):$(id -g)" \
+  -e HOME=/tmp \
+  -p 3000:3000 \
+  -v "$(pwd):/app" \
+  -v /app/node_modules \
+  notebud-frontend:dev
+```
+
+If **port 3000 is already taken**, change only the host port: `-p 3001:3000` and open [http://localhost:3001](http://localhost:3001).
+
+The dev image sets `NEXT_PUBLIC_API_URL` to `http://localhost:8000/api/v1` by default. Override if needed: `-e NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` (the browser on your machine calls this host, not the container).
+
+The anonymous volume mounted at `/app/node_modules` keeps dependencies in the volume: on first use, Docker copies `node_modules` from the image into it, and the host bind mount does not replace that directory. Edit files in `src/` and the app will hot reload.
+
+Use `--rm` so the container is removed when it stops (avoids stale containers tying up names).
+
+---
+
+## Troubleshooting
+
+### Docker: `Bind for 0.0.0.0:3000 failed: port is already allocated`
+
+Something else is already listening on host port **3000** (often a local `npm run dev`, another Docker container, or a left-over frontend container).
+
+1. List containers: `docker ps`. Stop any frontend container: `docker stop <container_id>`.
+2. See non-Docker processes: `ss -tlnp | grep ':3000'` (or `lsof -i :3000`).
+3. Map a different **host** port: `-p 3001:3000` in `docker run` and use [http://localhost:3001](http://localhost:3001).
+
+**Do not mix `sudo docker run` and normal `docker run`** for the same image unless you understand user namespaces; bind-mounted files may end up with ownership that breaks local `npm run dev`.
+
+### Local `npm run dev`: `Permission denied` / lockfile IO error on `.next`
+
+This usually happens after **Docker ran `next dev` as root** and wrote `.next/` on your repo via the volume mount. Your user can no longer create the Turbopack dev lockfile.
+
+**Fix (pick one):**
+
+```bash
+sudo chown -R "$(id -u):$(id -g)" .next
+# or remove the cache and let Next recreate it:
+sudo rm -rf .next
+```
+
+**Prevention:** run the dev container with **`--user "$(id -u):$(id -g)"`** and **`-e HOME=/tmp`** as in the [Run with hot reload](#run-with-hot-reload-development) command above so new files in the project are owned by you.
+
+### Next.js log shows `GET /api/v1/health 404`
+
+That request went to the **Next.js** dev server on port 3000, not to FastAPI. The backend health URL is **http://localhost:8000/api/v1/health** (with `uvicorn` running on 8000). The app’s API client should use `NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1` so the **browser** calls the backend directly.
+
+### "Cannot find module 'next' or its corresponding type declarations"
+
+Run `npm install` in the `frontend` directory. If the error persists in your editor, restart the TypeScript server (`Cmd/Ctrl+Shift+P` → "TypeScript: Restart TS Server").
+
+### "'React' refers to a UMD global, but the current file is a module"
+
+Ensure files that use JSX include:
+
+```ts
+import React from 'react';
+```
+
+Modules with JSX need an explicit React import instead of relying on the global.

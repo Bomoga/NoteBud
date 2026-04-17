@@ -14,6 +14,21 @@ jobs:
       run:
         working-directory: backend
 
+    services:
+      neo4j:
+        image: neo4j:2025.01
+        env:
+          NEO4J_AUTH: neo4j/testpassword
+          NEO4J_PLUGINS: '["apoc"]'
+        ports:
+          - 7687:7687
+          - 7474:7474
+        options: >-
+          --health-cmd "cypher-shell -u neo4j -p testpassword 'RETURN 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,20 +46,20 @@ jobs:
       - name: Create test .env file
         run: |
           cat << 'EOF' > .env.development
-          POSTGRES_USER=notebud
-          POSTGRES_PASSWORD=notebud_password1228
-          POSTGRES_SERVER=localhost
-          POSTGRES_PORT=5432
-          POSTGRES_DB=test_db
+          NEO4J_URI=bolt://localhost:7687
+          NEO4J_USERNAME=neo4j
+          NEO4J_PASSWORD=testpassword
           GCS_BUCKET_NAME=dummy-bucket
           GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json
           EOF
-          # Select development env for tests
           echo "ENVIRONMENT=development" > .env
 
       - name: Run tests with pytest
         env:
           ENVIRONMENT: development
+          NEO4J_URI: bolt://localhost:7687
+          NEO4J_USERNAME: neo4j
+          NEO4J_PASSWORD: testpassword
         run: |
           pytest
 

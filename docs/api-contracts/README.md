@@ -23,7 +23,7 @@ An API contract is a simple document that both frontend and backend agree on bef
 
 ## Approval Process
 
-1. Backend or Frontend writes the contract and opens a PR into `develop`
+1. Backend or Frontend writes the contract and opens a PR into `dev`
 2. Tag both lanes for review in the PR description
 3. Both sides leave a comment: `✅ approved` or flag any issues
 4. Merge only after both lanes approve
@@ -63,8 +63,9 @@ Sample request + sample response
 
 | File | Feature | Status | Approved By |
 |---|---|---|---|
-| [AUTH.md](./AUTH.md) | Register, Login, Logout | ✅ Approved | FE + BE |
-| [NOTEBOOK.md](./NOTEBOOK.md) | Create notebook, list notebooks, upload file | ✅ Approved | FE + BE |
+| [AUTH.md](./AUTH.md) | Register, login (`/auth/token`), JWT Bearer, validation rules | ✅ Aligned with implementation | Update sign-off if you change auth behavior |
+| [NOTEBOOK.md](./NOTEBOOK.md) | Create notebook, list notebooks | ✅ Approved | FE + BE |
+| [FILES.md](./FILES.md) | Notebook upload + list + FE/polling context; `files.py` + `GET …/documents` | Align with implementation | Update sign-off if you change upload or document list |
 
 > Add a new row every time a new contract is merged.
 
@@ -76,6 +77,7 @@ Use all caps, one word per feature area:
 
 - `AUTH.md`
 - `NOTEBOOK.md`
+- `FILES.md`
 - `CHAT.md`
 - `PLANNER.md`
 - `RAG.md`
