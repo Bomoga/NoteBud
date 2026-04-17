@@ -110,6 +110,7 @@ export function createMockNotebook(
     updated_at: now,
     owner_id: null,
     semester: "Spring 2026",
+    banner_gcs_uri: null,
   };
 
   mockStore = [...mockStore, created];
