@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 type Position = { left: number; top: number };
 
@@ -37,6 +37,7 @@ export default function DraggableFloatingWidget({
   const rootRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ startX: number; startY: number; origin: Position } | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
+  const [minimized, setMinimized] = useState(false);
 
   useLayoutEffect(() => {
     setPortalEl(document.body);
@@ -165,21 +166,19 @@ export default function DraggableFloatingWidget({
             ))}
           </span>
         </div>
-        {onClose ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            className="flex shrink-0 items-center justify-center border-l border-white/20 px-2.5 text-slate-500 transition-colors hover:bg-white/20 hover:text-slate-800"
-            aria-label="Exit focus mode"
-          >
-            <XMarkIcon className="h-5 w-5" aria-hidden />
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setMinimized((m) => !m);
+          }}
+          className="flex shrink-0 items-center justify-center border-l border-white/20 px-2.5 text-slate-500 transition-colors hover:bg-white/20 hover:text-slate-800"
+          aria-label={minimized ? 'Expand study tools' : 'Minimize study tools'}
+        >
+          {minimized ? <ChevronUpIcon className="h-5 w-5" aria-hidden /> : <XMarkIcon className="h-5 w-5" aria-hidden />}
+        </button>
       </div>
-      <div className="min-w-0">{children}</div>
+      <div className={minimized ? 'hidden' : 'min-w-0'}>{children}</div>
     </div>
   );
 
