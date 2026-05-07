@@ -204,7 +204,7 @@ export default function BackpackPage() {
                                 onClick={() => setShowCreateForm(!showCreateForm)}
                                 className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
                             >
-                                <PlusIcon className="size-4" />
+                                {!showCreateForm && <PlusIcon className="size-4" />}
                                 {showCreateForm ? 'Cancel' : 'Create new'}
                             </button>
                         </div>
