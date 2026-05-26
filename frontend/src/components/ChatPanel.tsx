@@ -18,6 +18,17 @@ interface Props {
   notebookId: string;
 }
 
+const SUP: Record<string, string> = {
+  '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+  '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+};
+
+function inlineCitations(text: string): string {
+  return text.replace(/\[(\d+)\]/g, (_, n: string) =>
+    n.split('').map(d => SUP[d] ?? d).join('')
+  );
+}
+
 export default function ChatPanel({ notebookId }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -109,7 +120,8 @@ export default function ChatPanel({ notebookId }: Props) {
     <div className="flex flex-col h-full glass-panel border border-white/30 bg-white/10 backdrop-blur-[30px] overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/20 flex-shrink-0 flex items-center justify-center">
-        <p className="text-lg font-semibold text-slate-700">Notebook Chat</p>
+        <img src="/logo.svg" alt="" className="h-7 w-auto mr-2" />
+        <p className="text-lg font-semibold text-slate-700">NoteBuddy</p>
       </div>
 
       {/* Messages */}
@@ -118,59 +130,68 @@ export default function ChatPanel({ notebookId }: Props) {
           const isLastStreaming = isStreaming && i === messages.length - 1 && msg.role === 'assistant';
           return (
             <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-              <div
-                className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
-                  msg.role === 'user'
-                    ? 'bg-emerald-600/80 text-white'
-                    : 'bg-white/40 text-white border border-white/30'
-                }`}
-              >
-                {msg.role === 'assistant' ? (
-                  <div className="prose prose-sm prose-slate max-w-none break-words
-                    prose-p:leading-relaxed prose-p:my-1 prose-p:text-white
-                    prose-headings:font-semibold prose-headings:my-1 prose-headings:text-white
-                    prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-li:text-white
-                    prose-code:bg-white/20 prose-code:rounded prose-code:px-1 prose-code:text-[11px] prose-code:text-white
-                    prose-pre:bg-white/20 prose-pre:rounded-lg prose-pre:text-[11px]
-                    prose-strong:text-white prose-a:text-emerald-300">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {msg.content}
-                    </ReactMarkdown>
+              <div className={`flex items-start gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                {msg.role === 'assistant' && (
+                  <div className="h-8 w-8 flex-shrink-0 mt-0.5 rounded-full bg-[#86BF7A] overflow-hidden">
+                    <img src="/logo.svg" alt="" className="h-full w-full object-cover scale-110" />
                   </div>
-                ) : (
-                  <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
                 )}
-
-                {/* Citations */}
-                {msg.citations && msg.citations.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-white/30 space-y-1">
-                    <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Sources</p>
-                    {msg.citations.map((c, ci) => (
-                      <div key={ci} className="text-[11px] text-white/70 leading-snug">
-                        {c.notebook_title && (
-                          <span className="inline-block mr-1.5 rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-white/20 text-white/80">
-                            {c.notebook_title}
-                          </span>
-                        )}
-                        <span className="font-medium text-white/90">{c.filename}</span>
-                        {' · '}
-                        <span className="italic">{c.snippet}</span>
+                {(msg.content || !isLastStreaming) && (
+                  <div
+                    className={`rounded-xl px-3 py-2 text-sm min-w-0 ${
+                      msg.role === 'user'
+                        ? 'bg-emerald-600/80 text-white'
+                        : 'bg-white/40 text-white border border-white/30'
+                    }`}
+                  >
+                    {msg.role === 'assistant' ? (
+                      <div className="prose prose-sm prose-slate max-w-none break-words
+                        prose-p:leading-relaxed prose-p:my-1 prose-p:text-white
+                        prose-headings:font-semibold prose-headings:my-1 prose-headings:text-white
+                        prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-li:text-white
+                        prose-code:bg-white/20 prose-code:rounded prose-code:px-1 prose-code:text-[11px] prose-code:text-white
+                        prose-pre:bg-white/20 prose-pre:rounded-lg prose-pre:text-[11px]
+                        prose-strong:text-white prose-a:text-emerald-300">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {inlineCitations(msg.content)}
+                        </ReactMarkdown>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    ) : (
+                      <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
+                    )}
 
-                {/* Low confidence warning */}
-                {msg.low_confidence && msg.role === 'assistant' && !isStreaming && (
-                  <p className="mt-1 text-[10px] text-amber-300">
-                    Low confidence — limited relevant content found.
-                  </p>
+                    {/* Citations */}
+                    {msg.citations && msg.citations.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-white/30 space-y-1">
+                        <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wide">Sources</p>
+                        {msg.citations.map((c, ci) => (
+                          <div key={ci} className="text-[11px] text-white/70 leading-snug">
+                            {c.notebook_title && (
+                              <span className="inline-block mr-1.5 rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide bg-white/20 text-white/80">
+                                {c.notebook_title}
+                              </span>
+                            )}
+                            <span className="font-medium text-white/90">{c.filename}</span>
+                            {' · '}
+                            <span className="italic">{c.snippet}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Low confidence warning */}
+                    {msg.low_confidence && msg.role === 'assistant' && !isStreaming && (
+                      <p className="mt-1 text-[10px] text-amber-300">
+                        Low confidence — limited relevant content found.
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 
               {/* Pulsating dots shown below the bubble while streaming */}
               {isLastStreaming && (
-                <div className="flex items-center gap-1 mt-1.5 ml-1">
+                <div className="flex items-center gap-1 mt-1.5 ml-10">
                   <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0ms]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:150ms]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:300ms]" />

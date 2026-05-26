@@ -26,16 +26,17 @@ type NavBarPanelProps = {
     token: string | null | undefined;
     pathname: string;
     isFocusMode: boolean;
+    isNotesPage: boolean;
     displayInitial: string;
     username: string | null | undefined;
     handleLogout: () => void;
 };
 
-function NavMenuPanel({ token, pathname, isFocusMode, displayInitial, username, handleLogout }: NavBarPanelProps) {
+function NavMenuPanel({ token, pathname, isFocusMode, isNotesPage, displayInitial, username, handleLogout }: NavBarPanelProps) {
     return (
         <>
             <div className="space-y-1 pt-2 pb-3">
-                {token ? (
+                {token && isNotesPage ? (
                     <DisclosureButton
                         as={FocusToggle}
                         label="Focus mode"
@@ -45,16 +46,7 @@ function NavMenuPanel({ token, pathname, isFocusMode, displayInitial, username, 
                                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800'
                         }`}
                     />
-                ) : (
-                    <DisclosureButton
-                        as={Link}
-                        href="/login"
-                        className="hover:cursor-pointer flex items-center gap-2 border-l-4 border-transparent py-2 pr-4 pl-3 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
-                    >
-                        <PomodoroIcon className="shrink-0" />
-                        Focus mode
-                    </DisclosureButton>
-                )}
+                ) : null}
                 {navLinks.map(({ href, label, protected: isProtected }) => {
                     const linkPath = href.split('?')[0]
                     const isActive = href !== '#' && pathname === linkPath
@@ -136,6 +128,7 @@ export default function NavBar() {
     const { blobUrl: avatarUrl } = useAvatarUrl();
     const isFocusMode = useUiStore((s) => s.isFocusMode);
 
+    const isNotesPage = /^\/backpack\/[^/]+\/notes(\/|$)/.test(pathname);
     const notebookIdMatch = pathname.match(/^\/backpack\/([^/]+)/);
     const notebookId = notebookIdMatch?.[1];
 
@@ -200,7 +193,7 @@ export default function NavBar() {
                         </DisclosureButton>
                     </div>
                     <div className="hidden lg:ml-4 lg:flex lg:items-center lg:gap-3">
-                        {token ? <FocusToggle /> : null}
+                        {token && isNotesPage ? <FocusToggle /> : null}
                         <SettingsDropdown />
 
                         {token ? (
@@ -240,6 +233,7 @@ export default function NavBar() {
                     token={token}
                     pathname={pathname}
                     isFocusMode={isFocusMode}
+                    isNotesPage={isNotesPage}
                     displayInitial={displayInitial}
                     username={username}
                     handleLogout={handleLogout}
