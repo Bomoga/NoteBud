@@ -2,7 +2,20 @@
 General seed script — pre-med three-semester curriculum.
 
 Creates a user, fills their backpack with 11 notebooks (3 semesters),
-34 notepages, 14 connections, and Unsplash banner images.
+34 notepages, 14 connections, and banner images.
+
+Banner behaviour
+----------------
+* If BANNER_GCS_URIS (defined below) contains a non-empty URI for a
+  notebook, it is PATCHed directly onto the notebook — no file download
+  or re-upload occurs.  Use this to reproduce an exact prior setup.
+* If the URI is empty (the default), the banner is downloaded from
+  Unsplash and uploaded to GCS via the API.  The resulting GCS URIs are
+  printed at the end so you can paste them into BANNER_GCS_URIS for
+  future runs.
+
+Requirements (Python 3.9+):
+    pip install requests Markdown
 
 Usage (from /backend directory):
     python -m scripts.seed_curriculum                         # defaults
@@ -10,19 +23,34 @@ Usage (from /backend directory):
     python -m scripts.seed_curriculum --base-url http://192.168.1.10:8000
     python -m scripts.seed_curriculum --skip-banners
 
+Or run directly (no module path needed):
+    python scripts/seed_curriculum.py
+    python scripts/seed_curriculum.py --base-url https://your-api.example.com
+
 Options:
     --username     Account username  (default: RoaryPanther)
     --password     Account password  (default: panther1234)
     --base-url     API root URL      (default: http://localhost:8000,
                                       overridden by BASE_URL env var)
-    --skip-banners Skip banner image uploads (useful offline)
+    --skip-banners Skip banner uploads entirely (useful offline)
 """
+
+from __future__ import annotations
 
 import argparse
 import io
 import os
-import requests
-import markdown as _md
+import sys
+
+try:
+    import requests
+except ImportError:
+    sys.exit("Missing dependency: pip install requests")
+
+try:
+    import markdown as _md
+except ImportError:
+    sys.exit("Missing dependency: pip install Markdown")
 
 _MD = _md.Markdown(extensions=["tables", "fenced_code"])
 
@@ -50,6 +78,29 @@ BANNERS: dict[str, str] = {
     "CHM3210": "1554475900-0a0350e3fc7b",     # molecular model structure
     "PHY2049": "1537420327992-d6e192287183",  # lightning / electricity
     "BCH3023": "1617791160505-6f00504e3519",  # academic science setting
+}
+
+# ---------------------------------------------------------------------------
+# Pre-existing GCS banner URIs  (stable, no re-upload needed)
+#
+# Populate these from a previous seed run (printed in step 7 output).
+# When set, the script PATCHes the URI directly instead of downloading
+# from Unsplash and uploading a new blob.  Leave a value as "" to fall
+# back to the Unsplash upload for that notebook.
+# ---------------------------------------------------------------------------
+
+BANNER_GCS_URIS: dict[str, str] = {
+    "BSC2010": "",
+    "CHM2045": "",
+    "MAC2311": "",
+    "BSC2011": "",
+    "CHM2046": "",
+    "MAC2312": "",
+    "PHY2048": "",
+    "PCB3063": "",
+    "CHM3210": "",
+    "PHY2049": "",
+    "BCH3023": "",
 }
 
 # ---------------------------------------------------------------------------
@@ -2549,6 +2600,14 @@ def post(url: str, payload: dict, token: str | None = None) -> dict:
     return resp.json()
 
 
+def patch(url: str, payload: dict, token: str) -> dict:
+    resp = requests.patch(url, json=payload, headers=_headers(token), timeout=30)
+    if not resp.ok:
+        print(f"  ERROR {resp.status_code}: {resp.text[:300]}")
+        resp.raise_for_status()
+    return resp.json()
+
+
 def delete(url: str, token: str) -> None:
     resp = requests.delete(url, headers=_headers(token), timeout=30)
     if not resp.ok:
@@ -2654,32 +2713,49 @@ def main():
         except requests.HTTPError:
             print(f"  SKIPPED: {from_key} --[{link_type}]--> {to_key} (may already exist)")
 
-    # ── 7. Upload banners ──────────────────────────────────────────────────
+    # ── 7. Set / upload banners ────────────────────────────────────────────
+    final_gcs_uris: dict[str, str] = {}
+
     if args.skip_banners:
         step("Skipping banner uploads (--skip-banners)")
     else:
-        step("Uploading notebook banners from Unsplash")
+        step("Setting notebook banners")
         for key, nb_id in notebook_ids.items():
-            pid = BANNERS.get(key)
-            if not pid:
-                print(f"  SKIP {key} — no banner defined")
-                continue
-            img_url = _BANNER_CDN.format(id=pid)
-            img_r = requests.get(img_url, timeout=20)
-            if img_r.status_code != 200:
-                print(f"  FAIL download {key}: HTTP {img_r.status_code}")
-                continue
-            files = {"file": (f"{key}_banner.jpg", io.BytesIO(img_r.content), "image/jpeg")}
-            up = requests.post(
-                f"{api}/notebooks/{nb_id}/banner",
-                headers=_headers(token),
-                files=files,
-                timeout=30,
-            )
-            if up.status_code == 200:
-                print(f"  OK   {key} ({len(img_r.content) // 1024}KB)")
+            existing_uri = BANNER_GCS_URIS.get(key, "").strip()
+
+            if existing_uri:
+                # Fast path: PATCH the known GCS URI directly — no re-upload.
+                result = patch(
+                    f"{api}/notebooks/{nb_id}",
+                    {"banner_gcs_uri": existing_uri},
+                    token,
+                )
+                final_gcs_uris[key] = result.get("banner_gcs_uri") or existing_uri
+                print(f"  SET  {key} -> {existing_uri}")
             else:
-                print(f"  FAIL {key}: {up.status_code} {up.text[:80]}")
+                # Slow path: download from Unsplash and upload to GCS.
+                pid = BANNERS.get(key)
+                if not pid:
+                    print(f"  SKIP {key} — no banner defined")
+                    continue
+                img_url = _BANNER_CDN.format(id=pid)
+                img_r = requests.get(img_url, timeout=20)
+                if img_r.status_code != 200:
+                    print(f"  FAIL download {key}: HTTP {img_r.status_code}")
+                    continue
+                files = {"file": (f"{key}_banner.jpg", io.BytesIO(img_r.content), "image/jpeg")}
+                up = requests.post(
+                    f"{api}/notebooks/{nb_id}/banner",
+                    headers=_headers(token),
+                    files=files,
+                    timeout=30,
+                )
+                if up.status_code == 200:
+                    gcs_uri = up.json().get("banner_gcs_uri", "")
+                    final_gcs_uris[key] = gcs_uri
+                    print(f"  OK   {key} ({len(img_r.content) // 1024}KB) -> {gcs_uri}")
+                else:
+                    print(f"  FAIL {key}: {up.status_code} {up.text[:80]}")
 
     # ── 8. Done ────────────────────────────────────────────────────────────
     step("Done!")
@@ -2693,6 +2769,13 @@ def main():
     print("  Notebook IDs:")
     for key, nb_id in notebook_ids.items():
         print(f"    {key}: {nb_id}")
+
+    if final_gcs_uris:
+        print()
+        print("  GCS banner URIs (copy into BANNER_GCS_URIS to skip re-upload on future runs):")
+        for key, uri in final_gcs_uris.items():
+            print(f'    "{key}": "{uri}",')
+
 
 
 if __name__ == "__main__":

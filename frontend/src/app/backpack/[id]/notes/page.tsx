@@ -365,9 +365,7 @@ export default function NotesForNotebookPage() {
           </DraggableFloatingWidget>
         ) : null}
         <div
-          className={`mx-auto flex min-h-0 w-full max-w-full flex-1 flex-row gap-2 px-2 ${
-            isFocusMode ? 'pt-0' : 'pt-16'
-          }`}
+          className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-row gap-2 px-2 pt-16"
         >
 
           {/* File tree pane (collapsible) */}
